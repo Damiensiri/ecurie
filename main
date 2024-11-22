@@ -1,0 +1,20 @@
+{
+  "name": "Ecurie Damien SIRI",
+  "short_name": "Ecurie DSIRI",
+  "start_url": "https://www.ecuriedamiensiri-proprietaire.com",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#175B92",
+  "icons": [
+    {
+      "src": "/https://static.wixstatic.com/media/ff7f34_1718776f2aa94e39a50d0bc5d216bc69~mv2.png/v1/crop/x_0,y_421,w_4096,h_1685/fill/w_332,h_136,al_c,q_85,usm_0.66_1.00_0.01,enc_auto/ff7f34_1718776f2aa94e39a50d0bc5d216bc69~mv2.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
