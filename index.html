@@ -165,12 +165,16 @@ if(permission==="granted"){
 
 messaging.getToken({
 vapidKey:"BKf6TU4UsZgu-dAYLreOKWyk6qOk55ZeCzYNG6hMuWWBSZVLIC02sBvmZQXhauGS1sl790nQ6MS6Dx3nC56FQj8"
-}).then(token=>{
+})
+.then(token=>{
 
 console.log("TOKEN PUSH :",token)
 
 new Notification("Notifications activées")
 
+})
+.catch(err=>{
+console.log("Erreur token :",err)
 })
 
 }
@@ -207,6 +211,8 @@ buildPlanning()
 /* BUILD PLANNING */
 
 function buildPlanning(){
+
+if(!horaires.maison) return
 
 const paddocks=["maison","grande","beudot"]
 
@@ -266,7 +272,15 @@ current += 1
 })
 
 slots=[...new Set(slots)]
-slots.sort()
+
+slots.sort((a,b)=>{
+
+let [ah,am]=a.split(":").map(Number)
+let [bh,bm]=b.split(":").map(Number)
+
+return (ah*60+am)-(bh*60+bm)
+
+})
 
 let html="<tr><th>Heure</th>"
 
@@ -363,6 +377,8 @@ snapshot.forEach(doc=>{
 horaires[doc.id]=doc.data()
 })
 
+buildPlanning()
+
 })
 
 /* ANNULATION */
@@ -401,7 +417,7 @@ body:r.name+" — "+r.paddock+" "+r.time
 
 /* REFRESH */
 
-setInterval(buildPlanning,30000)
+setInterval(buildPlanning,20000)
 
 /* INIT */
 
