@@ -153,6 +153,9 @@ let reservations=[]
 let horaires={}
 let currentDate=""
 
+let notifEnabled=false
+let knownReservations=new Set()
+
 /* NOTIFICATIONS */
 
 function enableNotif(){
@@ -161,6 +164,7 @@ Notification.requestPermission().then(permission=>{
 
 if(permission==="granted"){
 
+notifEnabled=true
 new Notification("Notifications activées")
 
 }
@@ -323,11 +327,14 @@ document.getElementById("planning").innerHTML=html
 
 db.collection("reservations").onSnapshot(snapshot=>{
 
-snapshot.docChanges().forEach(change=>{
+snapshot.forEach(doc=>{
 
-if(change.type==="added"){
+let r=doc.data()
+r.id=doc.id
 
-let r=change.doc.data()
+if(notifEnabled && !knownReservations.has(r.id)){
+
+knownReservations.add(r.id)
 
 if(Notification.permission==="granted"){
 
