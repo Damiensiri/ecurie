@@ -43,7 +43,6 @@ cursor:pointer;
 background:#1c1f26;
 border-radius:15px;
 padding:15px;
-margin-bottom:15px;
 }
 
 .tabs{display:flex;gap:10px;margin-bottom:10px;}
@@ -76,6 +75,10 @@ padding:6px;
 .free{background:#2ecc71;}
 .resa{background:#e74c3c;cursor:pointer;}
 .closed{background:#555;}
+
+.now td{
+border-top:3px solid #f1c40f;
+}
 
 </style>
 </head>
@@ -119,12 +122,18 @@ padding:6px;
 const PASS="0359140"
 
 if(!localStorage.getItem("backstage_auth")){
+
 let p=prompt("Mot de passe")
+
 if(p!==PASS){
+
 document.body.innerHTML="Accès refusé"
 throw "stop"
+
 }
+
 localStorage.setItem("backstage_auth",true)
+
 }
 
 /* FIREBASE */
@@ -139,6 +148,7 @@ appId:"1:501153278739:web:824b4344c381f2a94548e6"
 }
 
 firebase.initializeApp(firebaseConfig)
+
 const db=firebase.firestore()
 
 let reservations=[]
@@ -148,17 +158,28 @@ let currentDate=""
 /* NOTIFICATIONS */
 
 function enableNotif(){
+
 Notification.requestPermission().then(p=>{
-if(p==="granted") new Notification("Notifications activées")
+
+if(p==="granted"){
+
+new Notification("Notifications activées")
+
+}
+
 })
+
 }
 
 /* DATE */
 
 function dateOffset(days){
+
 let d=new Date()
 d.setDate(d.getDate()+days)
+
 return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")
+
 }
 
 /* LOAD DAY */
@@ -168,13 +189,14 @@ function loadDay(offset){
 currentDate=dateOffset(offset)
 
 document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"))
+
 document.getElementById("btn"+offset).classList.add("active")
 
 buildPlanning()
 
 }
 
-/* BUILD PLANNING — EXACT LOGIC CLIENT */
+/* BUILD PLANNING (LOGIQUE CLIENT) */
 
 function buildPlanning(){
 
@@ -184,6 +206,7 @@ const parts=currentDate.split("-")
 const d=new Date(parts[0],parts[1]-1,parts[2])
 
 const names=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"]
+
 let jour=names[d.getDay()]
 
 let slots=[]
@@ -216,6 +239,7 @@ if(r.date!==currentDate) return false
 if(r.paddock!==paddock) return false
 
 let [rh,rm]=r.time.split(":").map(Number)
+
 let resStart=rh+(rm/60)
 
 return resStart===current
@@ -238,19 +262,33 @@ slots.sort()
 let html="<tr><th>Heure</th>"
 
 paddocks.forEach(p=>html+="<th>"+p+"</th>")
+
 html+="</tr>"
+
+const now=new Date()
+const today=now.toISOString().split("T")[0]
+const currentFloat=now.getHours()+now.getMinutes()/60
 
 slots.forEach(time=>{
 
-html+="<tr><td>"+time+"</td>"
+let [th,tm]=time.split(":").map(Number)
+let slotFloat=th+(tm/60)
+
+let isNow=(currentDate===today && slotFloat>=currentFloat && slotFloat<currentFloat+0.5)
+
+html+=`<tr class="${isNow?"now":""}">`
+
+html+="<td>"+time+"</td>"
 
 paddocks.forEach(p=>{
 
 let config=horaires[p] ? horaires[p][jour] : null
 
 if(config && config.closed){
+
 html+="<td class='closed'>FERMÉ</td>"
 return
+
 }
 
 let resa=reservations.find(r=>{
@@ -262,9 +300,13 @@ return r.date===currentDate
 })
 
 if(resa){
+
 html+=`<td class="resa" onclick="cancel('${resa.id}')">${resa.name}</td>`
+
 }else{
+
 html+=`<td class="free"></td>`
+
 }
 
 })
@@ -284,9 +326,12 @@ db.collection("reservations").onSnapshot(snapshot=>{
 reservations=[]
 
 snapshot.forEach(doc=>{
+
 let r=doc.data()
 r.id=doc.id
+
 reservations.push(r)
+
 })
 
 buildPlanning()
@@ -298,7 +343,9 @@ buildPlanning()
 db.collection("horaires").get().then(snapshot=>{
 
 snapshot.forEach(doc=>{
+
 horaires[doc.id]=doc.data()
+
 })
 
 })
@@ -306,11 +353,14 @@ horaires[doc.id]=doc.data()
 /* ANNULATION */
 
 async function cancel(id){
+
 if(!confirm("Annuler cette réservation ?")) return
+
 await db.collection("reservations").doc(id).delete()
+
 }
 
-/* NOTIF RESA */
+/* NOTIF */
 
 db.collection("reservations").onSnapshot(snapshot=>{
 
@@ -321,9 +371,11 @@ if(change.type==="added"){
 let r=change.doc.data()
 
 if(Notification.permission==="granted"){
+
 new Notification("Nouvelle réservation paddock",{
 body:r.name+" — "+r.paddock+" "+r.time
 })
+
 }
 
 }
@@ -332,7 +384,7 @@ body:r.name+" — "+r.paddock+" "+r.time
 
 })
 
-/* REFRESH AUTO */
+/* REFRESH */
 
 setInterval(buildPlanning,30000)
 
