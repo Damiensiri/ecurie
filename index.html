@@ -162,9 +162,7 @@ function enableNotif(){
 Notification.requestPermission().then(p=>{
 
 if(p==="granted"){
-
 new Notification("Notifications activées")
-
 }
 
 })
@@ -196,11 +194,13 @@ buildPlanning()
 
 }
 
-/* BUILD PLANNING (LOGIQUE CLIENT) */
+/* BUILD PLANNING */
 
 function buildPlanning(){
 
 const paddocks=["maison","grande","beudot"]
+
+let skip={maison:0,grande:0,beudot:0}
 
 const parts=currentDate.split("-")
 const d=new Date(parts[0],parts[1]-1,parts[2])
@@ -239,7 +239,6 @@ if(r.date!==currentDate) return false
 if(r.paddock!==paddock) return false
 
 let [rh,rm]=r.time.split(":").map(Number)
-
 let resStart=rh+(rm/60)
 
 return resStart===current
@@ -282,6 +281,11 @@ html+="<td>"+time+"</td>"
 
 paddocks.forEach(p=>{
 
+if(skip[p]>0){
+skip[p]--
+return
+}
+
 let config=horaires[p] ? horaires[p][jour] : null
 
 if(config && config.closed){
@@ -301,7 +305,11 @@ return r.date===currentDate
 
 if(resa){
 
-html+=`<td class="resa" onclick="cancel('${resa.id}')">${resa.name}</td>`
+let span=resa.duration===90?2:1
+
+skip[p]=span-1
+
+html+=`<td class="resa" rowspan="${span}" onclick="cancel('${resa.id}')">${resa.name}</td>`
 
 }else{
 
