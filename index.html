@@ -158,10 +158,8 @@ function enableNotif(){
 Notification.requestPermission().then(permission=>{
 
 if(permission==="granted"){
-
 notifEnabled=true
 new Notification("Notifications activées")
-
 }
 
 })
@@ -258,7 +256,15 @@ current += 1
 
 slots=[...new Set(slots)]
 
+/* si aucun créneau → paddocks fermés toute la journée */
+
+if(slots.length===0){
+slots=["--"]
+}
+
 slots.sort((a,b)=>{
+
+if(a==="--" || b==="--") return 0
 
 let [ah,am]=a.split(":").map(Number)
 let [bh,bm]=b.split(":").map(Number)
@@ -280,6 +286,15 @@ html+="<td>"+time+"</td>"
 
 paddocks.forEach(p=>{
 
+/* paddock fermé toute la journée */
+
+if(time==="--"){
+html+="<td class='closed'>FERMÉ</td>"
+return
+}
+
+/* paddock fermé avant ouverture ou après fermeture */
+
 let config=horaires[p] ? horaires[p][jour] : null
 
 if(config){
@@ -298,6 +313,8 @@ return
 }
 
 }
+
+/* réservation */
 
 let resa=reservations.find(r=>r.date===currentDate && r.paddock===p && r.time===time)
 
