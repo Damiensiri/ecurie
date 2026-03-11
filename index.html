@@ -18,9 +18,24 @@ color:white;
 header{
 background:#181E3B;
 padding:15px;
-text-align:center;
-font-size:20px;
-font-weight:bold;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+header h1{
+margin:0;
+font-size:18px;
+}
+
+.icons{
+display:flex;
+gap:10px;
+}
+
+.icons button{
+font-size:18px;
+padding:8px 12px;
 }
 
 .container{
@@ -34,20 +49,24 @@ padding:15px;
 margin-bottom:15px;
 }
 
-button{
-padding:10px 14px;
-border:none;
-border-radius:10px;
-background:#181E3B;
-color:white;
-font-weight:bold;
-cursor:pointer;
-}
-
 .tabs{
 display:flex;
 gap:10px;
 margin-bottom:10px;
+}
+
+.tabs button{
+padding:8px 12px;
+border:none;
+border-radius:8px;
+background:#181E3B;
+color:white;
+cursor:pointer;
+}
+
+.tabs button.active{
+background:#2ecc71;
+color:black;
 }
 
 table{
@@ -58,7 +77,7 @@ text-align:center;
 
 td,th{
 border:1px solid #333;
-padding:8px;
+padding:6px;
 }
 
 .free{
@@ -76,42 +95,35 @@ cursor:pointer;
 <body>
 
 <header>
-🐎 Écurie du Grand Rang — Backstage
+
+<h1>🐎 Backstage</h1>
+
+<div class="icons">
+
+<button onclick="enableNotif()">🔔</button>
+
+<button onclick="location.href='horaires.html'">
+⚙️ Configuration
+</button>
+
+</div>
+
 </header>
+
 
 <div class="container">
 
 <div class="card">
 
-<button onclick="enableNotif()">
-🔔 Activer les notifications
-</button>
-
-</div>
-
-<div class="card">
-
-<h3>Planning paddocks</h3>
-
 <div class="tabs">
 
-<button onclick="loadDay(0)">Aujourd'hui</button>
-<button onclick="loadDay(1)">Demain</button>
-<button onclick="loadDay(2)">Après-demain</button>
+<button id="btn0" onclick="loadDay(0)">Aujourd'hui</button>
+<button id="btn1" onclick="loadDay(1)">Demain</button>
+<button id="btn2" onclick="loadDay(2)">Après-demain</button>
 
 </div>
 
 <table id="planning"></table>
-
-</div>
-
-<div class="card">
-
-<h3>Configuration</h3>
-
-<button onclick="location.href='horaires.html'">
-⚙️ Configurer les horaires
-</button>
 
 </div>
 
@@ -123,7 +135,7 @@ cursor:pointer;
 
 <script>
 
-/* ---------------- MOT DE PASSE ---------------- */
+/* PASSWORD */
 
 const PASS="0359140"
 
@@ -136,15 +148,13 @@ if(p!==PASS){
 document.body.innerHTML="Accès refusé"
 throw "stop"
 
-}else{
+}
 
 localStorage.setItem("backstage_auth",true)
 
 }
 
-}
-
-/* ---------------- FIREBASE ---------------- */
+/* FIREBASE */
 
 const firebaseConfig={
 apiKey:"AIzaSyBn6Hgu-xvsWqpwJ-i4lZyI0QjKMBvOeXA",
@@ -162,21 +172,15 @@ const db=firebase.firestore()
 let reservations=[]
 let currentDate=""
 
-/* ---------------- NOTIFICATIONS ---------------- */
+/* NOTIFICATIONS */
 
 function enableNotif(){
 
-Notification.requestPermission().then(permission=>{
+Notification.requestPermission().then(p=>{
 
-if(permission==="granted"){
+if(p==="granted"){
 
-alert("Notifications activées")
-
-new Notification("Notifications paddock activées")
-
-}else{
-
-alert("Notifications refusées")
+new Notification("Notifications activées")
 
 }
 
@@ -184,59 +188,83 @@ alert("Notifications refusées")
 
 }
 
-/* ---------------- DATE ---------------- */
+/* DATE */
 
 function dateOffset(days){
 
 let d=new Date()
-
 d.setDate(d.getDate()+days)
 
 return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")
 
 }
 
-/* ---------------- LOAD DAY ---------------- */
+/* LOAD DAY */
 
 function loadDay(offset){
 
 currentDate=dateOffset(offset)
 
+document.querySelectorAll(".tabs button").forEach(b=>{
+b.classList.remove("active")
+})
+
+document.getElementById("btn"+offset).classList.add("active")
+
 buildPlanning()
 
 }
 
-/* ---------------- PLANNING ---------------- */
+/* BUILD PLANNING */
 
 function buildPlanning(){
 
 let paddocks=["maison","grande","beudot"]
 
-let hours=[
-"08:00","09:00","10:00","11:00",
-"12:00","13:00","14:00","15:00",
-"16:00","17:00","18:00"
-]
+let slots=[]
+
+for(let h=8;h<=18;h++){
+
+slots.push(String(h).padStart(2,"0")+":00")
+slots.push(String(h).padStart(2,"0")+":30")
+
+}
 
 let html="<tr><th>Heure</th>"
 
 paddocks.forEach(p=>{
+
 html+="<th>"+p+"</th>"
+
 })
 
 html+="</tr>"
 
-hours.forEach(h=>{
+slots.forEach(time=>{
 
 html+="<tr>"
 
-html+="<td>"+h+"</td>"
+html+="<td>"+time+"</td>"
 
 paddocks.forEach(p=>{
 
 let resa=reservations.find(r=>{
 
-return r.date===currentDate && r.paddock===p && r.time===h
+let start=r.time
+let duration=r.duration/60
+
+let [rh,rm]=start.split(":").map(Number)
+
+let startFloat=rh+(rm/60)
+
+let [th,tm]=time.split(":").map(Number)
+
+let slotFloat=th+(tm/60)
+
+return r.date===currentDate
+&& r.paddock===p
+&& slotFloat>=startFloat
+&& slotFloat<startFloat+duration
 
 })
 
@@ -250,7 +278,7 @@ ${resa.name}
 
 }else{
 
-html+=`<td class="free">Libre</td>`
+html+=`<td class="free"></td>`
 
 }
 
@@ -264,7 +292,7 @@ document.getElementById("planning").innerHTML=html
 
 }
 
-/* ---------------- FIREBASE LISTEN ---------------- */
+/* FIREBASE LISTENER */
 
 db.collection("reservations")
 .onSnapshot(snapshot=>{
@@ -284,7 +312,7 @@ buildPlanning()
 
 })
 
-/* ---------------- ANNULATION ---------------- */
+/* ANNULATION */
 
 async function cancel(id){
 
@@ -294,7 +322,7 @@ await db.collection("reservations").doc(id).delete()
 
 }
 
-/* ---------------- NOTIF NOUVELLE RESA ---------------- */
+/* NOTIF NOUVELLE RESA */
 
 db.collection("reservations")
 .onSnapshot(snapshot=>{
@@ -319,7 +347,11 @@ body:r.name+" — "+r.paddock+" "+r.time
 
 })
 
-/* ---------------- INIT ---------------- */
+/* REFRESH AUTO */
+
+setInterval(buildPlanning,30000)
+
+/* INIT */
 
 loadDay(0)
 
