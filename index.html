@@ -2,11 +2,9 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Backstage Écurie</title>
-
-<link rel="manifest" href="manifest.json">
 
 <style>
 
@@ -18,11 +16,11 @@ color:white;
 }
 
 header{
-padding:15px;
-font-size:20px;
-font-weight:bold;
-text-align:center;
 background:#181E3B;
+padding:15px;
+text-align:center;
+font-weight:bold;
+font-size:20px;
 }
 
 .container{
@@ -52,6 +50,7 @@ background:#181E3B;
 color:white;
 font-weight:bold;
 margin-top:10px;
+cursor:pointer;
 }
 
 </style>
@@ -66,16 +65,31 @@ margin-top:10px;
 <div class="container">
 
 <div class="card">
+
+<button onclick="enableNotif()">
+🔔 Activer les notifications
+</button>
+
+</div>
+
+<div class="card">
+
 <h3>Réservations aujourd'hui</h3>
+
 <div id="today"></div>
+
 </div>
 
 <div class="card">
+
 <h3>Planning paddocks</h3>
+
 <div id="planning"></div>
+
 </div>
 
 <div class="card">
+
 <h3>Configuration</h3>
 
 <button onclick="location.href='horaires.html'">
@@ -92,7 +106,7 @@ margin-top:10px;
 
 <script>
 
-/* ---------------- PASSWORD ---------------- */
+/* ---------------- MOT DE PASSE ---------------- */
 
 const PASS="0359140"
 
@@ -130,13 +144,32 @@ const db=firebase.firestore()
 
 /* ---------------- NOTIFICATIONS ---------------- */
 
-if(Notification.permission!=="granted"){
+function enableNotif(){
 
-Notification.requestPermission()
+if(!("Notification" in window)){
+alert("Notifications non supportées")
+return
+}
+
+Notification.requestPermission().then(permission => {
+
+if(permission==="granted"){
+
+alert("Notifications activées")
+
+new Notification("Notifications paddock activées")
+
+}else{
+
+alert("Notifications refusées")
 
 }
 
-/* ---------------- TODAY ---------------- */
+})
+
+}
+
+/* ---------------- DATE AUJOURD'HUI ---------------- */
 
 function todayString(){
 
@@ -146,7 +179,7 @@ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.g
 
 }
 
-/* ---------------- LOAD ---------------- */
+/* ---------------- LOAD RESERVATIONS ---------------- */
 
 db.collection("reservations")
 .onSnapshot(snapshot=>{
@@ -154,6 +187,7 @@ db.collection("reservations")
 let today=todayString()
 
 let html=""
+let planning={maison:[],grande:[],beudot:[]}
 
 snapshot.forEach(doc=>{
 
@@ -168,15 +202,45 @@ html+=`
 </div>
 `
 
+planning[r.paddock].push(r.time)
+
 }
 
 })
 
 document.getElementById("today").innerHTML=html
 
+/* planning */
+
+let phtml=""
+
+for(let p in planning){
+
+phtml+=`<b>${p}</b><br>`
+
+if(planning[p].length===0){
+
+phtml+="Libre<br><br>"
+
+}else{
+
+planning[p].forEach(t=>{
+
+phtml+=t+"<br>"
+
 })
 
-/* ---------------- NOTIF NEW ---------------- */
+phtml+="<br>"
+
+}
+
+}
+
+document.getElementById("planning").innerHTML=phtml
+
+})
+
+/* ---------------- NOTIF NOUVELLE RESA ---------------- */
 
 db.collection("reservations")
 .onSnapshot(snapshot=>{
@@ -187,11 +251,15 @@ if(change.type==="added"){
 
 let r=change.doc.data()
 
+if(Notification.permission==="granted"){
+
 new Notification("Nouvelle réservation paddock",{
 
 body:r.name+" — "+r.paddock+" "+r.time
 
 })
+
+}
 
 }
 
