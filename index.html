@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Backstage Écurie</title>
+
+<link rel="manifest" href="manifest.json">
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#0f1115;
+color:white;
+}
+
+header{
+padding:15px;
+font-size:20px;
+font-weight:bold;
+text-align:center;
+background:#181E3B;
+}
+
+.container{
+padding:15px;
+}
+
+.card{
+background:#1c1f26;
+border-radius:15px;
+padding:15px;
+margin-bottom:15px;
+}
+
+.row{
+display:flex;
+justify-content:space-between;
+padding:6px 0;
+border-bottom:1px solid #333;
+}
+
+button{
+width:100%;
+padding:12px;
+border:none;
+border-radius:10px;
+background:#181E3B;
+color:white;
+font-weight:bold;
+margin-top:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+🐎 Écurie du Grand Rang — Backstage
+</header>
+
+<div class="container">
+
+<div class="card">
+<h3>Réservations aujourd'hui</h3>
+<div id="today"></div>
+</div>
+
+<div class="card">
+<h3>Planning paddocks</h3>
+<div id="planning"></div>
+</div>
+
+<div class="card">
+<h3>Configuration</h3>
+
+<button onclick="location.href='horaires.html'">
+⚙️ Configurer les horaires
+</button>
+
+</div>
+
+</div>
+
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+
+/* ---------------- PASSWORD ---------------- */
+
+const PASS="0359140"
+
+if(!localStorage.getItem("backstage_auth")){
+
+let p=prompt("Mot de passe")
+
+if(p!==PASS){
+
+document.body.innerHTML="Accès refusé"
+throw "stop"
+
+}else{
+
+localStorage.setItem("backstage_auth",true)
+
+}
+
+}
+
+/* ---------------- FIREBASE ---------------- */
+
+const firebaseConfig={
+apiKey:"AIzaSyBn6Hgu-xvsWqpwJ-i4lZyI0QjKMBvOeXA",
+authDomain:"ecurie-paddock.firebaseapp.com",
+projectId:"ecurie-paddock",
+storageBucket:"ecurie-paddock.firebasestorage.app",
+messagingSenderId:"501153278739",
+appId:"1:501153278739:web:824b4344c381f2a94548e6"
+}
+
+firebase.initializeApp(firebaseConfig)
+
+const db=firebase.firestore()
+
+/* ---------------- NOTIFICATIONS ---------------- */
+
+if(Notification.permission!=="granted"){
+
+Notification.requestPermission()
+
+}
+
+/* ---------------- TODAY ---------------- */
+
+function todayString(){
+
+let d=new Date()
+
+return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")
+
+}
+
+/* ---------------- LOAD ---------------- */
+
+db.collection("reservations")
+.onSnapshot(snapshot=>{
+
+let today=todayString()
+
+let html=""
+
+snapshot.forEach(doc=>{
+
+let r=doc.data()
+
+if(r.date===today){
+
+html+=`
+<div class="row">
+<div>${r.time} — ${r.name}</div>
+<div>${r.paddock}</div>
+</div>
+`
+
+}
+
+})
+
+document.getElementById("today").innerHTML=html
+
+})
+
+/* ---------------- NOTIF NEW ---------------- */
+
+db.collection("reservations")
+.onSnapshot(snapshot=>{
+
+snapshot.docChanges().forEach(change=>{
+
+if(change.type==="added"){
+
+let r=change.doc.data()
+
+new Notification("Nouvelle réservation paddock",{
+
+body:r.name+" — "+r.paddock+" "+r.time
+
+})
+
+}
+
+})
+
+})
+
+</script>
+
+</body>
+</html>
