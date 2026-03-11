@@ -114,6 +114,7 @@ border-top:3px solid #f1c40f;
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 
 <script>
 
@@ -126,10 +127,8 @@ if(!localStorage.getItem("backstage_auth")){
 let p=prompt("Mot de passe")
 
 if(p!==PASS){
-
 document.body.innerHTML="Accès refusé"
 throw "stop"
-
 }
 
 localStorage.setItem("backstage_auth",true)
@@ -150,19 +149,30 @@ appId:"1:501153278739:web:824b4344c381f2a94548e6"
 firebase.initializeApp(firebaseConfig)
 
 const db=firebase.firestore()
+const messaging=firebase.messaging()
 
 let reservations=[]
 let horaires={}
 let currentDate=""
 
-/* NOTIFICATIONS */
+/* PUSH NOTIFICATIONS */
 
 function enableNotif(){
 
-Notification.requestPermission().then(p=>{
+Notification.requestPermission().then(permission=>{
 
-if(p==="granted"){
+if(permission==="granted"){
+
+messaging.getToken({
+vapidKey:"REMPLACE_PAR_TA_CLE_VAPID"
+}).then(token=>{
+
+console.log("TOKEN PUSH :",token)
+
 new Notification("Notifications activées")
+
+})
+
 }
 
 })
@@ -337,7 +347,6 @@ snapshot.forEach(doc=>{
 
 let r=doc.data()
 r.id=doc.id
-
 reservations.push(r)
 
 })
@@ -351,9 +360,7 @@ buildPlanning()
 db.collection("horaires").get().then(snapshot=>{
 
 snapshot.forEach(doc=>{
-
 horaires[doc.id]=doc.data()
-
 })
 
 })
@@ -368,7 +375,7 @@ await db.collection("reservations").doc(id).delete()
 
 }
 
-/* NOTIF */
+/* NOTIFICATION LOCALE */
 
 db.collection("reservations").onSnapshot(snapshot=>{
 
