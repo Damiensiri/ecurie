@@ -74,11 +74,7 @@ padding:6px;
 
 .free{background:#2ecc71;}
 .resa{background:#e74c3c;cursor:pointer;}
-.closed{background:#555;}
-
-.now td{
-border-top:3px solid #f1c40f;
-}
+.closed{background:#555;color:#ccc;font-weight:bold;}
 
 </style>
 </head>
@@ -153,8 +149,9 @@ let reservations=[]
 let horaires={}
 let currentDate=""
 let notifEnabled=false
+let firstLoad=true
 
-/* NOTIFICATIONS LOCALES */
+/* NOTIFICATIONS */
 
 function enableNotif(){
 
@@ -259,16 +256,15 @@ current += 1
 
 })
 
+/* si aucun slot → on en crée au moins un pour afficher fermé */
+
+if(slots.length===0){
+slots=["--"]
+}
+
 slots=[...new Set(slots)]
 
-slots.sort((a,b)=>{
-
-let [ah,am]=a.split(":").map(Number)
-let [bh,bm]=b.split(":").map(Number)
-
-return (ah*60+am)-(bh*60+bm)
-
-})
+slots.sort()
 
 let html="<tr><th>Heure</th>"
 
@@ -279,15 +275,26 @@ html+="</tr>"
 slots.forEach(time=>{
 
 html+="<tr>"
+
 html+="<td>"+time+"</td>"
 
 paddocks.forEach(p=>{
+
+let config=horaires[p] ? horaires[p][jour] : null
+
+if(config && config.closed){
+
+html+="<td class='closed'>FERMÉ</td>"
+return
+
+}
 
 let resa=reservations.find(r=>r.date===currentDate && r.paddock===p && r.time===time)
 
 if(resa){
 
 let span=resa.duration===90?2:1
+
 skip[p]=span-1
 
 html+=`<td class="resa" rowspan="${span}" onclick="cancel('${resa.id}')">${resa.name}</td>`
@@ -319,7 +326,7 @@ db.collection("reservations").onSnapshot(snapshot=>{
 
 snapshot.docChanges().forEach(change=>{
 
-if(change.type==="added" && notifEnabled){
+if(change.type==="added" && notifEnabled && !firstLoad){
 
 let r=change.doc.data()
 
@@ -330,6 +337,8 @@ body:r.name+" — "+r.paddock+" "+r.time
 }
 
 })
+
+firstLoad=false
 
 reservations=[]
 
