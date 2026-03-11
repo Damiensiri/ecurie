@@ -114,7 +114,6 @@ border-top:3px solid #f1c40f;
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 
 <script>
 
@@ -149,26 +148,13 @@ appId:"1:501153278739:web:824b4344c381f2a94548e6"
 firebase.initializeApp(firebaseConfig)
 
 const db=firebase.firestore()
-const messaging=firebase.messaging()
 
 let reservations=[]
 let horaires={}
 let currentDate=""
+let notifEnabled=false
 
-/* ENREGISTRER SERVICE WORKER */
-
-if ('serviceWorker' in navigator) {
-
-navigator.serviceWorker.register('/firebase-messaging-sw.js')
-.then(function(registration){
-
-messaging.useServiceWorker(registration)
-
-})
-
-}
-
-/* PUSH NOTIFICATIONS */
+/* NOTIFICATIONS LOCALES */
 
 function enableNotif(){
 
@@ -176,26 +162,8 @@ Notification.requestPermission().then(permission=>{
 
 if(permission==="granted"){
 
-messaging.getToken({
-vapidKey:"BKf6TU4UsZgu-dAYLreOKWyk6qOk55ZeCzYNG6hMuWWBSZVLIC02sBvmZQXhauGS1sl790nQ6MS6Dx3nC56FQj8"
-})
-.then(token=>{
-
-console.log("TOKEN PUSH :",token)
-
-/* on stocke le token */
-
-db.collection("tokens").doc(token).set({
-token:token,
-date:new Date()
-})
-
+notifEnabled=true
 new Notification("Notifications activées")
-
-})
-.catch(err=>{
-console.log("Erreur token :",err)
-})
 
 }
 
@@ -348,6 +316,20 @@ document.getElementById("planning").innerHTML=html
 /* RESERVATIONS */
 
 db.collection("reservations").onSnapshot(snapshot=>{
+
+snapshot.docChanges().forEach(change=>{
+
+if(change.type==="added" && notifEnabled){
+
+let r=change.doc.data()
+
+new Notification("Nouvelle réservation paddock",{
+body:r.name+" — "+r.paddock+" "+r.time
+})
+
+}
+
+})
 
 reservations=[]
 
