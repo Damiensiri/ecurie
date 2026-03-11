@@ -19,8 +19,8 @@ header{
 background:#181E3B;
 padding:15px;
 text-align:center;
-font-weight:bold;
 font-size:20px;
+font-weight:bold;
 }
 
 .container{
@@ -34,22 +34,39 @@ padding:15px;
 margin-bottom:15px;
 }
 
-.row{
-display:flex;
-justify-content:space-between;
-padding:6px 0;
-border-bottom:1px solid #333;
-}
-
 button{
-width:100%;
-padding:12px;
+padding:10px 14px;
 border:none;
 border-radius:10px;
 background:#181E3B;
 color:white;
 font-weight:bold;
-margin-top:10px;
+cursor:pointer;
+}
+
+.tabs{
+display:flex;
+gap:10px;
+margin-bottom:10px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+text-align:center;
+}
+
+td,th{
+border:1px solid #333;
+padding:8px;
+}
+
+.free{
+background:#2ecc71;
+}
+
+.resa{
+background:#e74c3c;
 cursor:pointer;
 }
 
@@ -74,17 +91,17 @@ cursor:pointer;
 
 <div class="card">
 
-<h3>Réservations aujourd'hui</h3>
+<h3>Planning paddocks</h3>
 
-<div id="today"></div>
+<div class="tabs">
+
+<button onclick="loadDay(0)">Aujourd'hui</button>
+<button onclick="loadDay(1)">Demain</button>
+<button onclick="loadDay(2)">Après-demain</button>
 
 </div>
 
-<div class="card">
-
-<h3>Planning paddocks</h3>
-
-<div id="planning"></div>
+<table id="planning"></table>
 
 </div>
 
@@ -142,16 +159,14 @@ firebase.initializeApp(firebaseConfig)
 
 const db=firebase.firestore()
 
+let reservations=[]
+let currentDate=""
+
 /* ---------------- NOTIFICATIONS ---------------- */
 
 function enableNotif(){
 
-if(!("Notification" in window)){
-alert("Notifications non supportées")
-return
-}
-
-Notification.requestPermission().then(permission => {
+Notification.requestPermission().then(permission=>{
 
 if(permission==="granted"){
 
@@ -169,76 +184,115 @@ alert("Notifications refusées")
 
 }
 
-/* ---------------- DATE AUJOURD'HUI ---------------- */
+/* ---------------- DATE ---------------- */
 
-function todayString(){
+function dateOffset(days){
 
 let d=new Date()
+
+d.setDate(d.getDate()+days)
 
 return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")
 
 }
 
-/* ---------------- LOAD RESERVATIONS ---------------- */
+/* ---------------- LOAD DAY ---------------- */
+
+function loadDay(offset){
+
+currentDate=dateOffset(offset)
+
+buildPlanning()
+
+}
+
+/* ---------------- PLANNING ---------------- */
+
+function buildPlanning(){
+
+let paddocks=["maison","grande","beudot"]
+
+let hours=[
+"08:00","09:00","10:00","11:00",
+"12:00","13:00","14:00","15:00",
+"16:00","17:00","18:00"
+]
+
+let html="<tr><th>Heure</th>"
+
+paddocks.forEach(p=>{
+html+="<th>"+p+"</th>"
+})
+
+html+="</tr>"
+
+hours.forEach(h=>{
+
+html+="<tr>"
+
+html+="<td>"+h+"</td>"
+
+paddocks.forEach(p=>{
+
+let resa=reservations.find(r=>{
+
+return r.date===currentDate && r.paddock===p && r.time===h
+
+})
+
+if(resa){
+
+html+=`
+<td class="resa" onclick="cancel('${resa.id}')">
+${resa.name}
+</td>
+`
+
+}else{
+
+html+=`<td class="free">Libre</td>`
+
+}
+
+})
+
+html+="</tr>"
+
+})
+
+document.getElementById("planning").innerHTML=html
+
+}
+
+/* ---------------- FIREBASE LISTEN ---------------- */
 
 db.collection("reservations")
 .onSnapshot(snapshot=>{
 
-let today=todayString()
-
-let html=""
-let planning={maison:[],grande:[],beudot:[]}
+reservations=[]
 
 snapshot.forEach(doc=>{
 
 let r=doc.data()
+r.id=doc.id
 
-if(r.date===today){
-
-html+=`
-<div class="row">
-<div>${r.time} — ${r.name}</div>
-<div>${r.paddock}</div>
-</div>
-`
-
-planning[r.paddock].push(r.time)
-
-}
+reservations.push(r)
 
 })
 
-document.getElementById("today").innerHTML=html
-
-/* planning */
-
-let phtml=""
-
-for(let p in planning){
-
-phtml+=`<b>${p}</b><br>`
-
-if(planning[p].length===0){
-
-phtml+="Libre<br><br>"
-
-}else{
-
-planning[p].forEach(t=>{
-
-phtml+=t+"<br>"
+buildPlanning()
 
 })
 
-phtml+="<br>"
+/* ---------------- ANNULATION ---------------- */
+
+async function cancel(id){
+
+if(!confirm("Annuler cette réservation ?")) return
+
+await db.collection("reservations").doc(id).delete()
 
 }
-
-}
-
-document.getElementById("planning").innerHTML=phtml
-
-})
 
 /* ---------------- NOTIF NOUVELLE RESA ---------------- */
 
@@ -254,9 +308,7 @@ let r=change.doc.data()
 if(Notification.permission==="granted"){
 
 new Notification("Nouvelle réservation paddock",{
-
 body:r.name+" — "+r.paddock+" "+r.time
-
 })
 
 }
@@ -266,6 +318,10 @@ body:r.name+" — "+r.paddock+" "+r.time
 })
 
 })
+
+/* ---------------- INIT ---------------- */
+
+loadDay(0)
 
 </script>
 
