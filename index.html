@@ -176,7 +176,9 @@ new Notification("Notifications activées")
 /* NAVIGATION */
 
 function gotoHoraires(){
+
 location.href="horaires.html"
+
 }
 
 /* DATE */
@@ -284,19 +286,9 @@ paddocks.forEach(p=>html+="<th>"+p+"</th>")
 
 html+="</tr>"
 
-const now=new Date()
-const today=now.toISOString().split("T")[0]
-const currentFloat=now.getHours()+now.getMinutes()/60
-
 slots.forEach(time=>{
 
-let [th,tm]=time.split(":").map(Number)
-let slotFloat=th+(tm/60)
-
-let isNow=(currentDate===today && slotFloat<=currentFloat && slotFloat+1>currentFloat)
-
-html+=`<tr class="${isNow?"now":""}">`
-
+html+="<tr>"
 html+="<td>"+time+"</td>"
 
 paddocks.forEach(p=>{
@@ -382,10 +374,6 @@ buildPlanning()
 
 })
 
-/* REFRESH LIGNE JAUNE */
-
-setInterval(buildPlanning,60000)
-
 /* ANNULATION */
 
 async function cancel(id){
@@ -395,6 +383,10 @@ if(!confirm("Annuler cette réservation ?")) return
 await db.collection("reservations").doc(id).delete()
 
 }
+
+/* REFRESH */
+
+setInterval(buildPlanning,20000)
 
 /* INIT */
 
