@@ -155,6 +155,19 @@ let reservations=[]
 let horaires={}
 let currentDate=""
 
+/* ENREGISTRER SERVICE WORKER */
+
+if ('serviceWorker' in navigator) {
+
+navigator.serviceWorker.register('/firebase-messaging-sw.js')
+.then(function(registration){
+
+messaging.useServiceWorker(registration)
+
+})
+
+}
+
 /* PUSH NOTIFICATIONS */
 
 function enableNotif(){
@@ -169,6 +182,13 @@ vapidKey:"BKf6TU4UsZgu-dAYLreOKWyk6qOk55ZeCzYNG6hMuWWBSZVLIC02sBvmZQXhauGS1sl790
 .then(token=>{
 
 console.log("TOKEN PUSH :",token)
+
+/* on stocke le token */
+
+db.collection("tokens").doc(token).set({
+token:token,
+date:new Date()
+})
 
 new Notification("Notifications activées")
 
@@ -288,54 +308,28 @@ paddocks.forEach(p=>html+="<th>"+p+"</th>")
 
 html+="</tr>"
 
-const now=new Date()
-const today=now.toISOString().split("T")[0]
-const currentFloat=now.getHours()+now.getMinutes()/60
-
 slots.forEach(time=>{
 
-let [th,tm]=time.split(":").map(Number)
-let slotFloat=th+(tm/60)
-
-let isNow=(currentDate===today && slotFloat>=currentFloat && slotFloat<currentFloat+0.5)
-
-html+=`<tr class="${isNow?"now":""}">`
-
+html+="<tr>"
 html+="<td>"+time+"</td>"
 
 paddocks.forEach(p=>{
 
-if(skip[p]>0){
-skip[p]--
-return
-}
-
-let config=horaires[p] ? horaires[p][jour] : null
-
-if(config && config.closed){
-
-html+="<td class='closed'>FERMÉ</td>"
-return
-
-}
-
-let resa=reservations.find(r=>{
-
-return r.date===currentDate
-&& r.paddock===p
-&& r.time===time
-
-})
+let resa=reservations.find(r=>r.date===currentDate && r.paddock===p && r.time===time)
 
 if(resa){
 
 let span=resa.duration===90?2:1
-
 skip[p]=span-1
 
 html+=`<td class="resa" rowspan="${span}" onclick="cancel('${resa.id}')">${resa.name}</td>`
 
 }else{
+
+if(skip[p]>0){
+skip[p]--
+return
+}
 
 html+=`<td class="free"></td>`
 
@@ -390,30 +384,6 @@ if(!confirm("Annuler cette réservation ?")) return
 await db.collection("reservations").doc(id).delete()
 
 }
-
-/* NOTIFICATION LOCALE */
-
-db.collection("reservations").onSnapshot(snapshot=>{
-
-snapshot.docChanges().forEach(change=>{
-
-if(change.type==="added"){
-
-let r=change.doc.data()
-
-if(Notification.permission==="granted"){
-
-new Notification("Nouvelle réservation paddock",{
-body:r.name+" — "+r.paddock+" "+r.time
-})
-
-}
-
-}
-
-})
-
-})
 
 /* REFRESH */
 
