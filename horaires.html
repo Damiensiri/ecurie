@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Admin Paddocks</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+margin:0;
+font-family:'Montserrat',sans-serif;
+background:#0f1115;
+color:white;
+}
+
+header{
+text-align:center;
+padding:15px;
+font-size:22px;
+font-weight:700;
+}
+
+.tabs{
+display:flex;
+justify-content:center;
+gap:10px;
+margin-bottom:10px;
+}
+
+.tab{
+background:#1c1f26;
+padding:8px 14px;
+border-radius:10px;
+cursor:pointer;
+}
+
+.tab.active{
+background:#2e7d32;
+}
+
+.card{
+background:#1c1f26;
+margin:12px;
+padding:16px;
+border-radius:16px;
+}
+
+.dayRow{
+display:flex;
+flex-direction:column;
+margin-bottom:14px;
+border-bottom:1px solid #333;
+padding-bottom:12px;
+}
+
+.dayTitle{
+font-weight:700;
+margin-bottom:6px;
+}
+
+.row{
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+select{
+background:#252a33;
+color:white;
+border:none;
+padding:6px;
+border-radius:6px;
+}
+
+.closed{
+background:#c0392b;
+padding:4px 8px;
+border-radius:6px;
+cursor:pointer;
+font-size:12px;
+}
+
+.closed.off{
+background:#2e7d32;
+}
+
+.durations{
+display:flex;
+gap:12px;
+margin-top:10px;
+}
+
+button{
+margin-top:16px;
+width:100%;
+padding:12px;
+border:none;
+border-radius:10px;
+background:#2e7d32;
+color:white;
+font-weight:700;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>ADMIN PADDOCKS</header>
+
+<div class="tabs">
+
+<div class="tab active" onclick="switchTab('maison',event)">Maison</div>
+<div class="tab" onclick="switchTab('grande',event)">Grande voie</div>
+<div class="tab" onclick="switchTab('beudot',event)">Beudot</div>
+
+</div>
+
+<div class="card">
+
+<div id="days"></div>
+
+<div class="durations">
+
+<label>
+<input type="checkbox" id="d60" checked>
+60 min
+</label>
+
+<label>
+<input type="checkbox" id="d90">
+90 min
+</label>
+
+</div>
+
+<button onclick="save()">Sauvegarder</button>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+
+/* FIREBASE */
+
+const firebaseConfig={
+apiKey:"AIzaSyBn6Hgu-xvsWqpwJ-i4lZyI0QjKMBvOeXA",
+authDomain:"ecurie-paddock.firebaseapp.com",
+projectId:"ecurie-paddock",
+storageBucket:"ecurie-paddock.firebasestorage.app",
+messagingSenderId:"501153278739",
+appId:"1:501153278739:web:824b4344c381f2a94548e6"
+};
+
+firebase.initializeApp(firebaseConfig)
+
+const db=firebase.firestore()
+
+/* CONFIG */
+
+let paddock="maison"
+
+const days=[
+"lundi",
+"mardi",
+"mercredi",
+"jeudi",
+"vendredi",
+"samedi",
+"dimanche"
+]
+
+/* HEURES */
+
+function hourOptions(){
+
+let html=""
+
+for(let h=6;h<=22;h++){
+
+let hh=String(h).padStart(2,"0")
+
+html+=`<option value="${hh}:00">${hh}:00</option>`
+
+}
+
+return html
+
+}
+
+/* BUILD UI */
+
+function build(data){
+
+const container=document.getElementById("days")
+container.innerHTML=""
+
+days.forEach(day=>{
+
+let open="08:00"
+let close="19:00"
+let closed=false
+
+if(data && data[day]){
+open=data[day].open
+close=data[day].close
+closed=data[day].closed
+}
+
+container.innerHTML+=`
+
+<div class="dayRow">
+
+<div class="dayTitle">${day.toUpperCase()}</div>
+
+<div class="row">
+
+<div class="closed ${closed?'':'off'}" onclick="toggleClosed(this)">
+${closed?"Fermé":"Ouvert"}
+</div>
+
+<select class="open">
+${hourOptions()}
+</select>
+
+<span>→</span>
+
+<select class="close">
+${hourOptions()}
+</select>
+
+</div>
+
+</div>
+
+`
+
+})
+
+/* appliquer valeurs */
+
+document.querySelectorAll(".dayRow").forEach((row,i)=>{
+
+if(data && data[days[i]]){
+
+row.querySelector(".open").value=data[days[i]].open
+row.querySelector(".close").value=data[days[i]].close
+
+}
+
+})
+
+}
+
+/* SWITCH PADDOCK */
+
+async function switchTab(name,e){
+
+paddock=name
+
+document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"))
+e.target.classList.add("active")
+
+const doc=await db.collection("horaires").doc(paddock).get()
+
+if(doc.exists){
+
+const data=doc.data()
+
+document.getElementById("d60").checked=data.durations.includes(60)
+document.getElementById("d90").checked=data.durations.includes(90)
+
+build(data)
+
+}else{
+
+build()
+
+}
+
+}
+
+/* OPEN CLOSE */
+
+function toggleClosed(btn){
+
+if(btn.classList.contains("off")){
+
+btn.classList.remove("off")
+btn.innerText="Fermé"
+
+}else{
+
+btn.classList.add("off")
+btn.innerText="Ouvert"
+
+}
+
+}
+
+/* SAVE */
+
+async function save(){
+
+const data={}
+
+data.durations=[]
+
+if(document.getElementById("d60").checked) data.durations.push(60)
+if(document.getElementById("d90").checked) data.durations.push(90)
+
+document.querySelectorAll(".dayRow").forEach((row,i)=>{
+
+const day=days[i]
+
+const closed=!row.querySelector(".closed").classList.contains("off")
+
+const open=row.querySelector(".open").value
+const close=row.querySelector(".close").value
+
+data[day]={open,close,closed}
+
+})
+
+await db.collection("horaires").doc(paddock).set(data)
+
+alert("Sauvegardé ✔")
+
+}
+
+/* INIT */
+
+switchTab("maison",{target:document.querySelector(".tab.active")})
+
+</script>
+
+</body>
+</html>
