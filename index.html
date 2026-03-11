@@ -91,7 +91,7 @@ border-top:3px solid #f1c40f;
 
 <div class="icons">
 <button onclick="enableNotif()">🔔</button>
-<button onclick="gotoHoraires()">⚙️</button>
+<button onclick="location.href='horaires.html'">⚙️</button>
 </div>
 
 </header>
@@ -152,11 +152,9 @@ const db=firebase.firestore()
 let reservations=[]
 let horaires={}
 let currentDate=""
-
 let notifEnabled=false
-let knownReservations=new Set()
 
-/* NOTIFICATIONS */
+/* NOTIFICATIONS LOCALES */
 
 function enableNotif(){
 
@@ -170,14 +168,6 @@ new Notification("Notifications activées")
 }
 
 })
-
-}
-
-/* NAVIGATION */
-
-function gotoHoraires(){
-
-location.href="horaires.html"
 
 }
 
@@ -323,26 +313,19 @@ document.getElementById("planning").innerHTML=html
 
 }
 
-/* RESERVATIONS + NOTIF */
+/* RESERVATIONS */
 
 db.collection("reservations").onSnapshot(snapshot=>{
 
-snapshot.forEach(doc=>{
+snapshot.docChanges().forEach(change=>{
 
-let r=doc.data()
-r.id=doc.id
+if(change.type==="added" && notifEnabled){
 
-if(notifEnabled && !knownReservations.has(r.id)){
+let r=change.doc.data()
 
-knownReservations.add(r.id)
-
-if(Notification.permission==="granted"){
-
-new Notification("🐎 Nouvelle réservation paddock",{
+new Notification("Nouvelle réservation paddock",{
 body:r.name+" — "+r.paddock+" "+r.time
 })
-
-}
 
 }
 
