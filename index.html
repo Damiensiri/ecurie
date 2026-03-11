@@ -6,6 +6,16 @@
 
 <title>Backstage Écurie</title>
 
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function(OneSignal) {
+await OneSignal.init({
+appId: "39fea1c8-04b9-4ccc-98bf-804064299d94",
+});
+});
+</script>
+
 <style>
 
 body{
@@ -91,7 +101,7 @@ border-top:3px solid #f1c40f;
 
 <div class="icons">
 <button onclick="enableNotif()">🔔</button>
-<button onclick="location.href='horaires.html'">⚙️</button>
+<button onclick="gotoHoraires()">⚙️</button>
 </div>
 
 </header>
@@ -154,20 +164,23 @@ let horaires={}
 let currentDate=""
 let notifEnabled=false
 
-/* NOTIFICATIONS LOCALES */
+/* ONESIGNAL */
 
 function enableNotif(){
 
-Notification.requestPermission().then(permission=>{
+OneSignalDeferred.push(function(OneSignal) {
 
-if(permission==="granted"){
+OneSignal.registerForPushNotifications()
 
-notifEnabled=true
-new Notification("Notifications activées")
+})
 
 }
 
-})
+/* GOTO PWA INTERNE */
+
+function gotoHoraires(){
+
+location.href="horaires.html"
 
 }
 
@@ -316,20 +329,6 @@ document.getElementById("planning").innerHTML=html
 /* RESERVATIONS */
 
 db.collection("reservations").onSnapshot(snapshot=>{
-
-snapshot.docChanges().forEach(change=>{
-
-if(change.type==="added" && notifEnabled){
-
-let r=change.doc.data()
-
-new Notification("Nouvelle réservation paddock",{
-body:r.name+" — "+r.paddock+" "+r.time
-})
-
-}
-
-})
 
 reservations=[]
 
