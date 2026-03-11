@@ -6,16 +6,6 @@
 
 <title>Backstage Écurie</title>
 
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-OneSignalDeferred.push(async function(OneSignal) {
-await OneSignal.init({
-appId: "39fea1c8-04b9-4ccc-98bf-804064299d94",
-});
-});
-</script>
-
 <style>
 
 body{
@@ -162,21 +152,24 @@ const db=firebase.firestore()
 let reservations=[]
 let horaires={}
 let currentDate=""
-let notifEnabled=false
 
-/* ONESIGNAL */
+/* NOTIFICATIONS */
 
 function enableNotif(){
 
-OneSignalDeferred.push(function(OneSignal) {
+Notification.requestPermission().then(permission=>{
 
-OneSignal.registerForPushNotifications()
+if(permission==="granted"){
+
+new Notification("Notifications activées")
+
+}
 
 })
 
 }
 
-/* GOTO PWA INTERNE */
+/* NAVIGATION */
 
 function gotoHoraires(){
 
@@ -326,9 +319,27 @@ document.getElementById("planning").innerHTML=html
 
 }
 
-/* RESERVATIONS */
+/* RESERVATIONS + NOTIF */
 
 db.collection("reservations").onSnapshot(snapshot=>{
+
+snapshot.docChanges().forEach(change=>{
+
+if(change.type==="added"){
+
+let r=change.doc.data()
+
+if(Notification.permission==="granted"){
+
+new Notification("🐎 Nouvelle réservation paddock",{
+body:r.name+" — "+r.paddock+" "+r.time
+})
+
+}
+
+}
+
+})
 
 reservations=[]
 
