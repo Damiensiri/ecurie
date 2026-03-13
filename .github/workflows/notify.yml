@@ -1,23 +1,46 @@
-name: OneSignal Test Push
+name: Firebase Reservation Watcher
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: "*/5 * * * *"   # toutes les 5 minutes pour le test
+    - cron: "*/1 * * * *"
+  workflow_dispatch:
 
 jobs:
-  push:
+  check:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Send OneSignal test notification
+      - name: Check reservations
         run: |
-          curl -X POST "https://onesignal.com/api/v1/notifications" \
-          -H "Content-Type: application/json" \
-          -H "Authorization: Basic os_v2_app_waemo7qbx5aapjdw6nstnakjtkmyjey5bg2eng43r6hl5v36oc4bfpnq5tyknltlzfmasdm3gioinri2yemutmhkzc6vqxzizu6273q" \
-          -d '{
-            "app_id": "b008c77e-01bf-4007-a476-f3653681499a",
-            "included_segments": ["Subscribed Users"],
-            "headings": {"en": "🔔 Test GitHub Action"},
-            "contents": {"en": "Si tu vois ça, GitHub → OneSignal fonctionne"}
-          }'
+
+          RESPONSE=$(curl -s "https://firestore.googleapis.com/v1/projects/ecurie-paddock/databases/(default)/documents/reservations")
+
+          echo "$RESPONSE" > data.json
+
+          LAST=$(cat data.json | md5sum)
+
+          if [ ! -f last.txt ]; then
+            echo $LAST > last.txt
+            exit 0
+          fi
+
+          OLD=$(cat last.txt)
+
+          if [ "$LAST" != "$OLD" ]; then
+
+            echo "change detected"
+
+            curl --request POST \
+            --url https://onesignal.com/api/v1/notifications \
+            --header "Content-Type: application/json" \
+            --header "Authorization: Basic os_v2_app_waemo7qbx5aapjdw6nstnakjtkmyjey5bg2eng43r6hl5v36oc4bfpnq5tyknltlzfmasdm3gioinri2yemutmhkzc6vqxzizu6273q" \
+            --data '{
+              "app_id": "b008c77e-01bf-4007-a476-f3653681499a",
+              "included_segments": ["Subscribed Users"],
+              "headings": {"en": "🐎 Activité paddock"},
+              "contents": {"en": "Nouvelle réservation ou annulation"}
+            }'
+
+            echo $LAST > last.txt
+
+          fi
