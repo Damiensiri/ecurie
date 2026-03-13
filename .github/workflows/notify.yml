@@ -15,20 +15,9 @@ jobs:
 
           RESPONSE=$(curl -s "https://firestore.googleapis.com/v1/projects/ecurie-paddock/databases/(default)/documents/reservations")
 
-          echo "$RESPONSE" > data.json
+          if [ -n "$RESPONSE" ]; then
 
-          LAST=$(cat data.json | md5sum)
-
-          if [ ! -f last.txt ]; then
-            echo $LAST > last.txt
-            exit 0
-          fi
-
-          OLD=$(cat last.txt)
-
-          if [ "$LAST" != "$OLD" ]; then
-
-            echo "change detected"
+            echo "reservation detected"
 
             curl --request POST \
             --url https://onesignal.com/api/v1/notifications \
@@ -37,10 +26,8 @@ jobs:
             --data '{
               "app_id": "b008c77e-01bf-4007-a476-f3653681499a",
               "included_segments": ["Subscribed Users"],
-              "headings": {"en": "🐎 Activité paddock"},
-              "contents": {"en": "Nouvelle réservation ou annulation"}
+              "headings": {"en": "🐎 Paddock"},
+              "contents": {"en": "Activité détectée"}
             }'
-
-            echo $LAST > last.txt
 
           fi
