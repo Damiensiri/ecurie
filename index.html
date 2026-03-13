@@ -14,15 +14,9 @@ window.OneSignalDeferred = window.OneSignalDeferred || [];
 
 OneSignalDeferred.push(async function(OneSignal) {
 
-  await OneSignal.init({
-    appId: "f7a2dbe7-1664-4186-ad0c-8fa1d3431156",
-
-    serviceWorkerPath: "/ecurie/OneSignalSDKWorker.js",
-    serviceWorkerUpdaterPath: "/ecurie/OneSignalSDKWorker.js",
-
-    serviceWorkerParam: { scope: "/ecurie/" }
-
-  });
+await OneSignal.init({
+appId: "f7a2dbe7-1664-4186-ad0c-8fa1d3431156"
+});
 
 });
 </script>
@@ -173,7 +167,19 @@ let currentDate=""
 let notifEnabled=false
 let firstLoad=true
 
-/* NOTIFICATIONS */
+/* ONESIGNAL NOTIFICATIONS */
+
+function sendNotification(title,message){
+
+if(!("Notification" in window)) return
+
+if(Notification.permission==="granted"){
+new Notification(title,{body:message})
+}
+
+}
+
+/* ENABLE NOTIF */
 
 function enableNotif(){
 
@@ -341,19 +347,33 @@ document.getElementById("planning").innerHTML=html
 
 }
 
-/* RESERVATIONS */
+/* FIREBASE LISTENER */
 
 db.collection("reservations").onSnapshot(snapshot=>{
 
 snapshot.docChanges().forEach(change=>{
 
-if(change.type==="added" && notifEnabled && !firstLoad){
+let r = change.doc.data()
 
-let r=change.doc.data()
+if(!firstLoad && notifEnabled){
 
-new Notification("Nouvelle réservation paddock",{
-body:r.name+" — "+r.paddock+" "+r.time
-})
+if(change.type==="added"){
+
+sendNotification(
+"Nouvelle réservation paddock 🐎",
+r.name+" — "+r.paddock+" "+r.time
+)
+
+}
+
+if(change.type==="removed"){
+
+sendNotification(
+"Réservation annulée",
+r.name+" — "+r.paddock+" "+r.time
+)
+
+}
 
 }
 
@@ -364,11 +384,9 @@ firstLoad=false
 reservations=[]
 
 snapshot.forEach(doc=>{
-
 let r=doc.data()
 r.id=doc.id
 reservations.push(r)
-
 })
 
 buildPlanning()
