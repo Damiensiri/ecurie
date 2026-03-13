@@ -6,19 +6,14 @@
 
 <title>Backstage Écurie</title>
 
+<!-- ONESIGNAL -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-
 <script>
 window.OneSignalDeferred = window.OneSignalDeferred || [];
-
 OneSignalDeferred.push(async function(OneSignal) {
-
 await OneSignal.init({
-appId: "f7a2dbe7-1664-4186-ad0c-8fa1d3431156",
-serviceWorkerPath: "OneSignalSDKWorker.js",
-notifyButton: { enable:false }
+appId: "f7a2dbe7-1664-4186-ad0c-8fa1d3431156"
 });
-
 });
 </script>
 
@@ -39,9 +34,15 @@ justify-content:space-between;
 align-items:center;
 }
 
-header h1{margin:0;font-size:18px;}
+header h1{
+margin:0;
+font-size:18px;
+}
 
-.icons{display:flex;gap:10px;}
+.icons{
+display:flex;
+gap:10px;
+}
 
 .icons button{
 font-size:18px;
@@ -53,7 +54,9 @@ color:white;
 cursor:pointer;
 }
 
-.container{padding:15px;}
+.container{
+padding:15px;
+}
 
 .card{
 background:#1c1f26;
@@ -61,7 +64,11 @@ border-radius:15px;
 padding:15px;
 }
 
-.tabs{display:flex;gap:10px;margin-bottom:10px;}
+.tabs{
+display:flex;
+gap:10px;
+margin-bottom:10px;
+}
 
 .tabs button{
 padding:8px 12px;
@@ -165,23 +172,48 @@ const db=firebase.firestore()
 let reservations=[]
 let horaires={}
 let currentDate=""
-let notifEnabled=false
 let firstLoad=true
 
-/* NOTIFICATIONS */
+/* ONESIGNAL PUSH */
+
+function sendPush(name,paddock,time){
+
+fetch("https://onesignal.com/api/v1/notifications",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Basic os_v2_app_66rnxzywmraynlimr6q5gqyrk2eftbcjmuoe63fvg3ifj7qpobdhmfl46wdae3ztea5yulku2jaubeapob635ympine3wf6vcx3xg6q"
+},
+
+body:JSON.stringify({
+
+app_id:"f7a2dbe7-1664-4186-ad0c-8fa1d3431156",
+
+included_segments:["Subscribed Users"],
+
+headings:{en:"Nouvelle réservation paddock 🐎"},
+
+contents:{en:name+" — "+paddock+" "+time}
+
+})
+
+})
+
+}
+
+/* NOTIFICATIONS PERMISSION */
 
 function enableNotif(){
 
-OneSignalDeferred.push(async function(OneSignal) {
+Notification.requestPermission().then(permission=>{
 
-const permission = await OneSignal.Notifications.requestPermission();
-
-if(permission){
-alert("Notifications activées");
-notifEnabled = true;
+if(permission==="granted"){
+alert("Notifications activées")
 }
 
-});
+})
 
 }
 
@@ -195,6 +227,206 @@ d.setDate(d.getDate()+days)
 return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")
 
 }
+
+/* LOAD DAY */
+
+function loadDay(offset){
+
+currentDate=dateOffset(offset)
+
+document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"))
+
+document.getElementById("btn"+offset).classList.add("active")
+
+buildPlanning()
+
+}
+
+/* BUILD PLANNING */
+
+function buildPlanning(){
+
+if(!horaires.maison) return
+
+const paddocks=["maison","grande","beudot"]
+
+let skip={maison:0,grande:0,beudot:0}
+
+const parts=currentDate.split("-")
+const d=new Date(parts[0],parts[1]-1,parts[2])
+
+const names=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"]
+
+let jour=names[d.getDay()]
+
+let slots=[]
+
+paddocks.forEach(paddock=>{
+
+if(!horaires[paddock] || !horaires[paddock][jour]) return
+
+const config=horaires[paddock][jour]
+
+if(config.closed) return
+
+let start=parseInt(config.open.split(":")[0])
+let end=parseInt(config.close.split(":")[0])
+
+let current=start
+
+while(current < end){
+
+let hour=Math.floor(current)
+let minutes=current%1===0 ? "00":"30"
+
+let time=String(hour).padStart(2,"0")+":"+minutes
+
+slots.push(time)
+
+let reservation=reservations.find(r=>{
+
+if(r.date!==currentDate) return false
+if(r.paddock!==paddock) return false
+
+let [rh,rm]=r.time.split(":").map(Number)
+let resStart=rh+(rm/60)
+
+return resStart===current
+
+})
+
+if(reservation){
+current += reservation.duration/60
+}else{
+current += 1
+}
+
+}
+
+})
+
+slots=[...new Set(slots)]
+
+if(slots.length===0){
+slots=["--"]
+}
+
+slots.sort((a,b)=>{
+
+if(a==="--" || b==="--") return 0
+
+let [ah,am]=a.split(":").map(Number)
+let [bh,bm]=b.split(":").map(Number)
+
+return (ah*60+am)-(bh*60+bm)
+
+})
+
+let html="<tr><th>Heure</th>"
+
+paddocks.forEach(p=>html+="<th>"+p+"</th>")
+
+html+="</tr>"
+
+slots.forEach(time=>{
+
+html+="<tr>"
+html+="<td>"+time+"</td>"
+
+paddocks.forEach(p=>{
+
+if(time==="--"){
+html+="<td class='closed'>FERMÉ</td>"
+return
+}
+
+let resa=reservations.find(r=>r.date===currentDate && r.paddock===p && r.time===time)
+
+if(resa){
+
+let span=resa.duration===90?2:1
+skip[p]=span-1
+
+html+=`<td class="resa" rowspan="${span}" onclick="cancel('${resa.id}')">${resa.name}</td>`
+
+}else{
+
+if(skip[p]>0){
+skip[p]--
+return
+}
+
+html+=`<td class="free"></td>`
+
+}
+
+})
+
+html+="</tr>"
+
+})
+
+document.getElementById("planning").innerHTML=html
+
+}
+
+/* RESERVATIONS LIVE */
+
+db.collection("reservations").onSnapshot(snapshot=>{
+
+snapshot.docChanges().forEach(change=>{
+
+if(change.type==="added" && !firstLoad){
+
+let r=change.doc.data()
+
+sendPush(r.name,r.paddock,r.time)
+
+}
+
+})
+
+firstLoad=false
+
+reservations=[]
+
+snapshot.forEach(doc=>{
+
+let r=doc.data()
+r.id=doc.id
+reservations.push(r)
+
+})
+
+buildPlanning()
+
+})
+
+/* HORAIRES */
+
+db.collection("horaires").get().then(snapshot=>{
+
+snapshot.forEach(doc=>{
+horaires[doc.id]=doc.data()
+})
+
+buildPlanning()
+
+})
+
+/* ANNULATION */
+
+async function cancel(id){
+
+if(!confirm("Annuler cette réservation ?")) return
+
+await db.collection("reservations").doc(id).delete()
+
+}
+
+/* REFRESH */
+
+setInterval(buildPlanning,20000)
 
 /* INIT */
 
