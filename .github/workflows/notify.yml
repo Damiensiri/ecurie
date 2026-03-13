@@ -11,12 +11,15 @@ jobs:
 
     steps:
 
-      - name: Check reservations
+      - name: Get last reservation
         run: |
 
-          COUNT=$(curl -s "https://firestore.googleapis.com/v1/projects/ecurie-paddock/databases/(default)/documents/reservations" | grep '"name":' | wc -l)
+          DATA=$(curl -s "https://firestore.googleapis.com/v1/projects/ecurie-paddock/databases/(default)/documents/reservations")
 
-          echo "Reservations count: $COUNT"
+          NAME=$(echo "$DATA" | grep -m1 '"stringValue"' | head -1)
+
+          echo "Last reservation:"
+          echo "$NAME"
 
           curl --request POST \
           --url https://onesignal.com/api/v1/notifications \
