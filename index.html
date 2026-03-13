@@ -8,13 +8,29 @@
 
 <!-- ONESIGNAL -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-
 <script>
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 OneSignalDeferred.push(async function(OneSignal) {
 
 await OneSignal.init({
-appId: "f7a2dbe7-1664-4186-ad0c-8fa1d3431156"
+appId: "f7a2dbe7-1664-4186-ad0c-8fa1d3431156",
+
+notifyButton: {
+enable: false
+},
+
+promptOptions: {
+slidedown: {
+enabled: true,
+autoPrompt: true,
+text: {
+actionMessage: "Recevoir les notifications paddock",
+acceptButton: "Autoriser",
+cancelButton: "Non merci"
+}
+}
+}
+
 });
 
 });
@@ -163,31 +179,8 @@ const db=firebase.firestore()
 let reservations=[]
 let horaires={}
 let currentDate=""
-let notifEnabled=false
+let notifEnabled=true
 let firstLoad=true
-
-/* ONESIGNAL ABONNEMENT */
-
-function enableNotif(){
-
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-
-OneSignalDeferred.push(async function(OneSignal) {
-
-await OneSignal.Notifications.requestPermission();
-
-let subscribed = await OneSignal.User.PushSubscription.optedIn;
-
-if(subscribed){
-
-notifEnabled=true
-alert("Notifications activées")
-
-}
-
-});
-
-}
 
 /* DATE */
 
@@ -348,11 +341,11 @@ db.collection("reservations").onSnapshot(snapshot=>{
 
 snapshot.docChanges().forEach(change=>{
 
-if(change.type==="added" && notifEnabled && !firstLoad){
+if(change.type==="added" && !firstLoad){
 
 let r=change.doc.data()
 
-new Notification("Nouvelle réservation paddock",{
+new Notification("Nouvelle réservation paddock 🐎",{
 body:r.name+" — "+r.paddock+" "+r.time
 })
 
