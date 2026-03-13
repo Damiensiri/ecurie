@@ -10,12 +10,13 @@ jobs:
     steps:
       - name: Send notification
         run: |
-          curl -X POST https://onesignal.com/api/v1/notifications \
+          curl -X POST https://api.onesignal.com/notifications \
           -H "Content-Type: application/json" \
-          -H "Authorization: Basic os_v2_app_waemo7qbx5aapjdw6nstnakjtkmyjey5bg2eng43r6hl5v36oc4bfpnq5tyknltlzfmasdm3gioinri2yemutmhkzc6vqxzizu6273q" \
+          -H "Authorization: Bearer os_v2_app_waemo7qbx5aapjdw6nstnakjtkmyjey5bg2eng43r6hl5v36oc4bfpnq5tyknltlzfmasdm3gioinri2yemutmhkzc6vqxzizu6273q" \
           -d '{
             "app_id": "b008c77e-01bf-4007-a476-f3653681499a",
+            "target_channel": "push",
             "included_segments": ["Subscribed Users"],
-            "headings": {"en": "🐎 Test GitHub"},
-            "contents": {"en": "Notification envoyée depuis GitHub"}
+            "headings": { "en": "🐎 Test GitHub" },
+            "contents": { "en": "Notification envoyée depuis GitHub Actions" }
           }'
