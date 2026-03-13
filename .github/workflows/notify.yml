@@ -10,24 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check reservations
+      - name: Send test notification
         run: |
 
-          RESPONSE=$(curl -s "https://firestore.googleapis.com/v1/projects/ecurie-paddock/databases/(default)/documents/reservations")
+          echo "Sending notification to OneSignal..."
 
-          if [ -n "$RESPONSE" ]; then
-
-            echo "reservation detected"
-
-            curl --request POST \
-            --url https://onesignal.com/api/v1/notifications \
-            --header "Content-Type: application/json" \
-            --header "Authorization: Basic os_v2_app_waemo7qbx5aapjdw6nstnakjtkmyjey5bg2eng43r6hl5v36oc4bfpnq5tyknltlzfmasdm3gioinri2yemutmhkzc6vqxzizu6273q" \
-            --data '{
-              "app_id": "b008c77e-01bf-4007-a476-f3653681499a",
-              "included_segments": ["Subscribed Users"],
-              "headings": {"en": "🐎 Paddock"},
-              "contents": {"en": "Activité détectée"}
-            }'
-
-          fi
+          curl --request POST \
+          --url https://onesignal.com/api/v1/notifications \
+          --header "Content-Type: application/json" \
+          --header "Authorization: os_v2_app_waemo7qbx5aapjdw6nstnakjtkmyjey5bg2eng43r6hl5v36oc4bfpnq5tyknltlzfmasdm3gioinri2yemutmhkzc6vqxzizu6273q" \
+          --data '{
+            "app_id": "b008c77e-01bf-4007-a476-f3653681499a",
+            "included_segments": ["Subscribed Users"],
+            "headings": {"en": "🐎 Test Paddock"},
+            "contents": {"en": "Notification envoyée depuis GitHub"}
+          }'
