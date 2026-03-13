@@ -11,40 +11,20 @@ jobs:
 
     steps:
 
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
       - name: Check reservations
         run: |
 
-          RESPONSE=$(curl -s "https://firestore.googleapis.com/v1/projects/ecurie-paddock/databases/(default)/documents/reservations")
+          COUNT=$(curl -s "https://firestore.googleapis.com/v1/projects/ecurie-paddock/databases/(default)/documents/reservations" | grep '"name":' | wc -l)
 
-          echo "$RESPONSE" > data.json
+          echo "Reservations count: $COUNT"
 
-          LAST=$(cat data.json | md5sum)
-
-          if [ ! -f last.txt ]; then
-            echo $LAST > last.txt
-            exit 0
-          fi
-
-          OLD=$(cat last.txt)
-
-          if [ "$LAST" != "$OLD" ]; then
-
-            echo "change detected"
-
-            curl --request POST \
-            --url https://onesignal.com/api/v1/notifications \
-            --header "Content-Type: application/json" \
-            --header "Authorization: Basic os_v2_app_waemo7qbx5aapjdw6nstnakjtkmyjey5bg2eng43r6hl5v36oc4bfpnq5tyknltlzfmasdm3gioinri2yemutmhkzc6vqxzizu6273q" \
-            --data '{
-              "app_id": "b008c77e-01bf-4007-a476-f3653681499a",
-              "included_segments": ["Subscribed Users"],
-              "headings": {"en": "🐎 Activité paddock"},
-              "contents": {"en": "Une réservation ou annulation vient d’être faite"}
-            }'
-
-            echo $LAST > last.txt
-
-          fi
+          curl --request POST \
+          --url https://onesignal.com/api/v1/notifications \
+          --header "Content-Type: application/json" \
+          --header "Authorization: Basic os_v2_app_waemo7qbx5aapjdw6nstnakjtkmyjey5bg2eng43r6hl5v36oc4bfpnq5tyknltlzfmasdm3gioinri2yemutmhkzc6vqxzizu6273q" \
+          --data '{
+            "app_id": "b008c77e-01bf-4007-a476-f3653681499a",
+            "included_segments": ["Subscribed Users"],
+            "headings": {"en": "🐎 Activité paddock"},
+            "contents": {"en": "Une réservation ou annulation vient d’être faite"}
+          }'
