@@ -11,15 +11,18 @@
 
 <script>
 window.OneSignalDeferred = window.OneSignalDeferred || [];
+
 OneSignalDeferred.push(async function(OneSignal) {
 
-await OneSignal.init({
-appId: "f7a2dbe7-1664-4186-ad0c-8fa1d3431156",
+  await OneSignal.init({
+    appId: "f7a2dbe7-1664-4186-ad0c-8fa1d3431156",
 
-serviceWorkerPath: "OneSignalSDKWorker.js",
-serviceWorkerParam: { scope: "/ecurie/" }
+    serviceWorkerPath: "/ecurie/OneSignalSDKWorker.js",
+    serviceWorkerUpdaterPath: "/ecurie/OneSignalSDKWorker.js",
 
-});
+    serviceWorkerParam: { scope: "/ecurie/" }
+
+  });
 
 });
 </script>
