@@ -11,7 +11,6 @@
 
 <script>
 window.OneSignalDeferred = window.OneSignalDeferred || [];
-
 OneSignalDeferred.push(async function(OneSignal) {
 
 await OneSignal.init({
@@ -167,30 +166,26 @@ let currentDate=""
 let notifEnabled=false
 let firstLoad=true
 
-/* ONESIGNAL NOTIFICATIONS */
-
-function sendNotification(title,message){
-
-if(!("Notification" in window)) return
-
-if(Notification.permission==="granted"){
-new Notification(title,{body:message})
-}
-
-}
-
-/* ENABLE NOTIF */
+/* ONESIGNAL ABONNEMENT */
 
 function enableNotif(){
 
-Notification.requestPermission().then(permission=>{
+window.OneSignalDeferred = window.OneSignalDeferred || [];
 
-if(permission==="granted"){
+OneSignalDeferred.push(async function(OneSignal) {
+
+await OneSignal.Notifications.requestPermission();
+
+let subscribed = await OneSignal.User.PushSubscription.optedIn;
+
+if(subscribed){
+
 notifEnabled=true
 alert("Notifications activées")
+
 }
 
-})
+});
 
 }
 
@@ -353,27 +348,13 @@ db.collection("reservations").onSnapshot(snapshot=>{
 
 snapshot.docChanges().forEach(change=>{
 
-let r = change.doc.data()
+if(change.type==="added" && notifEnabled && !firstLoad){
 
-if(!firstLoad && notifEnabled){
+let r=change.doc.data()
 
-if(change.type==="added"){
-
-sendNotification(
-"Nouvelle réservation paddock 🐎",
-r.name+" — "+r.paddock+" "+r.time
-)
-
-}
-
-if(change.type==="removed"){
-
-sendNotification(
-"Réservation annulée",
-r.name+" — "+r.paddock+" "+r.time
-)
-
-}
+new Notification("Nouvelle réservation paddock",{
+body:r.name+" — "+r.paddock+" "+r.time
+})
 
 }
 
@@ -384,9 +365,11 @@ firstLoad=false
 reservations=[]
 
 snapshot.forEach(doc=>{
+
 let r=doc.data()
 r.id=doc.id
 reservations.push(r)
+
 })
 
 buildPlanning()
