@@ -8,12 +8,19 @@
 
 <!-- ONESIGNAL -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+
 <script>
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 OneSignalDeferred.push(async function(OneSignal) {
+
 await OneSignal.init({
-appId: "f7a2dbe7-1664-4186-ad0c-8fa1d3431156"
+appId: "f7a2dbe7-1664-4186-ad0c-8fa1d3431156",
+
+serviceWorkerPath: "OneSignalSDKWorker.js",
+serviceWorkerParam: { scope: "/ecurie/" }
+
 });
+
 });
 </script>
 
@@ -34,15 +41,9 @@ justify-content:space-between;
 align-items:center;
 }
 
-header h1{
-margin:0;
-font-size:18px;
-}
+header h1{margin:0;font-size:18px;}
 
-.icons{
-display:flex;
-gap:10px;
-}
+.icons{display:flex;gap:10px;}
 
 .icons button{
 font-size:18px;
@@ -54,9 +55,7 @@ color:white;
 cursor:pointer;
 }
 
-.container{
-padding:15px;
-}
+.container{padding:15px;}
 
 .card{
 background:#1c1f26;
@@ -64,11 +63,7 @@ border-radius:15px;
 padding:15px;
 }
 
-.tabs{
-display:flex;
-gap:10px;
-margin-bottom:10px;
-}
+.tabs{display:flex;gap:10px;margin-bottom:10px;}
 
 .tabs button{
 padding:8px 12px;
@@ -172,44 +167,17 @@ const db=firebase.firestore()
 let reservations=[]
 let horaires={}
 let currentDate=""
+let notifEnabled=false
 let firstLoad=true
 
-/* ONESIGNAL PUSH */
-
-function sendPush(name,paddock,time){
-
-fetch("https://onesignal.com/api/v1/notifications",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json",
-"Authorization":"Basic os_v2_app_66rnxzywmraynlimr6q5gqyrk2eftbcjmuoe63fvg3ifj7qpobdhmfl46wdae3ztea5yulku2jaubeapob635ympine3wf6vcx3xg6q"
-},
-
-body:JSON.stringify({
-
-app_id:"f7a2dbe7-1664-4186-ad0c-8fa1d3431156",
-
-included_segments:["Subscribed Users"],
-
-headings:{en:"Nouvelle réservation paddock 🐎"},
-
-contents:{en:name+" — "+paddock+" "+time}
-
-})
-
-})
-
-}
-
-/* NOTIFICATIONS PERMISSION */
+/* NOTIFICATIONS */
 
 function enableNotif(){
 
 Notification.requestPermission().then(permission=>{
 
 if(permission==="granted"){
+notifEnabled=true
 alert("Notifications activées")
 }
 
@@ -370,17 +338,19 @@ document.getElementById("planning").innerHTML=html
 
 }
 
-/* RESERVATIONS LIVE */
+/* RESERVATIONS */
 
 db.collection("reservations").onSnapshot(snapshot=>{
 
 snapshot.docChanges().forEach(change=>{
 
-if(change.type==="added" && !firstLoad){
+if(change.type==="added" && notifEnabled && !firstLoad){
 
 let r=change.doc.data()
 
-sendPush(r.name,r.paddock,r.time)
+new Notification("Nouvelle réservation paddock",{
+body:r.name+" — "+r.paddock+" "+r.time
+})
 
 }
 
