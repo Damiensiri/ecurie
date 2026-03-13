@@ -1,33 +1,23 @@
-name: Firebase Reservation Watcher
+name: OneSignal Test Push
 
 on:
-  schedule:
-    - cron: "*/1 * * * *"
   workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"   # toutes les 5 minutes pour le test
 
 jobs:
-  check:
+  push:
     runs-on: ubuntu-latest
 
     steps:
-
-      - name: Get last reservation
+      - name: Send OneSignal test notification
         run: |
-
-          DATA=$(curl -s "https://firestore.googleapis.com/v1/projects/ecurie-paddock/databases/(default)/documents/reservations")
-
-          NAME=$(echo "$DATA" | grep -m1 '"stringValue"' | head -1)
-
-          echo "Last reservation:"
-          echo "$NAME"
-
-          curl --request POST \
-          --url https://onesignal.com/api/v1/notifications \
-          --header "Content-Type: application/json" \
-          --header "Authorization: Basic os_v2_app_waemo7qbx5aapjdw6nstnakjtkmyjey5bg2eng43r6hl5v36oc4bfpnq5tyknltlzfmasdm3gioinri2yemutmhkzc6vqxzizu6273q" \
-          --data '{
+          curl -X POST "https://onesignal.com/api/v1/notifications" \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Basic os_v2_app_waemo7qbx5aapjdw6nstnakjtkmyjey5bg2eng43r6hl5v36oc4bfpnq5tyknltlzfmasdm3gioinri2yemutmhkzc6vqxzizu6273q" \
+          -d '{
             "app_id": "b008c77e-01bf-4007-a476-f3653681499a",
             "included_segments": ["Subscribed Users"],
-            "headings": {"en": "🐎 Activité paddock"},
-            "contents": {"en": "Une réservation ou annulation vient d’être faite"}
+            "headings": {"en": "🔔 Test GitHub Action"},
+            "contents": {"en": "Si tu vois ça, GitHub → OneSignal fonctionne"}
           }'
