@@ -8,16 +8,16 @@
 
 <!-- ONESIGNAL -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+
 <script>
 window.OneSignalDeferred = window.OneSignalDeferred || [];
+
 OneSignalDeferred.push(async function(OneSignal) {
 
 await OneSignal.init({
-appId: "f7a2dbe7-1664-4186-ad0c-8fa1d3431156",
+appId: "b008c77e-01bf-4007-a476-f3653681499a",
 
-notifyButton: {
-enable: false
-},
+notifyButton: { enable: false },
 
 promptOptions: {
 slidedown: {
@@ -116,7 +116,7 @@ padding:6px;
 <h1>🐎 Backstage</h1>
 
 <div class="icons">
-<button onclick="enableNotif()">🔔</button>
+<button>🔔</button>
 <button onclick="location.href='https://app.damiensiri.com/planningpaddock.html'">🐎</button>
 <button onclick="location.href='horaires.html'">⚙️</button>
 </div>
@@ -179,7 +179,6 @@ const db=firebase.firestore()
 let reservations=[]
 let horaires={}
 let currentDate=""
-let notifEnabled=true
 let firstLoad=true
 
 /* DATE */
