@@ -6,22 +6,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  check:
+  notify:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Send test notification
+      - name: Send OneSignal Test Notification
         run: |
 
-          echo "Sending notification to OneSignal..."
+          echo "Sending test notification..."
 
-          curl --request POST \
-          --url https://onesignal.com/api/v1/notifications \
-          --header "Content-Type: application/json" \
-          --header "Authorization: os_v2_app_waemo7qbx5aapjdw6nstnakjtkmyjey5bg2eng43r6hl5v36oc4bfpnq5tyknltlzfmasdm3gioinri2yemutmhkzc6vqxzizu6273q" \
-          --data '{
+          curl -X POST https://onesignal.com/api/v1/notifications \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Basic os_v2_app_waemo7qbx5aapjdw6nstnakjtkmyjey5bg2eng43r6hl5v36oc4bfpnq5tyknltlzfmasdm3gioinri2yemutmhkzc6vqxzizu6273q" \
+          -d '{
             "app_id": "b008c77e-01bf-4007-a476-f3653681499a",
             "included_segments": ["Subscribed Users"],
-            "headings": {"en": "🐎 Test Paddock"},
-            "contents": {"en": "Notification envoyée depuis GitHub"}
+            "headings": {"en": "🐎 Test paddock"},
+            "contents": {"en": "Notification GitHub Action"}
           }'
