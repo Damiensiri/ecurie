@@ -6,36 +6,6 @@
 
 <title>Backstage Écurie</title>
 
-<!-- ONESIGNAL -->
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-
-<script>
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-
-OneSignalDeferred.push(async function(OneSignal) {
-
-await OneSignal.init({
-appId: "b008c77e-01bf-4007-a476-f3653681499a",
-
-notifyButton: { enable: false },
-
-promptOptions: {
-slidedown: {
-enabled: true,
-autoPrompt: true,
-text: {
-actionMessage: "Recevoir les notifications paddock",
-acceptButton: "Autoriser",
-cancelButton: "Non merci"
-}
-}
-}
-
-});
-
-});
-</script>
-
 <style>
 
 body{
