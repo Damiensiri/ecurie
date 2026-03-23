@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ADMIN CONTROL PRO</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+margin:0;
+font-family:'Montserrat',sans-serif;
+background:#0f1115;
+color:white;
+}
+
+/* HEADER */
+
+header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px;
+background:#181E3B;
+position:sticky;
+top:0;
+z-index:10;
+}
+
+.live{color:#2ecc71;font-size:12px}
+
+/* STATS */
+
+.stats{
+display:flex;
+gap:10px;
+padding:10px;
+}
+
+.stat{
+flex:1;
+background:#1c1f26;
+padding:10px;
+border-radius:12px;
+text-align:center;
+}
+
+/* GRID */
+
+.grid{
+display:flex;
+gap:10px;
+padding:10px;
+overflow-x:auto;
+}
+
+.col{
+min-width:250px;
+background:#1c1f26;
+border-radius:16px;
+padding:10px;
+}
+
+.col h3{
+margin:0 0 10px 0;
+}
+
+/* SLOT */
+
+.slot{
+padding:8px;
+border-bottom:1px solid #333;
+border-radius:8px;
+margin-bottom:4px;
+}
+
+.free{color:#2ecc71}
+.reserved{color:#e74c3c}
+.past{opacity:0.4}
+
+button{
+background:#e74c3c;
+border:none;
+padding:4px 8px;
+border-radius:6px;
+color:white;
+}
+
+/* DRAG */
+
+.dragging{
+opacity:0.5;
+}
+
+/* URGENCE */
+
+.urgence{
+margin:10px;
+padding:12px;
+background:#c0392b;
+text-align:center;
+border-radius:12px;
+cursor:pointer;
+font-weight:700;
+}
+
+/* HORAIRES */
+
+.horaires{
+padding:10px;
+}
+
+select{
+width:100%;
+margin-bottom:6px;
+padding:6px;
+border-radius:8px;
+background:#252a33;
+color:white;
+border:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+<div>ADMIN PRO</div>
+<div class="live">● LIVE</div>
+</header>
+
+<div class="stats" id="stats"></div>
+
+<div class="urgence" onclick="resetDay()">
+🚨 MODE URGENCE (vider aujourd’hui)
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="horaires" id="horaires"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+
+/* FIREBASE */
+
+firebase.initializeApp({
+apiKey:"AIza...",
+projectId:"ecurie-paddock"
+})
+
+const db=firebase.firestore()
+
+let reservations=[]
+let horaires={}
+
+const paddocks=["maison","grande","beudot"]
+
+/* LOAD */
+
+db.collection("reservations").onSnapshot(snap=>{
+reservations=[]
+snap.forEach(doc=>{
+let d=doc.data()
+d.id=doc.id
+reservations.push(d)
+})
+render()
+})
+
+db.collection("horaires").onSnapshot(snap=>{
+horaires={}
+snap.forEach(doc=>{
+horaires[doc.id]=doc.data()
+})
+render()
+})
+
+/* RENDER GLOBAL */
+
+function render(){
+renderStats()
+renderGrid()
+renderHoraires()
+}
+
+/* STATS */
+
+function renderStats(){
+
+let today = getToday()
+
+let total = reservations.filter(r=>r.date===today).length
+
+document.getElementById("stats").innerHTML=`
+<div class="stat">Réservations<br>${total}</div>
+<div class="stat">Paddocks<br>${paddocks.length}</div>
+`
+
+}
+
+/* GRID MULTI */
+
+function renderGrid(){
+
+let grid=document.getElementById("grid")
+grid.innerHTML=""
+
+let today=getToday()
+let now=new Date()
+
+paddocks.forEach(p=>{
+
+let col=document.createElement("div")
+col.className="col"
+col.innerHTML=`<h3>${p}</h3>`
+
+let dayName=getDayName()
+
+let open=parseInt(horaires[p]?.[dayName]?.open?.split(":")[0]||8)
+let close=parseInt(horaires[p]?.[dayName]?.close?.split(":")[0]||18)
+
+for(let h=open;h<close;h++){
+
+let time=pad(h)+":00"
+
+let slotTime=new Date()
+slotTime.setHours(h,0,0)
+
+let isPast=slotTime<now
+
+let res=reservations.find(r=>r.date===today && r.time===time && r.paddock===p)
+
+let div=document.createElement("div")
+div.className="slot"
+
+if(isPast) div.classList.add("past")
+
+if(res){
+
+div.classList.add("reserved")
+
+div.innerHTML=`
+${time} - ${res.name}
+<button onclick="cancel('${res.id}')">X</button>
+`
+
+div.draggable=true
+div.ontouchstart=e=>startDrag(e,res)
+
+}else{
+
+div.classList.add("free")
+div.innerHTML=`${time} libre`
+
+div.ontouchend=e=>dropSlot(e,p,time)
+
+}
+
+col.appendChild(div)
+
+}
+
+grid.appendChild(col)
+
+})
+
+}
+
+/* DRAG MOBILE */
+
+let dragged=null
+
+function startDrag(e,res){
+dragged=res
+}
+
+function dropSlot(e,paddock,time){
+
+if(!dragged) return
+
+db.collection("reservations").doc(dragged.id).update({
+paddock:paddock,
+time:time
+})
+
+dragged=null
+
+}
+
+/* CANCEL */
+
+function cancel(id){
+if(confirm("Annuler ?")){
+db.collection("reservations").doc(id).delete()
+}
+}
+
+/* URGENCE */
+
+function resetDay(){
+
+if(!confirm("Tout supprimer aujourd’hui ?")) return
+
+let today=getToday()
+
+reservations.forEach(r=>{
+if(r.date===today){
+db.collection("reservations").doc(r.id).delete()
+}
+})
+
+}
+
+/* HORAIRES */
+
+function renderHoraires(){
+
+let html="<h3>Horaires</h3>"
+
+paddocks.forEach(p=>{
+
+html+=`<div><b>${p}</b>
+<select onchange="updateHoraire('${p}',this.value)">
+<option value="8">8h</option>
+<option value="9">9h</option>
+<option value="10">10h</option>
+</select>
+</div>`
+
+})
+
+document.getElementById("horaires").innerHTML=html
+
+}
+
+function updateHoraire(p,value){
+
+let day=getDayName()
+
+db.collection("horaires").doc(p).update({
+[day]:{open:value+":00",close:"20:00"}
+})
+
+}
+
+/* UTILS */
+
+function getToday(){
+
+let d=new Date()
+return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())
+
+}
+
+function getDayName(){
+
+const days=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"]
+return days[new Date().getDay()]
+
+}
+
+function pad(n){
+return String(n).padStart(2,"0")
+}
+
+</script>
+
+</body>
+</html>
