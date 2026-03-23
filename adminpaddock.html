@@ -30,7 +30,26 @@ top:0;
 z-index:10;
 }
 
-.live{color:#2ecc71;font-size:12px}
+/* DAYS */
+
+.days{
+display:flex;
+gap:8px;
+padding:10px;
+}
+
+.dayBtn{
+flex:1;
+background:#1c1f26;
+padding:10px;
+border-radius:10px;
+text-align:center;
+cursor:pointer;
+}
+
+.dayBtn.active{
+background:#2e7d32;
+}
 
 /* STATS */
 
@@ -48,6 +67,18 @@ border-radius:12px;
 text-align:center;
 }
 
+/* URGENCE */
+
+.urgence{
+margin:10px;
+padding:12px;
+background:#c0392b;
+text-align:center;
+border-radius:12px;
+cursor:pointer;
+font-weight:700;
+}
+
 /* GRID */
 
 .grid{
@@ -58,7 +89,7 @@ overflow-x:auto;
 }
 
 .col{
-min-width:250px;
+min-width:260px;
 background:#1c1f26;
 border-radius:16px;
 padding:10px;
@@ -66,6 +97,9 @@ padding:10px;
 
 .col h3{
 margin:0 0 10px 0;
+display:flex;
+justify-content:space-between;
+align-items:center;
 }
 
 /* SLOT */
@@ -87,24 +121,7 @@ border:none;
 padding:4px 8px;
 border-radius:6px;
 color:white;
-}
-
-/* DRAG */
-
-.dragging{
-opacity:0.5;
-}
-
-/* URGENCE */
-
-.urgence{
-margin:10px;
-padding:12px;
-background:#c0392b;
-text-align:center;
-border-radius:12px;
 cursor:pointer;
-font-weight:700;
 }
 
 /* HORAIRES */
@@ -114,13 +131,27 @@ padding:10px;
 }
 
 select{
-width:100%;
-margin-bottom:6px;
-padding:6px;
-border-radius:8px;
 background:#252a33;
 color:white;
 border:none;
+padding:6px;
+border-radius:6px;
+margin-bottom:6px;
+width:100%;
+}
+
+.closed{
+background:#c0392b;
+padding:4px 8px;
+border-radius:6px;
+cursor:pointer;
+font-size:12px;
+display:inline-block;
+margin-bottom:5px;
+}
+
+.closed.off{
+background:#2e7d32;
 }
 
 </style>
@@ -130,13 +161,15 @@ border:none;
 
 <header>
 <div>ADMIN PRO</div>
-<div class="live">● LIVE</div>
+<div>● LIVE</div>
 </header>
+
+<div class="days" id="days"></div>
 
 <div class="stats" id="stats"></div>
 
-<div class="urgence" onclick="resetDay()">
-🚨 MODE URGENCE (vider aujourd’hui)
+<div class="urgence" onclick="resetAll()">
+🚨 VIDER TOUS LES PADDOCKS (jour sélectionné)
 </div>
 
 <div class="grid" id="grid"></div>
@@ -159,8 +192,18 @@ const db=firebase.firestore()
 
 let reservations=[]
 let horaires={}
+let selectedDate=null
+let knownIds=JSON.parse(localStorage.getItem("knownIds")||"[]")
 
 const paddocks=["maison","grande","beudot"]
+
+/* INIT */
+
+buildDays()
+
+if("Notification" in window){
+Notification.requestPermission()
+}
 
 /* LOAD */
 
@@ -171,6 +214,7 @@ let d=doc.data()
 d.id=doc.id
 reservations.push(d)
 })
+notify()
 render()
 })
 
@@ -182,7 +226,44 @@ horaires[doc.id]=doc.data()
 render()
 })
 
-/* RENDER GLOBAL */
+/* DAYS */
+
+function buildDays(){
+
+const container=document.getElementById("days")
+
+for(let i=0;i<3;i++){
+
+let d=new Date()
+d.setDate(d.getDate()+i)
+
+let label=i===0?"Aujourd’hui":i===1?"Demain":"Après"
+
+let date=formatDate(d)
+
+let btn=document.createElement("div")
+btn.className="dayBtn"
+btn.innerText=label
+
+btn.onclick=()=>{
+selectedDate=date
+document.querySelectorAll(".dayBtn").forEach(b=>b.classList.remove("active"))
+btn.classList.add("active")
+render()
+}
+
+container.appendChild(btn)
+
+if(i===0){
+btn.classList.add("active")
+selectedDate=date
+}
+
+}
+
+}
+
+/* RENDER */
 
 function render(){
 renderStats()
@@ -194,9 +275,7 @@ renderHoraires()
 
 function renderStats(){
 
-let today = getToday()
-
-let total = reservations.filter(r=>r.date===today).length
+let total = reservations.filter(r=>r.date===selectedDate).length
 
 document.getElementById("stats").innerHTML=`
 <div class="stat">Réservations<br>${total}</div>
@@ -205,37 +284,48 @@ document.getElementById("stats").innerHTML=`
 
 }
 
-/* GRID MULTI */
+/* GRID */
 
 function renderGrid(){
 
 let grid=document.getElementById("grid")
 grid.innerHTML=""
 
-let today=getToday()
 let now=new Date()
+let dayName=getDayNameFromDate(selectedDate)
 
 paddocks.forEach(p=>{
 
 let col=document.createElement("div")
 col.className="col"
-col.innerHTML=`<h3>${p}</h3>`
 
-let dayName=getDayName()
+col.innerHTML=`
+<h3>
+${p}
+<button onclick="resetPaddock('${p}')">🧨</button>
+</h3>
+`
 
-let open=parseInt(horaires[p]?.[dayName]?.open?.split(":")[0]||8)
-let close=parseInt(horaires[p]?.[dayName]?.close?.split(":")[0]||18)
+let config=horaires[p]?.[dayName]
+
+if(!config || config.closed){
+col.innerHTML += "<div>Fermé</div>"
+grid.appendChild(col)
+return
+}
+
+let open=parseInt(config.open.split(":")[0])
+let close=parseInt(config.close.split(":")[0])
 
 for(let h=open;h<close;h++){
 
 let time=pad(h)+":00"
 
-let slotTime=new Date()
-slotTime.setHours(h,0,0)
+let slotTime=new Date(selectedDate+"T"+time)
 
 let isPast=slotTime<now
 
-let res=reservations.find(r=>r.date===today && r.time===time && r.paddock===p)
+let res=reservations.find(r=>r.date===selectedDate && r.time===time && r.paddock===p)
 
 let div=document.createElement("div")
 div.className="slot"
@@ -251,15 +341,14 @@ ${time} - ${res.name}
 <button onclick="cancel('${res.id}')">X</button>
 `
 
-div.draggable=true
-div.ontouchstart=e=>startDrag(e,res)
+div.ontouchstart=()=>dragged=res
 
 }else{
 
 div.classList.add("free")
 div.innerHTML=`${time} libre`
 
-div.ontouchend=e=>dropSlot(e,p,time)
+div.ontouchend=()=>dropSlot(p,time)
 
 }
 
@@ -273,20 +362,16 @@ grid.appendChild(col)
 
 }
 
-/* DRAG MOBILE */
+/* DRAG */
 
 let dragged=null
 
-function startDrag(e,res){
-dragged=res
-}
-
-function dropSlot(e,paddock,time){
+function dropSlot(p,time){
 
 if(!dragged) return
 
 db.collection("reservations").doc(dragged.id).update({
-paddock:paddock,
+paddock:p,
 time:time
 })
 
@@ -304,66 +389,121 @@ db.collection("reservations").doc(id).delete()
 
 /* URGENCE */
 
-function resetDay(){
+function resetAll(){
 
-if(!confirm("Tout supprimer aujourd’hui ?")) return
-
-let today=getToday()
+if(!confirm("Tout supprimer ce jour ?")) return
 
 reservations.forEach(r=>{
-if(r.date===today){
+if(r.date===selectedDate){
 db.collection("reservations").doc(r.id).delete()
 }
 })
 
 }
 
-/* HORAIRES */
+function resetPaddock(p){
 
-function renderHoraires(){
+if(!confirm("Vider "+p+" ?")) return
 
-let html="<h3>Horaires</h3>"
-
-paddocks.forEach(p=>{
-
-html+=`<div><b>${p}</b>
-<select onchange="updateHoraire('${p}',this.value)">
-<option value="8">8h</option>
-<option value="9">9h</option>
-<option value="10">10h</option>
-</select>
-</div>`
-
+reservations.forEach(r=>{
+if(r.date===selectedDate && r.paddock===p){
+db.collection("reservations").doc(r.id).delete()
+}
 })
-
-document.getElementById("horaires").innerHTML=html
 
 }
 
-function updateHoraire(p,value){
+/* NOTIF */
 
-let day=getDayName()
+function notify(){
 
-db.collection("horaires").doc(p).update({
-[day]:{open:value+":00",close:"20:00"}
+let newOnes = reservations.filter(r=>!knownIds.includes(r.id))
+
+newOnes.forEach(r=>{
+new Notification("Nouvelle réservation 🐴",{
+body: `${r.name} - ${r.paddock} ${r.time}`
+})
 })
 
+knownIds = reservations.map(r=>r.id)
+localStorage.setItem("knownIds", JSON.stringify(knownIds))
+
+}
+
+/* HORAIRES (TA LOGIQUE) */
+
+function renderHoraires(){
+
+let container=document.getElementById("horaires")
+container.innerHTML="<h3>Horaires</h3>"
+
+paddocks.forEach(p=>{
+
+container.innerHTML+=`<div><b>${p}</b><div id="h_${p}"></div></div>`
+
+buildHorairesUI(p)
+
+})
+
+}
+
+function buildHorairesUI(p){
+
+const days=["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"]
+
+let html=""
+
+days.forEach(day=>{
+
+let data=horaires[p]?.[day] || {open:"08:00",close:"19:00",closed:false}
+
+html+=`
+<div>
+<div class="closed ${data.closed?'':'off'}" onclick="toggleClosed(this)">
+${data.closed?"Fermé":"Ouvert"}
+</div>
+
+<select class="open">
+${hourOptions()}
+</select>
+
+<select class="close">
+${hourOptions()}
+</select>
+</div>
+`
+
+})
+
+document.getElementById("h_"+p).innerHTML=html
+
+}
+
+function hourOptions(){
+
+let html=""
+for(let h=6;h<=22;h++){
+let hh=pad(h)
+html+=`<option value="${hh}:00">${hh}:00</option>`
+}
+return html
+
+}
+
+function toggleClosed(btn){
+btn.classList.toggle("off")
+btn.innerText = btn.classList.contains("off") ? "Ouvert" : "Fermé"
 }
 
 /* UTILS */
 
-function getToday(){
-
-let d=new Date()
+function formatDate(d){
 return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())
-
 }
 
-function getDayName(){
-
+function getDayNameFromDate(date){
 const days=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"]
-return days[new Date().getDay()]
-
+return days[new Date(date).getDay()]
 }
 
 function pad(n){
