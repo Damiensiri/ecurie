@@ -143,7 +143,6 @@ appId:"1:501153278739:web:824b4344c381f2a94548e6"
 }
 
 firebase.initializeApp(firebaseConfig)
-
 const db=firebase.firestore()
 
 let reservations=[]
@@ -154,12 +153,10 @@ let firstLoad=true
 /* DATE */
 
 function dateOffset(days){
-
 let d=new Date()
 d.setDate(d.getDate()+days)
 
 return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")
-
 }
 
 /* LOAD DAY */
@@ -169,11 +166,37 @@ function loadDay(offset){
 currentDate=dateOffset(offset)
 
 document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"))
-
 document.getElementById("btn"+offset).classList.add("active")
 
 buildPlanning()
+}
 
+/* CHECK OUVERTURE PAR PADDOCK */
+
+function isOpen(paddock, time){
+
+if(!horaires[paddock]) return false
+
+const parts=currentDate.split("-")
+const d=new Date(parts[0],parts[1]-1,parts[2])
+
+const names=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"]
+let jour=names[d.getDay()]
+
+const config=horaires[paddock][jour]
+
+if(!config || config.closed) return false
+
+let [h,m]=time.split(":").map(Number)
+let current=h+(m/60)
+
+let [oh,om]=config.open.split(":").map(Number)
+let start=oh+(om/60)
+
+let [ch,cm]=config.close.split(":").map(Number)
+let end=ch+(cm/60)
+
+return current>=start && current<end
 }
 
 /* BUILD PLANNING */
@@ -190,7 +213,6 @@ const parts=currentDate.split("-")
 const d=new Date(parts[0],parts[1]-1,parts[2])
 
 const names=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"]
-
 let jour=names[d.getDay()]
 
 let slots=[]
@@ -203,8 +225,11 @@ const config=horaires[paddock][jour]
 
 if(config.closed) return
 
-let start=parseInt(config.open.split(":")[0])
-let end=parseInt(config.close.split(":")[0])
+let [oh,om]=config.open.split(":").map(Number)
+let start=oh+(om/60)
+
+let [ch,cm]=config.close.split(":").map(Number)
+let end=ch+(cm/60)
 
 let current=start
 
@@ -274,6 +299,12 @@ html+="<td class='closed'>FERMÉ</td>"
 return
 }
 
+/* 🔥 CHECK OUVERTURE */
+if(!isOpen(p,time)){
+html+="<td class='closed'>FERMÉ</td>"
+return
+}
+
 let resa=reservations.find(r=>r.date===currentDate && r.paddock===p && r.time===time)
 
 if(resa){
@@ -304,7 +335,7 @@ document.getElementById("planning").innerHTML=html
 
 }
 
-/* FIREBASE LISTENER */
+/* FIREBASE RESERVATIONS LIVE */
 
 db.collection("reservations").onSnapshot(snapshot=>{
 
@@ -327,20 +358,20 @@ firstLoad=false
 reservations=[]
 
 snapshot.forEach(doc=>{
-
 let r=doc.data()
 r.id=doc.id
 reservations.push(r)
-
 })
 
 buildPlanning()
 
 })
 
-/* HORAIRES */
+/* 🔥 FIREBASE HORAIRES LIVE */
 
-db.collection("horaires").get().then(snapshot=>{
+db.collection("horaires").onSnapshot(snapshot=>{
+
+horaires={}
 
 snapshot.forEach(doc=>{
 horaires[doc.id]=doc.data()
@@ -359,10 +390,6 @@ if(!confirm("Annuler cette réservation ?")) return
 await db.collection("reservations").doc(id).delete()
 
 }
-
-/* REFRESH */
-
-setInterval(buildPlanning,20000)
 
 /* INIT */
 
