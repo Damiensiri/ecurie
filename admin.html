@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ADMIN PADDOCKS PRO</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+margin:0;
+font-family:'Montserrat',sans-serif;
+background:#0f1115;
+color:white;
+}
+
+header{
+background:#181E3B;
+padding:15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.container{padding:15px;}
+
+.card{
+background:#1c1f26;
+border-radius:15px;
+padding:15px;
+margin-bottom:15px;
+}
+
+/* TABS */
+
+.tabs{display:flex;gap:10px;margin-bottom:10px;}
+
+.tabs button{
+padding:8px 12px;
+border:none;
+border-radius:8px;
+background:#181E3B;
+color:white;
+cursor:pointer;
+}
+
+.tabs button.active{
+background:#2ecc71;
+color:black;
+}
+
+/* TABLE */
+
+table{
+width:100%;
+border-collapse:collapse;
+text-align:center;
+}
+
+td,th{
+border:1px solid #333;
+padding:6px;
+}
+
+.free{background:#2ecc71;cursor:pointer;}
+.resa{background:#e74c3c;cursor:pointer;}
+.closed{background:#555;color:#bbb;}
+
+/* HORAIRES */
+
+.dayRow{
+margin-bottom:12px;
+border-bottom:1px solid #333;
+padding-bottom:10px;
+}
+
+.row{
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+select{
+background:#252a33;
+color:white;
+border:none;
+padding:6px;
+border-radius:6px;
+}
+
+.closedBtn{
+padding:4px 8px;
+border-radius:6px;
+cursor:pointer;
+}
+
+.closedBtn.open{background:#2ecc71;}
+.closedBtn.closed{background:#e74c3c;}
+
+button{
+padding:10px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+margin-top:10px;
+}
+
+.save{background:#2ecc71;}
+
+.urgence{background:#c0392b;}
+
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>🐎 Admin paddocks</h1>
+</header>
+
+<div class="container">
+
+<!-- PLANNING -->
+
+<div class="card">
+
+<div class="tabs">
+<button id="btn0" onclick="loadDay(0)">Aujourd'hui</button>
+<button id="btn1" onclick="loadDay(1)">Demain</button>
+<button id="btn2" onclick="loadDay(2)">Après</button>
+</div>
+
+<button class="urgence" onclick="resetAll()">🚨 Vider tout</button>
+
+<table id="planning"></table>
+
+</div>
+
+<!-- HORAIRES -->
+
+<div class="card">
+
+<div class="tabs">
+<button onclick="switchTab('maison',event)" class="active">Maison</button>
+<button onclick="switchTab('grande',event)">Grande</button>
+<button onclick="switchTab('beudot',event)">Beudot</button>
+</div>
+
+<div id="days"></div>
+
+<button class="save" onclick="save()">Sauvegarder</button>
+
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+
+/* FIREBASE */
+
+firebase.initializeApp({
+apiKey:"AIza...",
+projectId:"ecurie-paddock"
+})
+
+const db=firebase.firestore()
+
+let reservations=[]
+let horaires={}
+let currentDate=""
+let paddock="maison"
+
+/* DATE */
+
+function dateOffset(d){
+let x=new Date()
+x.setDate(x.getDate()+d)
+return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0")
+}
+
+function loadDay(i){
+currentDate=dateOffset(i)
+
+document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"))
+document.getElementById("btn"+i).classList.add("active")
+
+buildPlanning()
+}
+
+/* SAFE TIME */
+
+function normalize(t){
+let [h,m]=t.split(":").map(Number)
+return String(h).padStart(2,"0")+":"+(m||0).toString().padStart(2,"0")
+}
+
+/* PLANNING */
+
+function buildPlanning(){
+
+if(!horaires.maison) return
+
+const paddocks=["maison","grande","beudot"]
+
+let html="<tr><th>Heure</th>"
+paddocks.forEach(p=>html+="<th>"+p+"</th>")
+html+="</tr>"
+
+for(let h=6;h<=22;h++){
+
+let time=String(h).padStart(2,"0")+":00"
+
+html+="<tr><td>"+time+"</td>"
+
+paddocks.forEach(p=>{
+
+let resa=reservations.find(r=>r.date===currentDate && r.paddock===p && normalize(r.time)===time)
+
+if(resa){
+html+=`<td class="resa" onclick="cancel('${resa.id}')">${resa.name}</td>`
+}else{
+html+=`<td class="free" onclick="book('${p}','${time}')"></td>`
+}
+
+})
+
+html+="</tr>"
+}
+
+document.getElementById("planning").innerHTML=html
+}
+
+/* BOOK */
+
+function book(p,time){
+let name=prompt("Nom ?")
+if(!name) return
+
+db.collection("reservations").add({
+name,
+paddock:p,
+date:currentDate,
+time,
+duration:60
+})
+}
+
+/* CANCEL */
+
+function cancel(id){
+if(confirm("Annuler ?")){
+db.collection("reservations").doc(id).delete()
+}
+}
+
+/* RESET */
+
+function resetAll(){
+if(!confirm("Tout supprimer ?")) return
+reservations.forEach(r=>{
+if(r.date===currentDate){
+db.collection("reservations").doc(r.id).delete()
+}
+})
+}
+
+/* HORAIRES */
+
+const daysList=["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"]
+
+function switchTab(p,e){
+paddock=p
+document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"))
+e.target.classList.add("active")
+
+let data=horaires[paddock]
+buildHoraires(data)
+}
+
+function buildHoraires(data){
+
+const container=document.getElementById("days")
+container.innerHTML=""
+
+daysList.forEach(day=>{
+
+let d=data[day]
+
+container.innerHTML+=`
+<div class="dayRow">
+<div>${day}</div>
+
+<div class="row">
+<div class="closedBtn ${d.closed?'closed':'open'}" onclick="toggle(this)">
+${d.closed?"Fermé":"Ouvert"}
+</div>
+
+<select class="open">${options()}</select>
+<select class="close">${options()}</select>
+
+</div>
+</div>
+`
+})
+
+setTimeout(()=>{
+document.querySelectorAll(".dayRow").forEach((row,i)=>{
+let d=data[daysList[i]]
+row.querySelector(".open").value=d.open
+row.querySelector(".close").value=d.close
+})
+},0)
+}
+
+function options(){
+let h=""
+for(let i=6;i<=22;i++){
+let hh=String(i).padStart(2,"0")
+h+=`<option value="${hh}:00">${hh}:00</option>`
+}
+return h
+}
+
+function toggle(btn){
+btn.classList.toggle("closed")
+btn.classList.toggle("open")
+btn.innerText=btn.classList.contains("closed")?"Fermé":"Ouvert"
+}
+
+function save(){
+
+let data={}
+
+document.querySelectorAll(".dayRow").forEach((row,i)=>{
+
+let day=daysList[i]
+
+data[day]={
+open:row.querySelector(".open").value,
+close:row.querySelector(".close").value,
+closed:row.querySelector(".closedBtn").classList.contains("closed")
+}
+
+})
+
+db.collection("horaires").doc(paddock).set(data,{merge:true})
+
+alert("Sauvegardé")
+}
+
+/* FIREBASE */
+
+db.collection("reservations").onSnapshot(s=>{
+reservations=[]
+s.forEach(d=>{
+let r=d.data()
+r.id=d.id
+reservations.push(r)
+})
+buildPlanning()
+})
+
+db.collection("horaires").onSnapshot(s=>{
+horaires={}
+s.forEach(d=>{
+horaires[d.id]=d.data()
+})
+buildPlanning()
+})
+
+/* INIT */
+
+loadDay(0)
+
+</script>
+
+</body>
+</html>
