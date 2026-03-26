@@ -4,187 +4,60 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Paddock Control Pro</title>
+<title>Paddock Control V6</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
 
-body{
-margin:0;
-font-family:'Inter',sans-serif;
-background:#0f1115;
-color:white;
-}
+body{margin:0;font-family:'Inter',sans-serif;background:#0f1115;color:white;}
+header{background:#181E3B;padding:15px;text-align:center;font-weight:700;}
 
-/* HEADER */
+.days{display:flex;gap:8px;padding:10px;}
+.day{flex:1;background:#1c1f26;padding:10px;border-radius:10px;text-align:center;}
+.day.active{background:#2ecc71;color:black;}
 
-header{
-background:#181E3B;
-padding:15px;
-text-align:center;
-font-weight:700;
-}
+.grid{padding:10px;display:flex;flex-direction:column;gap:8px;}
+.row{display:flex;gap:6px;}
+.time{width:60px;color:#aaa;font-size:12px;}
 
-/* DAYS */
-
-.days{
-display:flex;
-gap:8px;
-padding:10px;
-}
-
-.day{
-flex:1;
-background:#1c1f26;
-padding:10px;
-border-radius:10px;
-text-align:center;
-}
-
-.day.active{
-background:#2ecc71;
-color:black;
-}
-
-/* GRID */
-
-.grid{
-padding:10px;
-display:flex;
-flex-direction:column;
-gap:8px;
-}
-
-.row{
-display:flex;
-gap:6px;
-}
-
-.time{
-width:60px;
-font-size:12px;
-color:#aaa;
-}
-
-.slot{
-flex:1;
-padding:10px;
-border-radius:8px;
-text-align:center;
-font-weight:600;
-}
-
+.slot{flex:1;padding:10px;border-radius:8px;text-align:center;font-weight:600;}
 .free{background:#1f8f5f;}
 .resa{background:#c0392b;}
 .closed{background:#555;color:#bbb;}
-
-/* ACTION BAR */
+.selected{outline:3px solid #2ecc71;}
 
 .actionBar{
-position:fixed;
-bottom:0;
-left:0;
-width:100%;
-background:#181E3B;
-padding:10px;
-display:flex;
-gap:10px;
+position:fixed;bottom:0;width:100%;
+background:#181E3B;padding:10px;
+display:flex;gap:10px;
 }
+.actionBar input{flex:1;padding:10px;border-radius:8px;border:none;}
+.actionBar button{padding:10px;border:none;border-radius:8px;background:#2ecc71;}
 
-.actionBar input{
-flex:1;
-padding:10px;
-border-radius:8px;
-border:none;
-}
+.block{margin:20px 10px 100px;background:#1c1f26;padding:15px;border-radius:15px;}
 
-.actionBar button{
-padding:10px;
-border:none;
-border-radius:8px;
-background:#2ecc71;
-}
+.tabs{display:flex;gap:10px;margin-bottom:10px;}
+.tab{background:#181E3B;padding:8px;border-radius:8px;cursor:pointer;}
+.tab.active{background:#2ecc71;color:black;}
 
-/* HORAIRES */
+.dayRow{margin-bottom:12px;border-bottom:1px solid #333;padding-bottom:10px;}
+.row2{display:flex;align-items:center;gap:8px;}
 
-.block{
-margin:20px 10px 100px;
-background:#1c1f26;
-padding:15px;
-border-radius:15px;
-}
+select{background:#252a33;color:white;border:none;padding:6px;border-radius:6px;}
 
-.tabs{
-display:flex;
-gap:10px;
-margin-bottom:10px;
-}
-
-.tab{
-background:#181E3B;
-padding:8px;
-border-radius:8px;
-cursor:pointer;
-}
-
-.tab.active{
-background:#2ecc71;
-color:black;
-}
-
-.dayRow{
-margin-bottom:12px;
-border-bottom:1px solid #333;
-padding-bottom:10px;
-}
-
-.row2{
-display:flex;
-align-items:center;
-gap:8px;
-}
-
-select{
-background:#252a33;
-color:white;
-border:none;
-padding:6px;
-border-radius:6px;
-}
-
-.closedBtn{
-padding:4px 8px;
-border-radius:6px;
-cursor:pointer;
-}
-
+.closedBtn{padding:4px 8px;border-radius:6px;cursor:pointer;color:white;}
 .closedBtn.open{background:#2ecc71;}
 .closedBtn.closed{background:#e74c3c;}
 
-.save{
-margin-top:10px;
-width:100%;
-padding:10px;
-border:none;
-border-radius:10px;
-background:#2ecc71;
-}
-
-/* TOAST */
+.save{margin-top:10px;width:100%;padding:10px;border:none;border-radius:10px;background:#2ecc71;}
 
 #toast{
-position:fixed;
-bottom:70px;
-left:50%;
+position:fixed;bottom:70px;left:50%;
 transform:translateX(-50%);
-background:#181E3B;
-padding:10px 15px;
-border-radius:10px;
-opacity:0;
-transition:0.3s;
+background:#181E3B;padding:10px 15px;
+border-radius:10px;opacity:0;transition:0.3s;
 }
-
 #toast.show{opacity:1;}
 
 </style>
@@ -192,12 +65,10 @@ transition:0.3s;
 
 <body>
 
-<header>🐎 Paddock Control</header>
+<header>🐎 Paddock Control V6</header>
 
 <div class="days" id="days"></div>
 <div class="grid" id="grid"></div>
-
-<!-- HORAIRES -->
 
 <div class="block">
 
@@ -238,6 +109,7 @@ let reservations=[]
 let horaires={}
 let selectedDate=""
 let selectedSlot=null
+let dragged=null
 let paddockAdmin="maison"
 
 /* TOAST */
@@ -278,6 +150,20 @@ el.classList.add("active")
 }
 }
 
+/* SLOT LOGIC */
+
+function isSlotTaken(r, time){
+
+let [rh,rm]=r.time.split(":").map(Number)
+let start=rh+(rm/60)
+let end=start+(r.duration||60)/60
+
+let [sh,sm]=time.split(":").map(Number)
+let slot=sh+(sm/60)
+
+return slot>=start && slot<end
+}
+
 /* RENDER */
 
 function render(){
@@ -310,19 +196,28 @@ cell.innerText="Fermé"
 
 }else{
 
-let resa=reservations.find(r=>r.date===selectedDate && r.paddock===p && normalize(r.time)===time)
+let resa=reservations.find(r=>r.date===selectedDate && r.paddock===p && isSlotTaken(r,time))
 
 if(resa){
+
 cell.classList.add("resa")
 cell.innerText=resa.name
 cell.onclick=()=>cancel(resa.id)
+
+cell.ontouchstart=()=>dragged=resa
+
 }else{
+
 cell.classList.add("free")
 cell.innerText="+"
+
 cell.onclick=()=>{
 selectedSlot={p,time}
-toast(p+" "+time)
+highlight(cell)
 }
+
+cell.ontouchend=()=>drop(p,time)
+
 }
 
 }
@@ -335,6 +230,27 @@ grid.appendChild(row)
 
 }
 
+}
+
+/* HIGHLIGHT */
+
+function highlight(el){
+document.querySelectorAll(".slot").forEach(s=>s.classList.remove("selected"))
+el.classList.add("selected")
+}
+
+/* DRAG */
+
+function drop(p,time){
+if(!dragged) return
+
+db.collection("reservations").doc(dragged.id).update({
+paddock:p,
+time:time
+})
+
+toast("Déplacé 🔄")
+dragged=null
 }
 
 /* BOOK */
@@ -356,6 +272,7 @@ duration:60
 
 document.getElementById("name").value=""
 selectedSlot=null
+
 toast("Réservé ✔")
 
 }
@@ -368,17 +285,14 @@ db.collection("reservations").doc(id).delete()
 toast("Annulé")
 }
 
-/* HORAIRES (IDENTIQUE) */
+/* HORAIRES */
 
 const days=["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"]
 
 function switchTab(p,e){
-
 paddockAdmin=p
-
 document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"))
 e.target.classList.add("active")
-
 buildHoraires(horaires[p])
 }
 
@@ -417,6 +331,20 @@ row.querySelector(".close").value=d.close
 },0)
 }
 
+function toggle(btn){
+const isClosed = btn.classList.contains("closed")
+
+if(isClosed){
+btn.classList.remove("closed")
+btn.classList.add("open")
+btn.innerText="Ouvert"
+}else{
+btn.classList.remove("open")
+btn.classList.add("closed")
+btn.innerText="Fermé"
+}
+}
+
 function options(){
 let html=""
 for(let h=6;h<=22;h++){
@@ -426,13 +354,7 @@ html+=`<option value="${hh}:00">${hh}:00</option>`
 return html
 }
 
-function toggle(btn){
-btn.classList.toggle("closed")
-btn.classList.toggle("open")
-btn.innerText=btn.classList.contains("closed")?"Fermé":"Ouvert"
-}
-
-function save(){
+async function save(){
 
 let data={}
 
@@ -448,18 +370,13 @@ closed:row.querySelector(".closedBtn").classList.contains("closed")
 
 })
 
-db.collection("horaires").doc(paddockAdmin).set(data,{merge:true})
+await db.collection("horaires").doc(paddockAdmin).set(data,{merge:true})
 
-toast("Horaires sauvegardés")
+toast("Horaires sauvegardés ✔")
 
 }
 
 /* UTILS */
-
-function normalize(t){
-let [h,m]=t.split(":").map(Number)
-return String(h).padStart(2,"0")+":"+(m||0).toString().padStart(2,"0")
-}
 
 function format(d){
 return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())
