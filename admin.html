@@ -17,22 +17,48 @@ header{background:#181E3B;padding:15px;text-align:center;font-weight:700;}
 .day.active{background:#2ecc71;color:black;}
 
 .grid{padding:10px;display:flex;flex-direction:column;gap:8px;}
-.row{display:flex;gap:6px;align-items:center;}
-.time{width:55px;font-size:12px;color:#aaa;}
 
-.slot{flex:1;padding:10px;border-radius:10px;text-align:center;font-weight:600;}
+.row{display:flex;gap:6px;align-items:center;}
+.time{width:60px;font-size:12px;color:#aaa;}
+
+.slot{
+flex:1;
+padding:10px;
+border-radius:8px;
+text-align:center;
+font-weight:600;
+}
+
 .free{background:#1f8f5f;}
 .resa{background:#c0392b;}
 .closedSlot{background:#555;color:#bbb;}
 .selected{outline:3px solid #2ecc71;}
 
 .actionBar{
-position:fixed;bottom:0;width:100%;
-background:#181E3B;padding:10px;
-display:flex;gap:10px;
+position:fixed;
+bottom:0;
+width:100%;
+background:#181E3B;
+padding:10px;
+display:flex;
+gap:10px;
 }
-.actionBar input{flex:1;padding:10px;border-radius:8px;border:none;}
-.actionBar button{padding:10px;border:none;border-radius:8px;background:#2ecc71;}
+
+.actionBar input,
+.actionBar select{
+flex:1;
+padding:10px;
+border-radius:8px;
+border:none;
+}
+
+.actionBar button{
+padding:10px;
+border:none;
+border-radius:8px;
+background:#2ecc71;
+font-weight:600;
+}
 
 .block{
 margin:20px 10px 100px;
@@ -49,12 +75,10 @@ border-radius:15px;
 .row2{display:flex;align-items:center;gap:8px;}
 
 select{
-flex:1;
-padding:8px;
-border-radius:8px;
 background:#252a33;
 color:white;
 border:none;
+border-radius:6px;
 }
 
 .closed{
@@ -64,6 +88,8 @@ cursor:pointer;
 }
 .closed.off{background:#2ecc71;}
 .closed:not(.off){background:#e74c3c;}
+
+button{cursor:pointer;}
 
 #toast{
 position:fixed;
@@ -77,6 +103,7 @@ opacity:0;
 transition:0.3s;
 }
 #toast.show{opacity:1;}
+
 </style>
 </head>
 
@@ -86,6 +113,19 @@ transition:0.3s;
 
 <div class="days" id="days"></div>
 <div class="grid" id="grid"></div>
+
+<!-- ACTIONS RESET -->
+
+<div style="padding:10px;display:flex;gap:10px;flex-wrap:wrap">
+
+<button onclick="clearAll()" style="background:#e74c3c">Tout vider</button>
+<button onclick="clearPaddock('maison')">Maison</button>
+<button onclick="clearPaddock('grande')">Grande</button>
+<button onclick="clearPaddock('beudot')">Beudot</button>
+
+</div>
+
+<!-- HORAIRES -->
 
 <div class="block">
 
@@ -101,8 +141,16 @@ transition:0.3s;
 
 </div>
 
+<!-- ACTION BAR -->
+
 <div class="actionBar">
 <input id="name" placeholder="Nom client">
+
+<select id="duration">
+<option value="60">1h</option>
+<option value="90">1h30</option>
+</select>
+
 <button onclick="book()">Réserver</button>
 </div>
 
@@ -126,8 +174,6 @@ let reservations=[]
 let horaires={}
 let selectedDate=""
 let selectedSlot=null
-let dragged=null
-let paddock="maison"
 
 const paddocks=["maison","grande","beudot"]
 
@@ -186,7 +232,7 @@ let slot=sh+(sm/60)
 return slot>=start && slot<end
 }
 
-/* RENDER */
+/* RENDER INTELLIGENT */
 
 function render(){
 
@@ -195,13 +241,59 @@ grid.innerHTML=""
 
 let day=getDayName(selectedDate)
 
-for(let h=6;h<=22;h++){
+let slotsSet=new Set()
 
-let time=pad(h)+":00"
+paddocks.forEach(p=>{
+
+let config=horaires[p]?.[day]
+if(!config || config.closed) return
+
+let [oh,om]=config.open.split(":").map(Number)
+let [ch,cm]=config.close.split(":").map(Number)
+
+let current=oh+(om/60)
+let end=ch+(cm/60)
+
+while(current<end){
+
+let h=Math.floor(current)
+let m=current%1===0?"00":"30"
+let time=pad(h)+":"+m
+
+slotsSet.add(time)
+
+let resa=reservations.find(r=>r.date===selectedDate && r.paddock===p && r.time===time)
+
+if(resa){
+current+=resa.duration/60
+}else{
+current+=1
+}
+
+}
+
+})
+
+let slots=[...slotsSet].sort()
+
+/* HEADER */
+
+let header=document.createElement("div")
+header.className="row"
+header.innerHTML=`<div class="time"></div>`
+
+paddocks.forEach(p=>{
+header.innerHTML+=`<div class="slot" style="background:#181E3B">${p}</div>`
+})
+
+grid.appendChild(header)
+
+/* ROWS */
+
+slots.forEach(time=>{
 
 let row=document.createElement("div")
 row.className="row"
-
 row.innerHTML=`<div class="time">${time}</div>`
 
 paddocks.forEach(p=>{
@@ -212,23 +304,30 @@ let cell=document.createElement("div")
 cell.className="slot"
 
 if(!config || config.closed){
+
 cell.classList.add("closedSlot")
 cell.innerText="Fermé"
+
 }else{
 
 let resa=reservations.find(r=>r.date===selectedDate && r.paddock===p && isSlotTaken(r,time))
 
 if(resa){
+
 cell.classList.add("resa")
 cell.innerText=resa.name
 cell.onclick=()=>cancel(resa.id)
+
 }else{
+
 cell.classList.add("free")
 cell.innerText="+"
+
 cell.onclick=()=>{
 selectedSlot={p,time}
 highlight(cell)
 }
+
 }
 
 }
@@ -238,7 +337,9 @@ row.appendChild(cell)
 })
 
 grid.appendChild(row)
-}
+
+})
+
 }
 
 function highlight(el){
@@ -249,17 +350,20 @@ el.classList.add("selected")
 /* BOOK */
 
 function book(){
+
 if(!selectedSlot) return toast("Choisir un créneau")
 
 let name=document.getElementById("name").value.trim()
 if(!name) return toast("Nom requis")
+
+let duration=parseInt(document.getElementById("duration").value)
 
 db.collection("reservations").add({
 name,
 paddock:selectedSlot.p,
 date:selectedDate,
 time:selectedSlot.time,
-duration:60
+duration
 })
 
 document.getElementById("name").value=""
@@ -276,9 +380,26 @@ db.collection("reservations").doc(id).delete()
 toast("Annulé")
 }
 
-/* HORAIRES */
+/* RESET */
+
+async function clearAll(){
+if(!confirm("Tout supprimer ?")) return
+let snap=await db.collection("reservations").get()
+snap.forEach(doc=>doc.ref.delete())
+toast("Tout vidé")
+}
+
+async function clearPaddock(p){
+if(!confirm("Vider "+p+" ?")) return
+let snap=await db.collection("reservations").where("paddock","==",p).get()
+snap.forEach(doc=>doc.ref.delete())
+toast(p+" vidé")
+}
+
+/* HORAIRES (SAFE) */
 
 const daysList=["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"]
+let paddock="maison"
 
 function switchTab(name,e){
 paddock=name
@@ -331,8 +452,6 @@ function toggleClosed(btn){
 btn.classList.toggle("off")
 btn.innerText=btn.classList.contains("off")?"Ouvert":"Fermé"
 }
-
-/* SAVE FIX FINAL */
 
 async function save(){
 
