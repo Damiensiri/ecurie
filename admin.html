@@ -1,30 +1,91 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Paddock Control V7</title>
+<meta charset="UTF-8">
+
+<!-- 🔥 ANTI ZOOM + PWA -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>Paddock Control</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#181E3B">
+
 <style>
-body{margin:0;font-family:'Inter',sans-serif;background:#0f1115;color:white;}
-header{background:#181E3B;padding:15px;text-align:center;font-weight:700;}
 
-.days{display:flex;gap:8px;padding:10px;}
-.day{flex:1;background:#1c1f26;padding:10px;border-radius:10px;text-align:center;}
-.day.active{background:#2ecc71;color:black;}
+*{
+-webkit-tap-highlight-color: transparent;
+}
 
-.grid{padding:10px;display:flex;flex-direction:column;gap:8px;}
+body{
+margin:0;
+font-family:'Inter',sans-serif;
+background:#0f1115;
+color:white;
+padding-bottom:90px;
+}
 
-.row{display:flex;gap:6px;align-items:center;}
-.time{width:60px;font-size:12px;color:#aaa;}
+input, select{
+font-size:16px;
+}
+
+header{
+background:#181E3B;
+padding:15px;
+text-align:center;
+font-weight:700;
+}
+
+/* DAYS */
+
+.days{
+display:flex;
+gap:8px;
+padding:10px;
+}
+
+.day{
+flex:1;
+background:#1c1f26;
+padding:10px;
+border-radius:10px;
+text-align:center;
+}
+
+.day.active{
+background:#2ecc71;
+color:black;
+}
+
+/* GRID */
+
+.grid{
+padding:10px;
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.row{
+display:flex;
+gap:6px;
+align-items:center;
+}
+
+.time{
+width:60px;
+font-size:12px;
+color:#aaa;
+}
 
 .slot{
 flex:1;
 padding:10px;
-border-radius:8px;
+border-radius:10px;
 text-align:center;
 font-weight:600;
 }
@@ -34,14 +95,19 @@ font-weight:600;
 .closedSlot{background:#555;color:#bbb;}
 .selected{outline:3px solid #2ecc71;}
 
+/* ACTION BAR */
+
 .actionBar{
 position:fixed;
 bottom:0;
+left:0;
 width:100%;
 background:#181E3B;
 padding:10px;
+padding-bottom:calc(10px + env(safe-area-inset-bottom));
 display:flex;
 gap:10px;
+z-index:1000;
 }
 
 .actionBar input,
@@ -60,25 +126,58 @@ background:#2ecc71;
 font-weight:600;
 }
 
+/* RESET */
+
+.controls{
+padding:10px;
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.controls button{
+border:none;
+border-radius:8px;
+padding:8px;
+background:#1c1f26;
+color:white;
+}
+
+/* HORAIRES */
+
 .block{
-margin:20px 10px 100px;
+margin:20px 10px;
 background:#1c1f26;
 padding:15px;
 border-radius:15px;
 }
 
-.tabs{display:flex;gap:10px;margin-bottom:10px;}
-.tab{background:#181E3B;padding:8px;border-radius:8px;cursor:pointer;}
-.tab.active{background:#2ecc71;color:black;}
+.tabs{
+display:flex;
+gap:10px;
+margin-bottom:10px;
+}
 
-.dayRow{margin-bottom:12px;border-bottom:1px solid #333;padding-bottom:10px;}
-.row2{display:flex;align-items:center;gap:8px;}
+.tab{
+background:#181E3B;
+padding:8px;
+border-radius:8px;
+}
 
-select{
-background:#252a33;
-color:white;
-border:none;
-border-radius:6px;
+.tab.active{
+background:#2ecc71;
+color:black;
+}
+
+.dayRow{
+margin-bottom:12px;
+border-bottom:1px solid #333;
+padding-bottom:10px;
+}
+
+.row2{
+display:flex;
+gap:8px;
 }
 
 .closed{
@@ -86,14 +185,15 @@ padding:5px 10px;
 border-radius:6px;
 cursor:pointer;
 }
+
 .closed.off{background:#2ecc71;}
 .closed:not(.off){background:#e74c3c;}
 
-button{cursor:pointer;}
+/* TOAST */
 
 #toast{
 position:fixed;
-bottom:70px;
+bottom:80px;
 left:50%;
 transform:translateX(-50%);
 background:#181E3B;
@@ -102,6 +202,7 @@ border-radius:10px;
 opacity:0;
 transition:0.3s;
 }
+
 #toast.show{opacity:1;}
 
 </style>
@@ -109,23 +210,17 @@ transition:0.3s;
 
 <body>
 
-<header>🐎 Paddock Control V7</header>
+<header>🐎 Paddock Control</header>
 
 <div class="days" id="days"></div>
 <div class="grid" id="grid"></div>
 
-<!-- ACTIONS RESET -->
-
-<div style="padding:10px;display:flex;gap:10px;flex-wrap:wrap">
-
+<div class="controls">
 <button onclick="clearAll()" style="background:#e74c3c">Tout vider</button>
 <button onclick="clearPaddock('maison')">Maison</button>
 <button onclick="clearPaddock('grande')">Grande</button>
 <button onclick="clearPaddock('beudot')">Beudot</button>
-
 </div>
-
-<!-- HORAIRES -->
 
 <div class="block">
 
@@ -140,8 +235,6 @@ transition:0.3s;
 <button onclick="save()">Sauvegarder</button>
 
 </div>
-
-<!-- ACTION BAR -->
 
 <div class="actionBar">
 <input id="name" placeholder="Nom client">
@@ -161,7 +254,7 @@ transition:0.3s;
 
 <script>
 
-/* FIREBASE */
+/* 🔥 FIREBASE */
 
 firebase.initializeApp({
 apiKey:"AIza...",
@@ -189,7 +282,6 @@ setTimeout(()=>el.classList.remove("show"),2000)
 /* DATE */
 
 function buildDays(){
-
 for(let i=0;i<3;i++){
 let d=new Date()
 d.setDate(d.getDate()+i)
@@ -210,7 +302,6 @@ document.getElementById("days").appendChild(el)
 
 if(i===0) selectedDate=date
 }
-
 updateDays()
 }
 
@@ -232,7 +323,7 @@ let slot=sh+(sm/60)
 return slot>=start && slot<end
 }
 
-/* RENDER INTELLIGENT */
+/* RENDER */
 
 function render(){
 
@@ -258,8 +349,8 @@ while(current<end){
 
 let h=Math.floor(current)
 let m=current%1===0?"00":"30"
-let time=pad(h)+":"+m
 
+let time=pad(h)+":"+m
 slotsSet.add(time)
 
 let resa=reservations.find(r=>r.date===selectedDate && r.paddock===p && r.time===time)
@@ -276,19 +367,13 @@ current+=1
 
 let slots=[...slotsSet].sort()
 
-/* HEADER */
-
 let header=document.createElement("div")
 header.className="row"
 header.innerHTML=`<div class="time"></div>`
-
 paddocks.forEach(p=>{
 header.innerHTML+=`<div class="slot" style="background:#181E3B">${p}</div>`
 })
-
 grid.appendChild(header)
-
-/* ROWS */
 
 slots.forEach(time=>{
 
@@ -299,35 +384,27 @@ row.innerHTML=`<div class="time">${time}</div>`
 paddocks.forEach(p=>{
 
 let config=horaires[p]?.[day]
-
 let cell=document.createElement("div")
 cell.className="slot"
 
 if(!config || config.closed){
-
 cell.classList.add("closedSlot")
 cell.innerText="Fermé"
-
 }else{
 
 let resa=reservations.find(r=>r.date===selectedDate && r.paddock===p && isSlotTaken(r,time))
 
 if(resa){
-
 cell.classList.add("resa")
 cell.innerText=resa.name
 cell.onclick=()=>cancel(resa.id)
-
 }else{
-
 cell.classList.add("free")
 cell.innerText="+"
-
 cell.onclick=()=>{
 selectedSlot={p,time}
 highlight(cell)
 }
-
 }
 
 }
@@ -350,7 +427,6 @@ el.classList.add("selected")
 /* BOOK */
 
 function book(){
-
 if(!selectedSlot) return toast("Choisir un créneau")
 
 let name=document.getElementById("name").value.trim()
@@ -368,7 +444,6 @@ duration
 
 document.getElementById("name").value=""
 selectedSlot=null
-
 toast("Réservé ✔")
 }
 
@@ -396,7 +471,7 @@ snap.forEach(doc=>doc.ref.delete())
 toast(p+" vidé")
 }
 
-/* HORAIRES (SAFE) */
+/* HORAIRES */
 
 const daysList=["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"]
 let paddock="maison"
