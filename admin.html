@@ -20,9 +20,8 @@ color:white;
 header{
 background:#181E3B;
 padding:15px;
-display:flex;
-justify-content:space-between;
-align-items:center;
+text-align:center;
+font-weight:700;
 }
 
 .container{padding:15px;}
@@ -56,18 +55,49 @@ color:black;
 
 table{
 width:100%;
-border-collapse:collapse;
+border-collapse:separate;
+border-spacing:6px;
 text-align:center;
 }
 
 td,th{
-border:1px solid #333;
-padding:6px;
+padding:10px;
+border-radius:8px;
 }
 
-.free{background:#2ecc71;cursor:pointer;}
-.resa{background:#e74c3c;cursor:pointer;}
-.closed{background:#555;color:#bbb;}
+.free{
+background:#1f8f5f;
+cursor:pointer;
+}
+
+.resa{
+background:#c0392b;
+cursor:pointer;
+font-weight:600;
+}
+
+.closed{
+background:#555;
+color:#bbb;
+}
+
+/* TOAST */
+
+#toast{
+position:fixed;
+bottom:20px;
+left:50%;
+transform:translateX(-50%);
+background:#181E3B;
+padding:12px 18px;
+border-radius:10px;
+opacity:0;
+transition:0.3s;
+}
+
+#toast.show{
+opacity:1;
+}
 
 /* HORAIRES */
 
@@ -95,6 +125,7 @@ border-radius:6px;
 padding:4px 8px;
 border-radius:6px;
 cursor:pointer;
+color:white;
 }
 
 .closedBtn.open{background:#2ecc71;}
@@ -109,7 +140,6 @@ margin-top:10px;
 }
 
 .save{background:#2ecc71;}
-
 .urgence{background:#c0392b;}
 
 </style>
@@ -117,13 +147,9 @@ margin-top:10px;
 
 <body>
 
-<header>
-<h1>🐎 Admin paddocks</h1>
-</header>
+<header>🐎 Admin paddocks</header>
 
 <div class="container">
-
-<!-- PLANNING -->
 
 <div class="card">
 
@@ -138,8 +164,6 @@ margin-top:10px;
 <table id="planning"></table>
 
 </div>
-
-<!-- HORAIRES -->
 
 <div class="card">
 
@@ -156,6 +180,8 @@ margin-top:10px;
 </div>
 
 </div>
+
+<div id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -176,6 +202,15 @@ let horaires={}
 let currentDate=""
 let paddock="maison"
 
+/* TOAST */
+
+function showToast(msg){
+let t=document.getElementById("toast")
+t.innerText=msg
+t.classList.add("show")
+setTimeout(()=>t.classList.remove("show"),2000)
+}
+
 /* DATE */
 
 function dateOffset(d){
@@ -193,7 +228,7 @@ document.getElementById("btn"+i).classList.add("active")
 buildPlanning()
 }
 
-/* SAFE TIME */
+/* TIME SAFE */
 
 function normalize(t){
 let [h,m]=t.split(":").map(Number)
@@ -249,6 +284,8 @@ date:currentDate,
 time,
 duration:60
 })
+
+showToast("✅ Réservation ajoutée")
 }
 
 /* CANCEL */
@@ -256,6 +293,7 @@ duration:60
 function cancel(id){
 if(confirm("Annuler ?")){
 db.collection("reservations").doc(id).delete()
+showToast("❌ Annulée")
 }
 }
 
@@ -268,6 +306,7 @@ if(r.date===currentDate){
 db.collection("reservations").doc(r.id).delete()
 }
 })
+showToast("🚨 Journée vidée")
 }
 
 /* HORAIRES */
@@ -278,9 +317,7 @@ function switchTab(p,e){
 paddock=p
 document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"))
 e.target.classList.add("active")
-
-let data=horaires[paddock]
-buildHoraires(data)
+buildHoraires(horaires[paddock])
 }
 
 function buildHoraires(data){
@@ -351,7 +388,7 @@ closed:row.querySelector(".closedBtn").classList.contains("closed")
 
 db.collection("horaires").doc(paddock).set(data,{merge:true})
 
-alert("Sauvegardé")
+showToast("✔ Horaires sauvegardés")
 }
 
 /* FIREBASE */
