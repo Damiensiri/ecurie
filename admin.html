@@ -4,108 +4,59 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>ADMIN PADDOCKS PRO</title>
+<title>Paddock Control</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
 
 body{
 margin:0;
-font-family:'Montserrat',sans-serif;
+font-family:'Inter',sans-serif;
 background:#0f1115;
 color:white;
 }
 
+/* HEADER */
+
 header{
 background:#181E3B;
 padding:15px;
-text-align:center;
 font-weight:700;
+text-align:center;
 }
 
-.container{padding:15px;}
+/* DAYS */
 
-.card{
+.days{
+display:flex;
+gap:8px;
+padding:10px;
+}
+
+.day{
+flex:1;
 background:#1c1f26;
-border-radius:15px;
-padding:15px;
-margin-bottom:15px;
+padding:10px;
+border-radius:10px;
+text-align:center;
 }
 
-/* TABS */
-
-.tabs{display:flex;gap:10px;margin-bottom:10px;}
-
-.tabs button{
-padding:8px 12px;
-border:none;
-border-radius:8px;
-background:#181E3B;
-color:white;
-cursor:pointer;
-}
-
-.tabs button.active{
+.day.active{
 background:#2ecc71;
 color:black;
 }
 
-/* TABLE */
+/* GRID */
 
-table{
-width:100%;
-border-collapse:separate;
-border-spacing:6px;
-text-align:center;
-}
-
-td,th{
+.grid{
 padding:10px;
-border-radius:8px;
+display:flex;
+flex-direction:column;
+gap:10px;
 }
 
-.free{
-background:#1f8f5f;
-cursor:pointer;
-}
-
-.resa{
-background:#c0392b;
-cursor:pointer;
-font-weight:600;
-}
-
-.closed{
-background:#555;
-color:#bbb;
-}
-
-/* TOAST */
-
-#toast{
-position:fixed;
-bottom:20px;
-left:50%;
-transform:translateX(-50%);
-background:#181E3B;
-padding:12px 18px;
-border-radius:10px;
-opacity:0;
-transition:0.3s;
-}
-
-#toast.show{
-opacity:1;
-}
-
-/* HORAIRES */
-
-.dayRow{
-margin-bottom:12px;
-border-bottom:1px solid #333;
-padding-bottom:10px;
-}
+/* ROW */
 
 .row{
 display:flex;
@@ -113,72 +64,88 @@ align-items:center;
 gap:8px;
 }
 
-select{
-background:#252a33;
-color:white;
+.time{
+width:60px;
+font-size:12px;
+color:#aaa;
+}
+
+/* SLOT */
+
+.slot{
+flex:1;
+padding:10px;
+border-radius:10px;
+text-align:center;
+font-weight:600;
+}
+
+.free{background:#1f8f5f;}
+.resa{background:#c0392b;}
+.closed{background:#555;color:#bbb;}
+
+.slot:active{
+transform:scale(0.96);
+}
+
+/* ACTION BAR */
+
+.actionBar{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+background:#181E3B;
+padding:10px;
+display:flex;
+gap:10px;
+}
+
+.actionBar input{
+flex:1;
+padding:10px;
+border-radius:8px;
 border:none;
-padding:6px;
-border-radius:6px;
 }
 
-.closedBtn{
-padding:4px 8px;
-border-radius:6px;
-cursor:pointer;
-color:white;
-}
-
-.closedBtn.open{background:#2ecc71;}
-.closedBtn.closed{background:#e74c3c;}
-
-button{
+.actionBar button{
 padding:10px;
 border:none;
 border-radius:8px;
-cursor:pointer;
-margin-top:10px;
+background:#2ecc71;
+font-weight:600;
 }
 
-.save{background:#2ecc71;}
-.urgence{background:#c0392b;}
+/* TOAST */
+
+#toast{
+position:fixed;
+bottom:70px;
+left:50%;
+transform:translateX(-50%);
+background:#181E3B;
+padding:10px 15px;
+border-radius:10px;
+opacity:0;
+transition:0.3s;
+}
+
+#toast.show{opacity:1;}
 
 </style>
 </head>
 
 <body>
 
-<header>🐎 Admin paddocks</header>
+<header>🐎 Paddock Control</header>
 
-<div class="container">
+<div class="days" id="days"></div>
 
-<div class="card">
+<div class="grid" id="grid"></div>
 
-<div class="tabs">
-<button id="btn0" onclick="loadDay(0)">Aujourd'hui</button>
-<button id="btn1" onclick="loadDay(1)">Demain</button>
-<button id="btn2" onclick="loadDay(2)">Après</button>
-</div>
-
-<button class="urgence" onclick="resetAll()">🚨 Vider tout</button>
-
-<table id="planning"></table>
-
-</div>
-
-<div class="card">
-
-<div class="tabs">
-<button onclick="switchTab('maison',event)" class="active">Maison</button>
-<button onclick="switchTab('grande',event)">Grande</button>
-<button onclick="switchTab('beudot',event)">Beudot</button>
-</div>
-
-<div id="days"></div>
-
-<button class="save" onclick="save()">Sauvegarder</button>
-
-</div>
-
+<div class="actionBar">
+<input id="clientName" placeholder="Nom client">
+<button onclick="confirmBooking()">Réserver</button>
 </div>
 
 <div id="toast"></div>
@@ -199,12 +166,14 @@ const db=firebase.firestore()
 
 let reservations=[]
 let horaires={}
-let currentDate=""
-let paddock="maison"
+let selectedDate=""
+let selectedSlot=null
+
+const paddocks=["maison","grande","beudot"]
 
 /* TOAST */
 
-function showToast(msg){
+function toast(msg){
 let t=document.getElementById("toast")
 t.innerText=msg
 t.classList.add("show")
@@ -213,182 +182,153 @@ setTimeout(()=>t.classList.remove("show"),2000)
 
 /* DATE */
 
-function dateOffset(d){
-let x=new Date()
-x.setDate(x.getDate()+d)
-return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0")
+function buildDays(){
+
+for(let i=0;i<3;i++){
+
+let d=new Date()
+d.setDate(d.getDate()+i)
+
+let el=document.createElement("div")
+el.className="day"
+el.innerText=i===0?"Aujourd’hui":i===1?"Demain":"Après"
+
+let date=format(d)
+
+el.onclick=()=>{
+selectedDate=date
+document.querySelectorAll(".day").forEach(x=>x.classList.remove("active"))
+el.classList.add("active")
+render()
 }
 
-function loadDay(i){
-currentDate=dateOffset(i)
+document.getElementById("days").appendChild(el)
 
-document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"))
-document.getElementById("btn"+i).classList.add("active")
-
-buildPlanning()
+if(i===0){
+selectedDate=date
+el.classList.add("active")
 }
 
-/* TIME SAFE */
+}
+
+}
+
+/* RENDER */
+
+function render(){
+
+let grid=document.getElementById("grid")
+grid.innerHTML=""
+
+let day=getDayName(selectedDate)
+
+for(let h=6;h<=22;h++){
+
+let time=pad(h)+":00"
+
+let row=document.createElement("div")
+row.className="row"
+
+row.innerHTML=`<div class="time">${time}</div>`
+
+paddocks.forEach(p=>{
+
+let config=horaires[p]?.[day]
+
+let cell=document.createElement("div")
+cell.className="slot"
+
+if(!config || config.closed){
+
+cell.classList.add("closed")
+cell.innerText="Fermé"
+
+}else{
+
+let resa=reservations.find(r=>r.date===selectedDate && r.paddock===p && normalize(r.time)===time)
+
+if(resa){
+
+cell.classList.add("resa")
+cell.innerText=resa.name
+cell.onclick=()=>cancel(resa.id)
+
+}else{
+
+cell.classList.add("free")
+cell.innerText="+"
+cell.onclick=()=>{
+selectedSlot={p,time}
+toast(p+" "+time)
+}
+
+}
+
+}
+
+row.appendChild(cell)
+
+})
+
+grid.appendChild(row)
+
+}
+
+}
+
+/* BOOK */
+
+function confirmBooking(){
+
+if(!selectedSlot) return toast("Choisir un créneau")
+
+let name=document.getElementById("clientName").value.trim()
+if(!name) return toast("Nom requis")
+
+db.collection("reservations").add({
+name,
+paddock:selectedSlot.p,
+date:selectedDate,
+time:selectedSlot.time,
+duration:60
+})
+
+document.getElementById("clientName").value=""
+selectedSlot=null
+
+toast("Réservé ✔")
+
+}
+
+/* CANCEL */
+
+function cancel(id){
+
+if(!confirm("Annuler ?")) return
+
+db.collection("reservations").doc(id).delete()
+toast("Annulé")
+
+}
+
+/* UTILS */
 
 function normalize(t){
 let [h,m]=t.split(":").map(Number)
 return String(h).padStart(2,"0")+":"+(m||0).toString().padStart(2,"0")
 }
 
-/* PLANNING */
-
-function buildPlanning(){
-
-if(!horaires.maison) return
-
-const paddocks=["maison","grande","beudot"]
-
-let html="<tr><th>Heure</th>"
-paddocks.forEach(p=>html+="<th>"+p+"</th>")
-html+="</tr>"
-
-for(let h=6;h<=22;h++){
-
-let time=String(h).padStart(2,"0")+":00"
-
-html+="<tr><td>"+time+"</td>"
-
-paddocks.forEach(p=>{
-
-let resa=reservations.find(r=>r.date===currentDate && r.paddock===p && normalize(r.time)===time)
-
-if(resa){
-html+=`<td class="resa" onclick="cancel('${resa.id}')">${resa.name}</td>`
-}else{
-html+=`<td class="free" onclick="book('${p}','${time}')"></td>`
+function format(d){
+return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())
 }
 
-})
-
-html+="</tr>"
+function getDayName(date){
+const days=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"]
+return days[new Date(date).getDay()]
 }
 
-document.getElementById("planning").innerHTML=html
-}
-
-/* BOOK */
-
-function book(p,time){
-let name=prompt("Nom ?")
-if(!name) return
-
-db.collection("reservations").add({
-name,
-paddock:p,
-date:currentDate,
-time,
-duration:60
-})
-
-showToast("✅ Réservation ajoutée")
-}
-
-/* CANCEL */
-
-function cancel(id){
-if(confirm("Annuler ?")){
-db.collection("reservations").doc(id).delete()
-showToast("❌ Annulée")
-}
-}
-
-/* RESET */
-
-function resetAll(){
-if(!confirm("Tout supprimer ?")) return
-reservations.forEach(r=>{
-if(r.date===currentDate){
-db.collection("reservations").doc(r.id).delete()
-}
-})
-showToast("🚨 Journée vidée")
-}
-
-/* HORAIRES */
-
-const daysList=["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"]
-
-function switchTab(p,e){
-paddock=p
-document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"))
-e.target.classList.add("active")
-buildHoraires(horaires[paddock])
-}
-
-function buildHoraires(data){
-
-const container=document.getElementById("days")
-container.innerHTML=""
-
-daysList.forEach(day=>{
-
-let d=data[day]
-
-container.innerHTML+=`
-<div class="dayRow">
-<div>${day}</div>
-
-<div class="row">
-<div class="closedBtn ${d.closed?'closed':'open'}" onclick="toggle(this)">
-${d.closed?"Fermé":"Ouvert"}
-</div>
-
-<select class="open">${options()}</select>
-<select class="close">${options()}</select>
-
-</div>
-</div>
-`
-})
-
-setTimeout(()=>{
-document.querySelectorAll(".dayRow").forEach((row,i)=>{
-let d=data[daysList[i]]
-row.querySelector(".open").value=d.open
-row.querySelector(".close").value=d.close
-})
-},0)
-}
-
-function options(){
-let h=""
-for(let i=6;i<=22;i++){
-let hh=String(i).padStart(2,"0")
-h+=`<option value="${hh}:00">${hh}:00</option>`
-}
-return h
-}
-
-function toggle(btn){
-btn.classList.toggle("closed")
-btn.classList.toggle("open")
-btn.innerText=btn.classList.contains("closed")?"Fermé":"Ouvert"
-}
-
-function save(){
-
-let data={}
-
-document.querySelectorAll(".dayRow").forEach((row,i)=>{
-
-let day=daysList[i]
-
-data[day]={
-open:row.querySelector(".open").value,
-close:row.querySelector(".close").value,
-closed:row.querySelector(".closedBtn").classList.contains("closed")
-}
-
-})
-
-db.collection("horaires").doc(paddock).set(data,{merge:true})
-
-showToast("✔ Horaires sauvegardés")
+function pad(n){
+return String(n).padStart(2,"0")
 }
 
 /* FIREBASE */
@@ -400,7 +340,7 @@ let r=d.data()
 r.id=d.id
 reservations.push(r)
 })
-buildPlanning()
+render()
 })
 
 db.collection("horaires").onSnapshot(s=>{
@@ -408,12 +348,12 @@ horaires={}
 s.forEach(d=>{
 horaires[d.id]=d.data()
 })
-buildPlanning()
+render()
 })
 
 /* INIT */
 
-loadDay(0)
+buildDays()
 
 </script>
 
