@@ -203,7 +203,6 @@ if(resa){
 cell.classList.add("resa")
 cell.innerText=resa.name
 cell.onclick=()=>cancel(resa.id)
-
 cell.ontouchstart=()=>dragged=resa
 
 }else{
@@ -293,7 +292,7 @@ function switchTab(p,e){
 paddockAdmin=p
 document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"))
 e.target.classList.add("active")
-buildHoraires(horaires[p])
+buildHoraires(horaires[p]||{})
 }
 
 function buildHoraires(data){
@@ -303,7 +302,7 @@ container.innerHTML=""
 
 days.forEach(day=>{
 
-let d=data[day]
+let d = data[day] || {open:"08:00",close:"19:00",closed:false}
 
 container.innerHTML+=`
 <div class="dayRow">
@@ -324,7 +323,8 @@ ${d.closed?"Fermé":"Ouvert"}
 
 setTimeout(()=>{
 document.querySelectorAll(".dayRow").forEach((row,i)=>{
-let d=data[days[i]]
+let d = data[days[i]]
+if(!d) return
 row.querySelector(".open").value=d.open
 row.querySelector(".close").value=d.close
 })
@@ -354,15 +354,20 @@ html+=`<option value="${hh}:00">${hh}:00</option>`
 return html
 }
 
+/* SAVE FIX FINAL */
+
 async function save(){
 
-let data={}
+let newData={}
+let existing = horaires[paddockAdmin] || {}
+
+newData.durations = existing.durations || [60]
 
 document.querySelectorAll(".dayRow").forEach((row,i)=>{
 
 let day=days[i]
 
-data[day]={
+newData[day]={
 open:row.querySelector(".open").value,
 close:row.querySelector(".close").value,
 closed:row.querySelector(".closedBtn").classList.contains("closed")
@@ -370,9 +375,11 @@ closed:row.querySelector(".closedBtn").classList.contains("closed")
 
 })
 
-await db.collection("horaires").doc(paddockAdmin).set(data,{merge:true})
+await db.collection("horaires").doc(paddockAdmin).set(newData)
 
-toast("Horaires sauvegardés ✔")
+toast("Horaires mis à jour ✔")
+
+switchTab(paddockAdmin,{target:document.querySelector(".tab.active")})
 
 }
 
