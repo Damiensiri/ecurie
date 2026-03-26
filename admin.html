@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Paddock Control</title>
+<title>Paddock Control Pro</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
@@ -22,8 +22,8 @@ color:white;
 header{
 background:#181E3B;
 padding:15px;
-font-weight:700;
 text-align:center;
+font-weight:700;
 }
 
 /* DAYS */
@@ -53,15 +53,12 @@ color:black;
 padding:10px;
 display:flex;
 flex-direction:column;
-gap:10px;
+gap:8px;
 }
-
-/* ROW */
 
 .row{
 display:flex;
-align-items:center;
-gap:8px;
+gap:6px;
 }
 
 .time{
@@ -70,12 +67,10 @@ font-size:12px;
 color:#aaa;
 }
 
-/* SLOT */
-
 .slot{
 flex:1;
 padding:10px;
-border-radius:10px;
+border-radius:8px;
 text-align:center;
 font-weight:600;
 }
@@ -83,10 +78,6 @@ font-weight:600;
 .free{background:#1f8f5f;}
 .resa{background:#c0392b;}
 .closed{background:#555;color:#bbb;}
-
-.slot:active{
-transform:scale(0.96);
-}
 
 /* ACTION BAR */
 
@@ -113,7 +104,71 @@ padding:10px;
 border:none;
 border-radius:8px;
 background:#2ecc71;
-font-weight:600;
+}
+
+/* HORAIRES */
+
+.block{
+margin:20px 10px 100px;
+background:#1c1f26;
+padding:15px;
+border-radius:15px;
+}
+
+.tabs{
+display:flex;
+gap:10px;
+margin-bottom:10px;
+}
+
+.tab{
+background:#181E3B;
+padding:8px;
+border-radius:8px;
+cursor:pointer;
+}
+
+.tab.active{
+background:#2ecc71;
+color:black;
+}
+
+.dayRow{
+margin-bottom:12px;
+border-bottom:1px solid #333;
+padding-bottom:10px;
+}
+
+.row2{
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+select{
+background:#252a33;
+color:white;
+border:none;
+padding:6px;
+border-radius:6px;
+}
+
+.closedBtn{
+padding:4px 8px;
+border-radius:6px;
+cursor:pointer;
+}
+
+.closedBtn.open{background:#2ecc71;}
+.closedBtn.closed{background:#e74c3c;}
+
+.save{
+margin-top:10px;
+width:100%;
+padding:10px;
+border:none;
+border-radius:10px;
+background:#2ecc71;
 }
 
 /* TOAST */
@@ -140,12 +195,27 @@ transition:0.3s;
 <header>🐎 Paddock Control</header>
 
 <div class="days" id="days"></div>
-
 <div class="grid" id="grid"></div>
 
+<!-- HORAIRES -->
+
+<div class="block">
+
+<div class="tabs">
+<div class="tab active" onclick="switchTab('maison',event)">Maison</div>
+<div class="tab" onclick="switchTab('grande',event)">Grande</div>
+<div class="tab" onclick="switchTab('beudot',event)">Beudot</div>
+</div>
+
+<div id="daysAdmin"></div>
+
+<button class="save" onclick="save()">Sauvegarder</button>
+
+</div>
+
 <div class="actionBar">
-<input id="clientName" placeholder="Nom client">
-<button onclick="confirmBooking()">Réserver</button>
+<input id="name" placeholder="Nom client">
+<button onclick="book()">Réserver</button>
 </div>
 
 <div id="toast"></div>
@@ -168,24 +238,21 @@ let reservations=[]
 let horaires={}
 let selectedDate=""
 let selectedSlot=null
-
-const paddocks=["maison","grande","beudot"]
+let paddockAdmin="maison"
 
 /* TOAST */
 
-function toast(msg){
-let t=document.getElementById("toast")
-t.innerText=msg
-t.classList.add("show")
-setTimeout(()=>t.classList.remove("show"),2000)
+function toast(t){
+let el=document.getElementById("toast")
+el.innerText=t
+el.classList.add("show")
+setTimeout(()=>el.classList.remove("show"),2000)
 }
 
 /* DATE */
 
 function buildDays(){
-
 for(let i=0;i<3;i++){
-
 let d=new Date()
 d.setDate(d.getDate()+i)
 
@@ -208,9 +275,7 @@ if(i===0){
 selectedDate=date
 el.classList.add("active")
 }
-
 }
-
 }
 
 /* RENDER */
@@ -231,7 +296,7 @@ row.className="row"
 
 row.innerHTML=`<div class="time">${time}</div>`
 
-paddocks.forEach(p=>{
+;["maison","grande","beudot"].forEach(p=>{
 
 let config=horaires[p]?.[day]
 
@@ -248,20 +313,16 @@ cell.innerText="Fermé"
 let resa=reservations.find(r=>r.date===selectedDate && r.paddock===p && normalize(r.time)===time)
 
 if(resa){
-
 cell.classList.add("resa")
 cell.innerText=resa.name
 cell.onclick=()=>cancel(resa.id)
-
 }else{
-
 cell.classList.add("free")
 cell.innerText="+"
 cell.onclick=()=>{
 selectedSlot={p,time}
 toast(p+" "+time)
 }
-
 }
 
 }
@@ -278,11 +339,11 @@ grid.appendChild(row)
 
 /* BOOK */
 
-function confirmBooking(){
+function book(){
 
 if(!selectedSlot) return toast("Choisir un créneau")
 
-let name=document.getElementById("clientName").value.trim()
+let name=document.getElementById("name").value.trim()
 if(!name) return toast("Nom requis")
 
 db.collection("reservations").add({
@@ -293,9 +354,8 @@ time:selectedSlot.time,
 duration:60
 })
 
-document.getElementById("clientName").value=""
+document.getElementById("name").value=""
 selectedSlot=null
-
 toast("Réservé ✔")
 
 }
@@ -303,11 +363,94 @@ toast("Réservé ✔")
 /* CANCEL */
 
 function cancel(id){
-
 if(!confirm("Annuler ?")) return
-
 db.collection("reservations").doc(id).delete()
 toast("Annulé")
+}
+
+/* HORAIRES (IDENTIQUE) */
+
+const days=["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"]
+
+function switchTab(p,e){
+
+paddockAdmin=p
+
+document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"))
+e.target.classList.add("active")
+
+buildHoraires(horaires[p])
+}
+
+function buildHoraires(data){
+
+let container=document.getElementById("daysAdmin")
+container.innerHTML=""
+
+days.forEach(day=>{
+
+let d=data[day]
+
+container.innerHTML+=`
+<div class="dayRow">
+<div>${day}</div>
+
+<div class="row2">
+<div class="closedBtn ${d.closed?'closed':'open'}" onclick="toggle(this)">
+${d.closed?"Fermé":"Ouvert"}
+</div>
+
+<select class="open">${options()}</select>
+<select class="close">${options()}</select>
+
+</div>
+</div>
+`
+})
+
+setTimeout(()=>{
+document.querySelectorAll(".dayRow").forEach((row,i)=>{
+let d=data[days[i]]
+row.querySelector(".open").value=d.open
+row.querySelector(".close").value=d.close
+})
+},0)
+}
+
+function options(){
+let html=""
+for(let h=6;h<=22;h++){
+let hh=String(h).padStart(2,"0")
+html+=`<option value="${hh}:00">${hh}:00</option>`
+}
+return html
+}
+
+function toggle(btn){
+btn.classList.toggle("closed")
+btn.classList.toggle("open")
+btn.innerText=btn.classList.contains("closed")?"Fermé":"Ouvert"
+}
+
+function save(){
+
+let data={}
+
+document.querySelectorAll(".dayRow").forEach((row,i)=>{
+
+let day=days[i]
+
+data[day]={
+open:row.querySelector(".open").value,
+close:row.querySelector(".close").value,
+closed:row.querySelector(".closedBtn").classList.contains("closed")
+}
+
+})
+
+db.collection("horaires").doc(paddockAdmin).set(data,{merge:true})
+
+toast("Horaires sauvegardés")
 
 }
 
@@ -349,6 +492,7 @@ s.forEach(d=>{
 horaires[d.id]=d.data()
 })
 render()
+switchTab(paddockAdmin,{target:document.querySelector(".tab.active")})
 })
 
 /* INIT */
