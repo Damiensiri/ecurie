@@ -4,12 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Paddock Control V6</title>
+<title>Paddock Control V7</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-
 body{margin:0;font-family:'Inter',sans-serif;background:#0f1115;color:white;}
 header{background:#181E3B;padding:15px;text-align:center;font-weight:700;}
 
@@ -18,13 +17,13 @@ header{background:#181E3B;padding:15px;text-align:center;font-weight:700;}
 .day.active{background:#2ecc71;color:black;}
 
 .grid{padding:10px;display:flex;flex-direction:column;gap:8px;}
-.row{display:flex;gap:6px;}
-.time{width:60px;color:#aaa;font-size:12px;}
+.row{display:flex;gap:6px;align-items:center;}
+.time{width:55px;font-size:12px;color:#aaa;}
 
-.slot{flex:1;padding:10px;border-radius:8px;text-align:center;font-weight:600;}
+.slot{flex:1;padding:10px;border-radius:10px;text-align:center;font-weight:600;}
 .free{background:#1f8f5f;}
 .resa{background:#c0392b;}
-.closed{background:#555;color:#bbb;}
+.closedSlot{background:#555;color:#bbb;}
 .selected{outline:3px solid #2ecc71;}
 
 .actionBar{
@@ -35,7 +34,12 @@ display:flex;gap:10px;
 .actionBar input{flex:1;padding:10px;border-radius:8px;border:none;}
 .actionBar button{padding:10px;border:none;border-radius:8px;background:#2ecc71;}
 
-.block{margin:20px 10px 100px;background:#1c1f26;padding:15px;border-radius:15px;}
+.block{
+margin:20px 10px 100px;
+background:#1c1f26;
+padding:15px;
+border-radius:15px;
+}
 
 .tabs{display:flex;gap:10px;margin-bottom:10px;}
 .tab{background:#181E3B;padding:8px;border-radius:8px;cursor:pointer;}
@@ -44,28 +48,41 @@ display:flex;gap:10px;
 .dayRow{margin-bottom:12px;border-bottom:1px solid #333;padding-bottom:10px;}
 .row2{display:flex;align-items:center;gap:8px;}
 
-select{background:#252a33;color:white;border:none;padding:6px;border-radius:6px;}
+select{
+flex:1;
+padding:8px;
+border-radius:8px;
+background:#252a33;
+color:white;
+border:none;
+}
 
-.closedBtn{padding:4px 8px;border-radius:6px;cursor:pointer;color:white;}
-.closedBtn.open{background:#2ecc71;}
-.closedBtn.closed{background:#e74c3c;}
-
-.save{margin-top:10px;width:100%;padding:10px;border:none;border-radius:10px;background:#2ecc71;}
+.closed{
+padding:5px 10px;
+border-radius:6px;
+cursor:pointer;
+}
+.closed.off{background:#2ecc71;}
+.closed:not(.off){background:#e74c3c;}
 
 #toast{
-position:fixed;bottom:70px;left:50%;
+position:fixed;
+bottom:70px;
+left:50%;
 transform:translateX(-50%);
-background:#181E3B;padding:10px 15px;
-border-radius:10px;opacity:0;transition:0.3s;
+background:#181E3B;
+padding:10px 15px;
+border-radius:10px;
+opacity:0;
+transition:0.3s;
 }
 #toast.show{opacity:1;}
-
 </style>
 </head>
 
 <body>
 
-<header>🐎 Paddock Control V6</header>
+<header>🐎 Paddock Control V7</header>
 
 <div class="days" id="days"></div>
 <div class="grid" id="grid"></div>
@@ -80,7 +97,7 @@ border-radius:10px;opacity:0;transition:0.3s;
 
 <div id="daysAdmin"></div>
 
-<button class="save" onclick="save()">Sauvegarder</button>
+<button onclick="save()">Sauvegarder</button>
 
 </div>
 
@@ -110,7 +127,9 @@ let horaires={}
 let selectedDate=""
 let selectedSlot=null
 let dragged=null
-let paddockAdmin="maison"
+let paddock="maison"
+
+const paddocks=["maison","grande","beudot"]
 
 /* TOAST */
 
@@ -124,6 +143,7 @@ setTimeout(()=>el.classList.remove("show"),2000)
 /* DATE */
 
 function buildDays(){
+
 for(let i=0;i<3;i++){
 let d=new Date()
 d.setDate(d.getDate()+i)
@@ -136,31 +156,33 @@ let date=format(d)
 
 el.onclick=()=>{
 selectedDate=date
-document.querySelectorAll(".day").forEach(x=>x.classList.remove("active"))
-el.classList.add("active")
+updateDays()
 render()
 }
 
 document.getElementById("days").appendChild(el)
 
-if(i===0){
-selectedDate=date
-el.classList.add("active")
+if(i===0) selectedDate=date
 }
+
+updateDays()
 }
+
+function updateDays(){
+document.querySelectorAll(".day").forEach((d,i)=>{
+let ref=format(new Date(Date.now()+i*86400000))
+d.classList.toggle("active",ref===selectedDate)
+})
 }
 
 /* SLOT LOGIC */
 
-function isSlotTaken(r, time){
-
+function isSlotTaken(r,time){
 let [rh,rm]=r.time.split(":").map(Number)
 let start=rh+(rm/60)
 let end=start+(r.duration||60)/60
-
 let [sh,sm]=time.split(":").map(Number)
 let slot=sh+(sm/60)
-
 return slot>=start && slot<end
 }
 
@@ -182,7 +204,7 @@ row.className="row"
 
 row.innerHTML=`<div class="time">${time}</div>`
 
-;["maison","grande","beudot"].forEach(p=>{
+paddocks.forEach(p=>{
 
 let config=horaires[p]?.[day]
 
@@ -190,33 +212,23 @@ let cell=document.createElement("div")
 cell.className="slot"
 
 if(!config || config.closed){
-
-cell.classList.add("closed")
+cell.classList.add("closedSlot")
 cell.innerText="Fermé"
-
 }else{
 
 let resa=reservations.find(r=>r.date===selectedDate && r.paddock===p && isSlotTaken(r,time))
 
 if(resa){
-
 cell.classList.add("resa")
 cell.innerText=resa.name
 cell.onclick=()=>cancel(resa.id)
-cell.ontouchstart=()=>dragged=resa
-
 }else{
-
 cell.classList.add("free")
 cell.innerText="+"
-
 cell.onclick=()=>{
 selectedSlot={p,time}
 highlight(cell)
 }
-
-cell.ontouchend=()=>drop(p,time)
-
 }
 
 }
@@ -226,36 +238,17 @@ row.appendChild(cell)
 })
 
 grid.appendChild(row)
-
 }
-
 }
-
-/* HIGHLIGHT */
 
 function highlight(el){
 document.querySelectorAll(".slot").forEach(s=>s.classList.remove("selected"))
 el.classList.add("selected")
 }
 
-/* DRAG */
-
-function drop(p,time){
-if(!dragged) return
-
-db.collection("reservations").doc(dragged.id).update({
-paddock:p,
-time:time
-})
-
-toast("Déplacé 🔄")
-dragged=null
-}
-
 /* BOOK */
 
 function book(){
-
 if(!selectedSlot) return toast("Choisir un créneau")
 
 let name=document.getElementById("name").value.trim()
@@ -273,7 +266,6 @@ document.getElementById("name").value=""
 selectedSlot=null
 
 toast("Réservé ✔")
-
 }
 
 /* CANCEL */
@@ -286,13 +278,16 @@ toast("Annulé")
 
 /* HORAIRES */
 
-const days=["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"]
+const daysList=["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"]
 
-function switchTab(p,e){
-paddockAdmin=p
+function switchTab(name,e){
+paddock=name
 document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"))
 e.target.classList.add("active")
-buildHoraires(horaires[p]||{})
+
+db.collection("horaires").doc(paddock).get().then(doc=>{
+buildHoraires(doc.data())
+})
 }
 
 function buildHoraires(data){
@@ -300,58 +295,41 @@ function buildHoraires(data){
 let container=document.getElementById("daysAdmin")
 container.innerHTML=""
 
-days.forEach(day=>{
+daysList.forEach(day=>{
 
-let d = data[day] || {open:"08:00",close:"19:00",closed:false}
+let d = data?.[day] || {open:"08:00",close:"19:00",closed:false}
 
 container.innerHTML+=`
 <div class="dayRow">
 <div>${day}</div>
 
 <div class="row2">
-<div class="closedBtn ${d.closed?'closed':'open'}" onclick="toggle(this)">
+<div class="closed ${d.closed?'':'off'}" onclick="toggleClosed(this)">
 ${d.closed?"Fermé":"Ouvert"}
 </div>
 
-<select class="open">${options()}</select>
-<select class="close">${options()}</select>
-
+<select class="open">${options(d.open)}</select>
+<select class="close">${options(d.close)}</select>
 </div>
 </div>
 `
 })
 
-setTimeout(()=>{
-document.querySelectorAll(".dayRow").forEach((row,i)=>{
-let d = data[days[i]]
-if(!d) return
-row.querySelector(".open").value=d.open
-row.querySelector(".close").value=d.close
-})
-},0)
 }
 
-function toggle(btn){
-const isClosed = btn.classList.contains("closed")
-
-if(isClosed){
-btn.classList.remove("closed")
-btn.classList.add("open")
-btn.innerText="Ouvert"
-}else{
-btn.classList.remove("open")
-btn.classList.add("closed")
-btn.innerText="Fermé"
-}
-}
-
-function options(){
+function options(selected){
 let html=""
 for(let h=6;h<=22;h++){
 let hh=String(h).padStart(2,"0")
-html+=`<option value="${hh}:00">${hh}:00</option>`
+let val=hh+":00"
+html+=`<option value="${val}" ${val===selected?"selected":""}>${val}</option>`
 }
 return html
+}
+
+function toggleClosed(btn){
+btn.classList.toggle("off")
+btn.innerText=btn.classList.contains("off")?"Ouvert":"Fermé"
 }
 
 /* SAVE FIX FINAL */
@@ -359,28 +337,29 @@ return html
 async function save(){
 
 let newData={}
-let existing = horaires[paddockAdmin] || {}
+
+let existingDoc = await db.collection("horaires").doc(paddock).get()
+let existing = existingDoc.exists ? existingDoc.data() : {}
 
 newData.durations = existing.durations || [60]
 
 document.querySelectorAll(".dayRow").forEach((row,i)=>{
 
-let day=days[i]
+let day=daysList[i]
 
 newData[day]={
 open:row.querySelector(".open").value,
 close:row.querySelector(".close").value,
-closed:row.querySelector(".closedBtn").classList.contains("closed")
+closed:!row.querySelector(".closed").classList.contains("off")
 }
 
 })
 
-await db.collection("horaires").doc(paddockAdmin).set(newData)
+await db.collection("horaires").doc(paddock).set(newData)
 
-toast("Horaires mis à jour ✔")
+toast("Horaires sauvegardés ✔")
 
-switchTab(paddockAdmin,{target:document.querySelector(".tab.active")})
-
+buildHoraires(newData)
 }
 
 /* UTILS */
@@ -390,8 +369,8 @@ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())
 }
 
 function getDayName(date){
-const days=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"]
-return days[new Date(date).getDay()]
+const d=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"]
+return d[new Date(date).getDay()]
 }
 
 function pad(n){
@@ -412,11 +391,8 @@ render()
 
 db.collection("horaires").onSnapshot(s=>{
 horaires={}
-s.forEach(d=>{
-horaires[d.id]=d.data()
-})
+s.forEach(d=>horaires[d.id]=d.data())
 render()
-switchTab(paddockAdmin,{target:document.querySelector(".tab.active")})
 })
 
 /* INIT */
