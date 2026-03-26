@@ -4,34 +4,26 @@
 
 <meta charset="UTF-8">
 
-<!-- 🔥 ANTI ZOOM + PWA -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <title>Paddock Control</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
-<!-- PWA -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#181E3B">
-
 <style>
 
-*{
--webkit-tap-highlight-color: transparent;
-}
+*{ -webkit-tap-highlight-color: transparent; }
 
-body{
+html, body{
 margin:0;
+overflow-x:hidden;
 font-family:'Inter',sans-serif;
 background:#0f1115;
 color:white;
-padding-bottom:90px;
+padding-bottom:120px;
 }
 
-input, select{
-font-size:16px;
-}
+input, select{ font-size:16px; }
 
 header{
 background:#181E3B;
@@ -95,18 +87,19 @@ font-weight:600;
 .closedSlot{background:#555;color:#bbb;}
 .selected{outline:3px solid #2ecc71;}
 
-/* ACTION BAR */
+/* ACTION BAR FIX */
 
 .actionBar{
 position:fixed;
-bottom:0;
 left:0;
+bottom:0;
 width:100%;
-background:#181E3B;
-padding:10px;
-padding-bottom:calc(10px + env(safe-area-inset-bottom));
 display:flex;
 gap:10px;
+background:#181E3B;
+padding:10px;
+padding-bottom:calc(env(safe-area-inset-bottom) + 12px);
+box-sizing:border-box;
 z-index:1000;
 }
 
@@ -152,33 +145,13 @@ padding:15px;
 border-radius:15px;
 }
 
-.tabs{
-display:flex;
-gap:10px;
-margin-bottom:10px;
-}
+.tabs{display:flex;gap:10px;margin-bottom:10px;}
+.tab{background:#181E3B;padding:8px;border-radius:8px;}
+.tab.active{background:#2ecc71;color:black;}
 
-.tab{
-background:#181E3B;
-padding:8px;
-border-radius:8px;
-}
+.dayRow{margin-bottom:12px;border-bottom:1px solid #333;padding-bottom:10px;}
 
-.tab.active{
-background:#2ecc71;
-color:black;
-}
-
-.dayRow{
-margin-bottom:12px;
-border-bottom:1px solid #333;
-padding-bottom:10px;
-}
-
-.row2{
-display:flex;
-gap:8px;
-}
+.row2{display:flex;gap:8px;}
 
 .closed{
 padding:5px 10px;
@@ -193,7 +166,7 @@ cursor:pointer;
 
 #toast{
 position:fixed;
-bottom:80px;
+bottom:90px;
 left:50%;
 transform:translateX(-50%);
 background:#181E3B;
@@ -202,7 +175,6 @@ border-radius:10px;
 opacity:0;
 transition:0.3s;
 }
-
 #toast.show{opacity:1;}
 
 </style>
@@ -254,7 +226,7 @@ transition:0.3s;
 
 <script>
 
-/* 🔥 FIREBASE */
+/* FIREBASE */
 
 firebase.initializeApp({
 apiKey:"AIza...",
@@ -269,8 +241,6 @@ let selectedDate=""
 let selectedSlot=null
 
 const paddocks=["maison","grande","beudot"]
-
-/* TOAST */
 
 function toast(t){
 let el=document.getElementById("toast")
@@ -323,7 +293,7 @@ let slot=sh+(sm/60)
 return slot>=start && slot<end
 }
 
-/* RENDER */
+/* RENDER AVEC BLOCK 1H30 */
 
 function render(){
 
@@ -349,8 +319,8 @@ while(current<end){
 
 let h=Math.floor(current)
 let m=current%1===0?"00":"30"
-
 let time=pad(h)+":"+m
+
 slotsSet.add(time)
 
 let resa=reservations.find(r=>r.date===selectedDate && r.paddock===p && r.time===time)
@@ -394,17 +364,39 @@ cell.innerText="Fermé"
 
 let resa=reservations.find(r=>r.date===selectedDate && r.paddock===p && isSlotTaken(r,time))
 
+let startMatch=reservations.find(r=>r.date===selectedDate && r.paddock===p && r.time===time)
+
 if(resa){
+
 cell.classList.add("resa")
+
+if(startMatch){
+
 cell.innerText=resa.name
-cell.onclick=()=>cancel(resa.id)
+
+if(resa.duration==90){
+cell.style.height="110px"
+cell.style.display="flex"
+cell.style.alignItems="center"
+cell.style.justifyContent="center"
+}
+
 }else{
+cell.style.visibility="hidden"
+}
+
+cell.onclick=()=>cancel(resa.id)
+
+}else{
+
 cell.classList.add("free")
 cell.innerText="+"
+
 cell.onclick=()=>{
 selectedSlot={p,time}
 highlight(cell)
 }
+
 }
 
 }
@@ -444,6 +436,7 @@ duration
 
 document.getElementById("name").value=""
 selectedSlot=null
+
 toast("Réservé ✔")
 }
 
@@ -588,8 +581,6 @@ horaires={}
 s.forEach(d=>horaires[d.id]=d.data())
 render()
 })
-
-/* INIT */
 
 buildDays()
 
