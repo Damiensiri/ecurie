@@ -5,13 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Template Affiche Grand Rang</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Bebas Neue', Arial, sans-serif;
       background: #e5e5e5;
     }
 
     .poster {
+      background:
+      radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 30%),
+      linear-gradient(135deg, #0d2b1f 0%, #10281f 35%, #091c14 100%);
       width: 1200px;
       height: 675px;
       position: relative;
@@ -22,6 +28,7 @@
     }
 
     .photo {
+      filter: contrast(1.12) saturate(1.08) brightness(0.92) sepia(0.08);
       position: absolute;
       top: 0;
       right: 0;
@@ -39,21 +46,45 @@
     .texture {
       position: absolute;
       inset: 0;
-      opacity: 0.08;
-      background-image: radial-gradient(#ffffff 1px, transparent 1px);
-      background-size: 12px 12px;
+      opacity: 0.09;
+      background-image:
+        radial-gradient(rgba(255,255,255,0.35) 1px, transparent 1px),
+        radial-gradient(rgba(0,0,0,0.25) 1px, transparent 1px);
+      background-size: 14px 14px, 21px 21px;
+      background-position: 0 0, 8px 8px;
+      mix-blend-mode: overlay;
+      pointer-events: none;
+    }
+
+    .paint-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+      linear-gradient(110deg, rgba(255,255,255,0.06), transparent 35%),
+      linear-gradient(290deg, rgba(0,0,0,0.18), transparent 40%);
+      mix-blend-mode: soft-light;
       pointer-events: none;
     }
 
     .report-banner {
       transform: rotate(-2deg);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+      border: 2px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(2px);
     }
 
     .stroke {
       text-shadow:
-        2px 2px 0 rgba(0,0,0,0.25),
-        4px 4px 15px rgba(0,0,0,0.35);
+        3px 3px 0 rgba(0,0,0,0.35),
+        0 0 18px rgba(0,0,0,0.3),
+        6px 6px 22px rgba(0,0,0,0.45);
+    }
+
+    .gold {
+      color: #e0a63d;
+      text-shadow:
+      2px 2px 0 rgba(0,0,0,0.35),
+      0 0 18px rgba(224,166,61,0.2);
     }
   </style>
 </head>
@@ -127,13 +158,14 @@
 
     <div class="overlay"></div>
     <div class="texture"></div>
+    <div class="paint-overlay"></div>
 
     <div class="absolute left-12 top-10 z-10">
-      <div id="posterTitle" class="text-white text-7xl font-black uppercase tracking-wide stroke">
+      <div id="posterTitle" class="text-white text-8xl font-black uppercase tracking-wider stroke leading-none" style="font-family:'Anton', sans-serif; letter-spacing:2px;">
         PROMENADE
       </div>
 
-      <div id="posterSubtitle" class="text-[#e0a63d] text-6xl italic mt-1 stroke">
+      <div id="posterSubtitle" class="gold text-7xl italic mt-2 stroke">
         à cheval
       </div>
     </div>
@@ -148,7 +180,7 @@
       </div>
     </div>
 
-    <div id="reportBanner" class="report-banner absolute left-10 top-[430px] bg-red-700 text-white px-8 py-5 rounded-2xl z-10">
+    <div id="reportBanner" class="report-banner absolute left-8 top-[420px] bg-gradient-to-r from-red-800 to-red-600 text-white px-10 py-6 rounded-[28px] z-10">
       <div id="posterReport" class="text-4xl font-black uppercase leading-tight">
         REPORTÉE AU<br/>DIMANCHE 21 JUIN
       </div>
