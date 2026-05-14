@@ -226,16 +226,15 @@
     <!-- BASE ORIGINAL IMAGE -->
     <img
       id="basePoster"
-      src="https://i.imgur.com/4j9Q6iK.jpeg"
+      src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1600&auto=format&fit=crop"
       class="absolute inset-0 w-full h-full object-cover"
     />
 
-    <!-- REPLACEABLE PHOTO -->
+    <!-- REPLACEABLE PHOTO AREA -->
     <img
       id="posterImage"
-      class="absolute top-0 right-0 w-[61%] h-full object-cover"
-      src="https://images.unsplash.com/photo-1517849845537-4d257902454a?q=80&w=1400&auto=format&fit=crop"
-      style="mix-blend-mode:normal; clip-path: inset(0 0 0 0);"
+      class="absolute top-0 right-0 w-[62%] h-full object-cover opacity-0 pointer-events-none"
+      src=""
     />
 
     <!-- DYNAMIC DATE -->
@@ -311,7 +310,9 @@
 
     const reader = new FileReader();
     reader.onload = function(event) {
-      document.getElementById('posterImage').src = event.target.result;
+      const img = document.getElementById('posterImage');
+      img.src = event.target.result;
+      img.style.opacity = '1';
     };
     reader.readAsDataURL(file);
   });
