@@ -161,7 +161,7 @@
 
   </style>
 </head>
-<body class="p-8">
+<body class="p-8 bg-[#d7d7d7]">
 
 <div class="flex flex-col xl:flex-row gap-8 items-start">
 
@@ -221,86 +221,56 @@
   </div>
 
   <!-- POSTER -->
-  <div id="poster" class="poster scale-[0.58] origin-top-left">
+  <div id="poster" class="relative w-[1536px] h-[864px] scale-[0.58] origin-top-left overflow-hidden shadow-2xl bg-black rounded-none">
 
+    <!-- BASE ORIGINAL IMAGE -->
     <img
-      id="posterImage"
-      class="photo"
-      src="https://images.unsplash.com/photo-1517849845537-4d257902454a?q=80&w=1400&auto=format&fit=crop"
+      id="basePoster"
+      src="https://i.imgur.com/4j9Q6iK.jpeg"
+      class="absolute inset-0 w-full h-full object-cover"
     />
 
-    <div class="overlay"></div>
-    <div class="grain"></div>
-    <div class="vignette"></div>
-    <div class="brush-white"></div>
-    <div class="absolute right-[40px] top-[40px] z-10 text-center">
-      <div class="w-[300px] h-[300px] rounded-full bg-white flex flex-col items-center justify-center relative overflow-hidden shadow-2xl">
-        <div class="absolute inset-0 opacity-15" style="background:repeating-radial-gradient(circle at center, rgba(0,0,0,.08) 0 2px, transparent 2px 8px);"></div>
-        <div class="text-[#1358a5] text-[120px] leading-none">♞</div>
-        <div class="text-[#1358a5] text-[58px] leading-none" style="font-family:Georgia,serif;font-weight:bold;">GRAND RANG</div>
-        <div class="text-[#1358a5] text-[28px] mt-2 tracking-wide" style="font-family:Georgia,serif;">CENTRE ÉQUESTRE</div>
-      </div>
-    </div>
-    <div class="footer-band"></div>
+    <!-- REPLACEABLE PHOTO -->
+    <img
+      id="posterImage"
+      class="absolute top-0 right-0 w-[61%] h-full object-cover"
+      src="https://images.unsplash.com/photo-1517849845537-4d257902454a?q=80&w=1400&auto=format&fit=crop"
+      style="mix-blend-mode:normal; clip-path: inset(0 0 0 0);"
+    />
 
-    <div class="absolute left-[42px] top-[10px] z-10">
-      <div id="posterTitle" class="text-white text-[150px] font-black uppercase tracking-tight stroke leading-[0.88]" style="font-family:'Anton', sans-serif; letter-spacing:1px;">
-        PROMENADE
-      </div>
-
-      <div id="posterSubtitle" class="gold text-[115px] italic -mt-2 stroke" style="font-family:'Brush Script MT', cursive; font-weight:700; letter-spacing:-1px;">
-        à cheval
-      </div>
+    <!-- DYNAMIC DATE -->
+    <div id="posterDate"
+      class="absolute bottom-[88px] left-[405px] text-white text-[72px] leading-[0.88] font-black uppercase"
+      style="font-family:'Anton',sans-serif;text-shadow:4px 4px 10px rgba(0,0,0,.45);">
+      SAMEDI<br>21 JUIN
     </div>
 
-    <div class="absolute left-[52px] top-[360px] text-white z-10 flex items-start gap-14">
-      <div class="flex items-center gap-5 mt-2">
-        <div class="w-[92px] h-[92px] rounded-full border-[6px] border-[#d89a34] flex items-center justify-center text-[#d89a34] text-[52px] font-bold">⌘</div>
-        <div id="posterDate" class="text-[74px] font-black uppercase leading-[0.9] stroke" style="font-family:'Anton', sans-serif;">
-        SAMEDI<br/>14 JUIN
-      </div>
-      </div>
-
-      <div class="flex items-center gap-5 mt-10 ml-[310px]">
-        <div class="w-[88px] h-[88px] rounded-full border-[6px] border-[#d89a34] flex items-center justify-center text-[#d89a34] text-[44px]">◷</div>
-        <div id="posterTime" class="text-[66px] font-black mt-7 stroke" style="font-family:'Anton', sans-serif;">
-        14H - 17H
-      </div>
-      <div class="text-[30px]" style="font-family:'Brush Script MT', cursive;">
-        Venez partager votre passion !
-      </div>
-      <div class="text-[28px] text-[#d89a34]">
-        🌐 ce-dugrandrang.com
-      </div>
+    <!-- DYNAMIC TIME -->
+    <div id="posterTime"
+      class="absolute bottom-[105px] left-[720px] text-white text-[70px] font-black uppercase"
+      style="font-family:'Anton',sans-serif;text-shadow:4px 4px 10px rgba(0,0,0,.45);">
+      14H - 17H
     </div>
 
-  </div>
-
-    <div class="absolute left-[315px] top-[715px] text-white text-[30px] leading-[1.15] z-10" style="font-family:'Brush Script MT', cursive;">
-      Venez profiter d'un moment de détente<br>
-      en pleine <span class="gold">nature !</span>
+    <!-- DYNAMIC PRICE -->
+    <div id="posterPrice"
+      class="absolute left-[72px] bottom-[170px] text-black text-[92px] font-black"
+      style="font-family:'Anton',sans-serif;">
+      35€
     </div>
 
-    <div id="reportBanner" class="report-banner">
-      <div class="report-top">
-        REPORTÉE !
+    <!-- STATUS BANNER -->
+    <div id="statusBanner" class="absolute left-[155px] top-[305px] rotate-[-2deg] z-20">
+      <div id="statusTop"
+        class="bg-[#c91515] text-white text-[92px] px-[34px] py-[12px] leading-none"
+        style="font-family:'Anton',sans-serif; box-shadow:0 10px 25px rgba(0,0,0,.35);">
+        REPORTÉE
       </div>
-      <div id="posterReport" class="report-bottom">
-        AU DIMANCHE 21 JUIN
-      </div>
-    </div>
 
-    <div class="absolute left-[35px] bottom-[80px] z-10">
-      <div class="w-[210px] h-[210px] rounded-full bg-[#dca03a] flex items-center justify-center shadow-2xl border-[8px] border-[#11111155]">
-        <div id="posterPrice" class="text-[100px] font-black text-black" style="font-family:'Anton', sans-serif;">
-          35€
-        </div>
-      </div>
-    </div>
-
-    <div class="absolute bottom-[34px] left-[340px] text-white text-[32px] font-semibold z-10 stroke flex items-center gap-12" style="font-family:'Bebas Neue', sans-serif; letter-spacing:1px;">
-      <div class="text-[#f0f0f0]" id="posterFooter">
-        Réservation obligatoire • 06.52.54.68.78
+      <div id="statusBottom"
+        class="bg-white text-[#c91515] text-[82px] px-[30px] py-[6px] ml-[32px] leading-none"
+        style="font-family:'Anton',sans-serif; box-shadow:0 10px 25px rgba(0,0,0,.28);">
+        AU 21 JUIN
       </div>
     </div>
 
@@ -308,6 +278,66 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<script>
+  const bind = (inputId, targetId, formatter = null) => {
+    const input = document.getElementById(inputId);
+    const target = document.getElementById(targetId);
+
+    if (!input || !target) return;
+
+    input.addEventListener('input', () => {
+      target.innerHTML = formatter ? formatter(input.value) : input.value;
+    });
+  };
+
+  bind('dateInput', 'posterDate', value => value.replace(' ', '<br>'));
+  bind('timeInput', 'posterTime');
+  bind('priceInput', 'posterPrice');
+
+  const reportInput = document.getElementById('reportInput');
+  reportInput.addEventListener('input', () => {
+    const value = reportInput.value;
+
+    const parts = value.split('|');
+
+    document.getElementById('statusTop').innerText = parts[0] || 'REPORTÉE';
+    document.getElementById('statusBottom').innerText = parts[1] || 'AU 21 JUIN';
+  });
+
+  document.getElementById('imageInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      document.getElementById('posterImage').src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function toggleReport() {
+    const banner = document.getElementById('statusBanner');
+    banner.style.display = banner.style.display === 'none' ? 'block' : 'none';
+  }
+
+  async function downloadPoster() {
+    const poster = document.getElementById('poster');
+
+    const canvas = await html2canvas(poster, {
+      useCORS: true,
+      scale: 2
+    });
+
+    const link = document.createElement('a');
+    link.download = 'affiche-grand-rang.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+</script>
+
+</body>
+</html>
 
 <script>
   const bind = (inputId, targetId, formatter = null) => {
