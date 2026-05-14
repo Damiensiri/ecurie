@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Template Affiche Grand Rang</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #e5e5e5;
+    }
+
+    .poster {
+      width: 1200px;
+      height: 675px;
+      position: relative;
+      overflow: hidden;
+      background: #0d2b1f;
+      border-radius: 24px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+
+    .photo {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 62%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(13,43,31,1) 35%, rgba(13,43,31,0.6) 52%, rgba(13,43,31,0) 70%);
+    }
+
+    .texture {
+      position: absolute;
+      inset: 0;
+      opacity: 0.08;
+      background-image: radial-gradient(#ffffff 1px, transparent 1px);
+      background-size: 12px 12px;
+      pointer-events: none;
+    }
+
+    .report-banner {
+      transform: rotate(-2deg);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    .stroke {
+      text-shadow:
+        2px 2px 0 rgba(0,0,0,0.25),
+        4px 4px 15px rgba(0,0,0,0.35);
+    }
+  </style>
+</head>
+<body class="p-8">
+
+<div class="flex flex-col xl:flex-row gap-8 items-start">
+
+  <!-- CONTROLS -->
+  <div class="bg-white rounded-3xl shadow-xl p-6 w-full xl:w-[360px] space-y-4">
+    <h2 class="text-2xl font-bold">Éditeur d'affiche</h2>
+
+    <div>
+      <label class="font-semibold">Titre</label>
+      <input id="titleInput" type="text" value="PROMENADE" class="w-full border rounded-xl p-2 mt-1" />
+    </div>
+
+    <div>
+      <label class="font-semibold">Sous-titre</label>
+      <input id="subtitleInput" type="text" value="à cheval" class="w-full border rounded-xl p-2 mt-1" />
+    </div>
+
+    <div>
+      <label class="font-semibold">Date initiale</label>
+      <input id="dateInput" type="text" value="SAMEDI 14 JUIN" class="w-full border rounded-xl p-2 mt-1" />
+    </div>
+
+    <div>
+      <label class="font-semibold">Horaire</label>
+      <input id="timeInput" type="text" value="14H - 17H" class="w-full border rounded-xl p-2 mt-1" />
+    </div>
+
+    <div>
+      <label class="font-semibold">Texte report</label>
+      <input id="reportInput" type="text" value="REPORTÉE AU DIMANCHE 21 JUIN" class="w-full border rounded-xl p-2 mt-1" />
+    </div>
+
+    <div>
+      <label class="font-semibold">Prix</label>
+      <input id="priceInput" type="text" value="35€" class="w-full border rounded-xl p-2 mt-1" />
+    </div>
+
+    <div>
+      <label class="font-semibold">Réservation</label>
+      <input id="footerInput" type="text" value="Réservation obligatoire • 06.52.54.68.78" class="w-full border rounded-xl p-2 mt-1" />
+    </div>
+
+    <div>
+      <label class="font-semibold">Photo</label>
+      <input id="imageInput" type="file" accept="image/*" class="w-full mt-2" />
+    </div>
+
+    <div class="flex gap-3 pt-2">
+      <button onclick="toggleReport()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-bold">
+        Afficher/Masquer Report
+      </button>
+
+      <button onclick="downloadPoster()" class="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-xl font-bold">
+        Export PNG
+      </button>
+    </div>
+  </div>
+
+  <!-- POSTER -->
+  <div id="poster" class="poster scale-[0.7] origin-top-left">
+
+    <img
+      id="posterImage"
+      class="photo"
+      src="https://images.unsplash.com/photo-1517849845537-4d257902454a?q=80&w=1400&auto=format&fit=crop"
+    />
+
+    <div class="overlay"></div>
+    <div class="texture"></div>
+
+    <div class="absolute left-12 top-10 z-10">
+      <div id="posterTitle" class="text-white text-7xl font-black uppercase tracking-wide stroke">
+        PROMENADE
+      </div>
+
+      <div id="posterSubtitle" class="text-[#e0a63d] text-6xl italic mt-1 stroke">
+        à cheval
+      </div>
+    </div>
+
+    <div class="absolute left-14 top-[250px] text-white z-10">
+      <div id="posterDate" class="text-4xl font-black uppercase leading-tight stroke">
+        SAMEDI<br/>14 JUIN
+      </div>
+
+      <div id="posterTime" class="text-3xl font-bold mt-5 stroke">
+        14H - 17H
+      </div>
+    </div>
+
+    <div id="reportBanner" class="report-banner absolute left-10 top-[430px] bg-red-700 text-white px-8 py-5 rounded-2xl z-10">
+      <div id="posterReport" class="text-4xl font-black uppercase leading-tight">
+        REPORTÉE AU<br/>DIMANCHE 21 JUIN
+      </div>
+    </div>
+
+    <div class="absolute left-10 bottom-10 z-10">
+      <div class="w-32 h-32 rounded-full bg-[#e0a63d] flex items-center justify-center shadow-2xl">
+        <div id="posterPrice" class="text-5xl font-black text-black">
+          35€
+        </div>
+      </div>
+    </div>
+
+    <div class="absolute bottom-8 left-[220px] text-white text-2xl font-semibold z-10 stroke">
+      <div id="posterFooter">
+        Réservation obligatoire • 06.52.54.68.78
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<script>
+  const bind = (inputId, targetId, formatter = null) => {
+    const input = document.getElementById(inputId);
+    const target = document.getElementById(targetId);
+
+    input.addEventListener('input', () => {
+      target.innerHTML = formatter ? formatter(input.value) : input.value;
+    });
+  };
+
+  bind('titleInput', 'posterTitle');
+  bind('subtitleInput', 'posterSubtitle');
+  bind('dateInput', 'posterDate', value => value.replace(' ', '<br/>'));
+  bind('timeInput', 'posterTime');
+  bind('reportInput', 'posterReport', value => value.replace('AU ', 'AU<br/>'));
+  bind('priceInput', 'posterPrice');
+  bind('footerInput', 'posterFooter');
+
+  document.getElementById('imageInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      document.getElementById('posterImage').src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function toggleReport() {
+    const banner = document.getElementById('reportBanner');
+    banner.style.display = banner.style.display === 'none' ? 'block' : 'none';
+  }
+
+  async function downloadPoster() {
+    const poster = document.getElementById('poster');
+
+    const canvas = await html2canvas(poster, {
+      useCORS: true,
+      scale: 2
+    });
+
+    const link = document.createElement('a');
+    link.download = 'affiche-grand-rang.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+</script>
+
+</body>
+</html>
