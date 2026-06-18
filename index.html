@@ -45,6 +45,10 @@ border-radius:15px;
 padding:15px;
 }
 
+.card + .card{
+margin-top:15px;
+}
+
 .tabs{display:flex;gap:10px;margin-bottom:10px;}
 
 .tabs button{
@@ -75,6 +79,101 @@ padding:6px;
 .free{background:#2ecc71;}
 .resa{background:#e74c3c;cursor:pointer;}
 .closed{background:#555;color:#bbb;font-weight:bold;}
+
+.section-title{
+margin:0 0 12px;
+font-size:18px;
+}
+
+.restriction-form{
+display:grid;
+grid-template-columns:repeat(5, max-content);
+gap:12px;
+align-items:center;
+margin-bottom:15px;
+}
+
+.restriction-form input[type="date"]{
+background:#0f1115;
+border:1px solid #333;
+border-radius:8px;
+color:white;
+padding:8px;
+}
+
+.restriction-form label{
+display:flex;
+align-items:center;
+gap:6px;
+white-space:nowrap;
+}
+
+.restriction-form input[type="checkbox"]{
+width:18px;
+height:18px;
+accent-color:#2ecc71;
+}
+
+.restriction-form button{
+padding:8px 12px;
+border:none;
+border-radius:8px;
+background:#2ecc71;
+color:black;
+font-weight:bold;
+cursor:pointer;
+}
+
+.restrictions-empty{
+color:#bbb;
+margin:0;
+}
+
+.restriction-toast{
+display:none;
+margin:0 0 12px;
+padding:10px;
+border-radius:8px;
+background:#2ecc71;
+color:black;
+font-weight:bold;
+}
+
+.restriction-item{
+border:1px solid #333;
+padding:10px;
+}
+
+.restriction-date{
+font-weight:bold;
+margin-bottom:8px;
+}
+
+.restriction-status{
+margin:4px 0;
+}
+
+.delete-btn{
+font-size:18px;
+border:none;
+border-radius:8px;
+background:#181E3B;
+color:white;
+padding:8px 10px;
+cursor:pointer;
+margin-top:8px;
+}
+
+@media(max-width:700px){
+.restriction-form{
+grid-template-columns:1fr;
+align-items:stretch;
+}
+
+.restriction-form label{
+justify-content:flex-start;
+}
+}
 
 </style>
 </head>
@@ -114,6 +213,33 @@ padding:6px;
 </div>
 
 <table id="planning"></table>
+
+</div>
+
+<div class="card">
+
+<h2 class="section-title">Exceptions 1h30</h2>
+
+<div id="restrictionToast" class="restriction-toast"></div>
+
+<div class="restriction-form">
+<input type="date" id="restrictionDate" onchange="fillRestrictionForm()">
+<button onclick="setRestrictionToday()">Aujourd'hui</button>
+
+<label>
+<input type="checkbox" id="restrictionGrande">
+Interdire le 1h30 sur Grande voie
+</label>
+
+<label>
+<input type="checkbox" id="restrictionBeudot">
+Interdire le 1h30 sur Beudot
+</label>
+
+<button id="restrictionSaveBtn" onclick="saveRestriction()">Ajouter</button>
+</div>
+
+<div id="restrictionsList"></div>
 
 </div>
 
@@ -157,6 +283,7 @@ const db=firebase.firestore()
 
 let reservations=[]
 let horaires={}
+let restrictions={}
 let currentDate=""
 let firstLoad=true
 
@@ -345,6 +472,130 @@ document.getElementById("planning").innerHTML=html
 
 }
 
+/* EXCEPTIONS 1H30 */
+
+function fillRestrictionForm(){
+
+const date=document.getElementById("restrictionDate").value
+const restriction=restrictions[date]
+
+document.getElementById("restrictionGrande").checked=!!(restriction && restriction.blockGrande90)
+document.getElementById("restrictionBeudot").checked=!!(restriction && restriction.blockBeudot90)
+document.getElementById("restrictionSaveBtn").textContent=restriction ? "Mettre à jour" : "Ajouter"
+
+}
+
+let restrictionToastTimeout=null
+
+function showRestrictionToast(message){
+
+const toast=document.getElementById("restrictionToast")
+
+toast.textContent=message
+toast.style.display="block"
+
+clearTimeout(restrictionToastTimeout)
+restrictionToastTimeout=setTimeout(()=>{
+toast.style.display="none"
+},2500)
+
+}
+
+function setRestrictionToday(){
+
+document.getElementById("restrictionDate").value=dateOffset(0)
+fillRestrictionForm()
+
+}
+
+async function saveRestriction(){
+
+const date=document.getElementById("restrictionDate").value
+
+if(!date){
+showRestrictionToast("Choisissez une date")
+return
+}
+
+const exists=!!restrictions[date]
+const blockGrande90=document.getElementById("restrictionGrande").checked
+const blockBeudot90=document.getElementById("restrictionBeudot").checked
+
+if(!blockGrande90 && !blockBeudot90){
+
+await db.collection("restrictions").doc(date).delete()
+showRestrictionToast(exists ? "Exception supprimée" : "Aucune interdiction à enregistrer")
+return
+
+}
+
+await db.collection("restrictions").doc(date).set({
+blockGrande90:blockGrande90,
+blockBeudot90:blockBeudot90
+})
+
+showRestrictionToast(exists ? "Exception mise à jour" : "Exception ajoutée")
+
+}
+
+async function deleteRestriction(date){
+
+if(!confirm("Supprimer cette exception ?")) return
+
+await db.collection("restrictions").doc(date).delete()
+
+showRestrictionToast("Exception supprimée")
+
+}
+
+function formatDateFr(date){
+
+const parts=date.split("-")
+const d=new Date(parts[0],parts[1]-1,parts[2])
+
+return d.toLocaleDateString("fr-FR",{
+day:"numeric",
+month:"long",
+year:"numeric"
+})
+
+}
+
+function dateValue(date){
+
+const parts=date.split("-")
+const d=new Date(parts[0],parts[1]-1,parts[2])
+
+return d.getTime()
+
+}
+
+function renderRestrictions(){
+
+const list=document.getElementById("restrictionsList")
+const dates=Object.keys(restrictions).sort((a,b)=>dateValue(a)-dateValue(b))
+
+if(dates.length===0){
+list.innerHTML="<p class='restrictions-empty'>Aucune exception enregistrée.</p>"
+return
+}
+
+let html=""
+
+dates.forEach(date=>{
+const restriction=restrictions[date]
+html+="<div class='restriction-item'>"
+html+="<div class='restriction-date'>"+formatDateFr(date)+"</div>"
+html+="<div class='restriction-status'>Grande voie : "+(restriction.blockGrande90 ? "🚫 Interdit" : "✅ Autorisé")+"</div>"
+html+="<div class='restriction-status'>Beudot : "+(restriction.blockBeudot90 ? "🚫 Interdit" : "✅ Autorisé")+"</div>"
+html+=`<button class="delete-btn" onclick="deleteRestriction('${date}')" title="Supprimer">🗑️ Supprimer</button>`
+html+="</div>"
+})
+
+list.innerHTML=html
+
+}
+
 /* FIREBASE RESERVATIONS LIVE */
 
 db.collection("reservations").onSnapshot(snapshot=>{
@@ -388,6 +639,21 @@ horaires[doc.id]=doc.data()
 })
 
 buildPlanning()
+
+})
+
+/* FIREBASE EXCEPTIONS 1H30 LIVE */
+
+db.collection("restrictions").onSnapshot(snapshot=>{
+
+restrictions={}
+
+snapshot.forEach(doc=>{
+restrictions[doc.id]=doc.data()
+})
+
+renderRestrictions()
+fillRestrictionForm()
 
 })
 
