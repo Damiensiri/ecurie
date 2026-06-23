@@ -883,13 +883,14 @@
               </label>
               <label class="field-label">Action
                 <select class="select" id="restrictionTarget">
+                  <option value="none">Aucune exception</option>
                   <option value="grande">Interdire Grande voie</option>
                   <option value="beudot">Interdire Beudot</option>
                   <option value="both">Interdire les deux</option>
                 </select>
               </label>
             </div>
-            <button class="warning-action" id="fakeSaveRestriction" style="width: 100%; margin-top: 12px;">Simuler l'exception</button>
+            <button class="warning-action" id="saveRestrictionBtn" style="width: 100%; margin-top: 12px;">Enregistrer l'exception</button>
             <div class="list-grid" id="restrictionList" style="margin-top: 12px;"></div>
           </div>
         </section>
@@ -1075,6 +1076,24 @@
         button.classList.toggle("is-active", offsetDate(Number(button.dataset.dayOffset)) === date);
       });
       renderPlanning();
+    }
+
+    function fillRestrictionForm() {
+      const date = document.getElementById("restrictionDate").value;
+      const restriction = restrictions[date];
+      const target = document.getElementById("restrictionTarget");
+
+      if (!restriction) {
+        target.value = "none";
+      } else if (restriction.blockGrande90 && restriction.blockBeudot90) {
+        target.value = "both";
+      } else if (restriction.blockGrande90) {
+        target.value = "grande";
+      } else if (restriction.blockBeudot90) {
+        target.value = "beudot";
+      } else {
+        target.value = "none";
+      }
     }
 
     function recordsForDay(date) {
@@ -1319,6 +1338,7 @@
       renderBlocks();
       renderHours();
       renderRestrictions();
+      fillRestrictionForm();
     }
 
     function normalizeReservation(doc) {
@@ -1396,6 +1416,36 @@
 
       await db.collection("reservations").doc(id).delete();
       showToast("Blocage supprime.");
+    }
+
+    async function saveRestriction() {
+      if (!db) {
+        showToast("Firebase n'est pas encore pret.");
+        return;
+      }
+
+      const date = document.getElementById("restrictionDate").value;
+      const target = document.getElementById("restrictionTarget").value;
+
+      if (!date) {
+        showToast("Choisis une date.");
+        return;
+      }
+
+      if (target === "none") {
+        if (!confirm(`Supprimer les exceptions 1h30 du ${formatDate(date)} ?`)) return;
+        await db.collection("restrictions").doc(date).delete();
+        showToast("Exception supprimee.");
+        return;
+      }
+
+      const payload = {
+        blockGrande90: target === "grande" || target === "both",
+        blockBeudot90: target === "beudot" || target === "both"
+      };
+
+      await db.collection("restrictions").doc(date).set(payload);
+      showToast("Exception enregistree.");
     }
 
     function subscribeFirebaseReadOnly() {
@@ -1491,9 +1541,10 @@
       renderReservations();
     });
     document.getElementById("hoursPaddock").addEventListener("change", renderHours);
+    document.getElementById("restrictionDate").addEventListener("change", fillRestrictionForm);
     document.getElementById("createBlockBtn").addEventListener("click", createBlockage);
     document.getElementById("fakeSaveHours").addEventListener("click", () => showToast("Lecture seule: aucun horaire n'est modifie dans Firebase."));
-    document.getElementById("fakeSaveRestriction").addEventListener("click", () => showToast("Lecture seule: aucune exception n'est envoyee a Firebase."));
+    document.getElementById("saveRestrictionBtn").addEventListener("click", saveRestriction);
 
     setSelectedDate(offsetDate(0));
     refreshViews();
