@@ -917,7 +917,7 @@
           </div>
           <div class="panel-body">
             <div class="accordion" id="hoursAccordion"></div>
-            <button class="primary-action" id="fakeSaveHours" style="width: 100%; margin-top: 12px;">Simuler la sauvegarde</button>
+            <button class="primary-action" id="saveHoursBtn" style="width: 100%; margin-top: 12px;">Sauvegarder les horaires</button>
           </div>
         </section>
       </section>
@@ -1300,14 +1300,14 @@
                 <span class="badge ${config.closed ? "red" : "green"}">${config.closed ? "Ferme" : "Ouvert"}</span>
               </span>
             </summary>
-            <div class="hours-row">
-              <label class="choice"><input type="checkbox" ${config.closed ? "" : "checked"}> Ouvert</label>
+            <div class="hours-row" data-day="${day}">
+              <label class="choice"><input type="checkbox" data-closed ${config.closed ? "" : "checked"}> Ouvert</label>
               <div class="form-grid">
                 <label class="field-label">Ouverture
-                  <input class="field" type="time" value="${config.open}">
+                  <input class="field" data-open type="time" value="${config.open}">
                 </label>
                 <label class="field-label">Fermeture
-                  <input class="field" type="time" value="${config.close}">
+                  <input class="field" data-close type="time" value="${config.close}">
                 </label>
               </div>
             </div>
@@ -1472,6 +1472,35 @@
       showToast("Exception enregistree.");
     }
 
+    async function saveHours() {
+      if (!db) {
+        showToast("Firebase n'est pas encore pret.");
+        return;
+      }
+
+      const selectedPaddock = document.getElementById("hoursPaddock").value;
+      const targetPaddocks = selectedPaddock === "all" ? ["maison", "grande", "beudot"] : [selectedPaddock];
+      const nextConfig = {};
+
+      document.querySelectorAll("#hoursAccordion .hours-row").forEach((row) => {
+        const day = row.dataset.day;
+        const open = row.querySelector("[data-open]").value;
+        const close = row.querySelector("[data-close]").value;
+        const isOpen = row.querySelector("[data-closed]").checked;
+        nextConfig[day] = {
+          closed: !isOpen,
+          open,
+          close
+        };
+      });
+
+      const label = selectedPaddock === "all" ? "les 3 paddocks" : paddockLabel(selectedPaddock);
+      if (!confirm(`Sauvegarder les horaires pour ${label} ?`)) return;
+
+      await Promise.all(targetPaddocks.map((paddock) => db.collection("horaires").doc(paddock).set(nextConfig)));
+      showToast("Horaires sauvegardes.");
+    }
+
     function subscribeFirebaseReadOnly() {
       if (!window.firebase || !firebase.firestore) {
         showToast("Firebase indisponible: affichage vide.");
@@ -1572,7 +1601,7 @@
     document.getElementById("hoursPaddock").addEventListener("change", renderHours);
     document.getElementById("restrictionDate").addEventListener("change", fillRestrictionForm);
     document.getElementById("createBlockBtn").addEventListener("click", createBlockage);
-    document.getElementById("fakeSaveHours").addEventListener("click", () => showToast("Lecture seule: aucun horaire n'est modifie dans Firebase."));
+    document.getElementById("saveHoursBtn").addEventListener("click", saveHours);
     document.getElementById("saveRestrictionBtn").addEventListener("click", saveRestriction);
 
     setSelectedDate(offsetDate(0));
