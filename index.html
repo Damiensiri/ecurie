@@ -854,7 +854,7 @@
               <label class="choice"><input type="checkbox" value="grande" checked> Grande voie</label>
               <label class="choice"><input type="checkbox" value="beudot"> Beudot</label>
             </div>
-            <button class="primary-action" id="fakeCreateBlock" style="width: 100%; margin-top: 12px;">Simuler la creation</button>
+            <button class="primary-action" id="createBlockBtn" style="width: 100%; margin-top: 12px;">Creer le blocage</button>
           </div>
         </section>
 
@@ -936,7 +936,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <script>
-    const FIREBASE_READ_ONLY = true;
+    const FIREBASE_READ_ONLY = false;
 
     const PASS = "0359140";
     if (!localStorage.getItem("backstage_auth")) {
@@ -1000,6 +1000,7 @@
     let restrictions = {};
     let selectedDate = offsetDate(0);
     let blockFilter = "future";
+    let db = null;
 
     function offsetDate(daysFromToday) {
       const date = new Date();
@@ -1334,6 +1335,50 @@
       };
     }
 
+    async function createBlockage() {
+      if (!db) {
+        showToast("Firebase n'est pas encore pret.");
+        return;
+      }
+
+      const date = document.getElementById("blockDate").value;
+      const reason = document.getElementById("blockReason").value.trim();
+      const start = document.getElementById("blockStart").value;
+      const end = document.getElementById("blockEnd").value;
+      const selectedPaddocks = [...document.querySelectorAll(".choice-grid input[type='checkbox']:checked")]
+        .map((input) => input.value)
+        .filter((value) => ["maison", "grande", "beudot"].includes(value));
+
+      if (!date || !start || !end) {
+        showToast("Date, heure debut et heure fin obligatoires.");
+        return;
+      }
+
+      const duration = minutes(end) - minutes(start);
+      if (duration <= 0) {
+        showToast("L'heure de fin doit etre apres l'heure de debut.");
+        return;
+      }
+
+      if (!selectedPaddocks.length) {
+        showToast("Choisis au moins un paddock.");
+        return;
+      }
+
+      const cleanReason = reason || "Blocage";
+      const blockName = cleanReason.toLowerCase().startsWith("blocage") ? cleanReason : `Blocage ${cleanReason}`;
+
+      await Promise.all(selectedPaddocks.map((paddock) => db.collection("reservations").add({
+        name: blockName,
+        paddock,
+        date,
+        time: start,
+        duration
+      })));
+
+      showToast("Blocage cree dans Firebase.");
+    }
+
     function subscribeFirebaseReadOnly() {
       if (!window.firebase || !firebase.firestore) {
         showToast("Firebase indisponible: affichage vide.");
@@ -1344,7 +1389,7 @@
         firebase.initializeApp(firebaseConfig);
       }
 
-      const db = firebase.firestore();
+      db = firebase.firestore();
 
       db.collection("reservations").onSnapshot((snapshot) => {
         const realReservations = [];
@@ -1422,7 +1467,7 @@
       renderReservations();
     });
     document.getElementById("hoursPaddock").addEventListener("change", renderHours);
-    document.getElementById("fakeCreateBlock").addEventListener("click", () => showToast("Lecture seule: aucun blocage n'est envoye a Firebase."));
+    document.getElementById("createBlockBtn").addEventListener("click", createBlockage);
     document.getElementById("fakeSaveHours").addEventListener("click", () => showToast("Lecture seule: aucun horaire n'est modifie dans Firebase."));
     document.getElementById("fakeSaveRestriction").addEventListener("click", () => showToast("Lecture seule: aucune exception n'est envoyee a Firebase."));
 
