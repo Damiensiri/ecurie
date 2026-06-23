@@ -1255,7 +1255,7 @@
             <span>${item.type || "Reservation"}</span>
           </div>
           <div class="item-actions">
-            <button class="danger" data-demo-action="cancel">Annuler</button>
+            <button class="danger" data-cancel-reservation="${item.id}">Annuler</button>
           </div>
         </article>
       `).join("") || `<div class="prototype-warning">Aucune reservation dans ce filtre.</div>`;
@@ -1418,6 +1418,30 @@
       showToast("Blocage supprime.");
     }
 
+    async function cancelReservation(id) {
+      if (!db) {
+        showToast("Firebase n'est pas encore pret.");
+        return;
+      }
+
+      const item = reservations.find((reservation) => reservation.id === id);
+      if (!item) {
+        showToast("Reservation introuvable.");
+        return;
+      }
+
+      if (String(item.name).toLowerCase().startsWith("blocage")) {
+        showToast("Action refusee: ceci est un blocage.");
+        return;
+      }
+
+      const label = `${item.name} - ${paddockLabel(item.paddock)} - ${formatDate(item.date)} - ${item.time}`;
+      if (!confirm(`Annuler cette reservation ?\n\n${label}`)) return;
+
+      await db.collection("reservations").doc(id).delete();
+      showToast("Reservation annulee.");
+    }
+
     async function saveRestriction() {
       if (!db) {
         showToast("Firebase n'est pas encore pret.");
@@ -1526,6 +1550,11 @@
       const deleteButton = event.target.closest("[data-delete-blockage]");
       if (deleteButton) {
         deleteBlockage(deleteButton.dataset.deleteBlockage);
+      }
+
+      const cancelButton = event.target.closest("[data-cancel-reservation]");
+      if (cancelButton) {
+        cancelReservation(cancelButton.dataset.cancelReservation);
       }
     });
 
