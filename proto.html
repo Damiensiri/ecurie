@@ -25,9 +25,7 @@
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -36,11 +34,7 @@
       color: var(--text);
     }
 
-    button,
-    input,
-    select {
-      font: inherit;
-    }
+    button, input, select { font: inherit; }
 
     button {
       min-height: var(--tap);
@@ -53,9 +47,7 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    button:active {
-      transform: translateY(1px);
-    }
+    button:active { transform: translateY(1px); }
 
     .app-shell {
       min-height: 100vh;
@@ -77,9 +69,7 @@
       backdrop-filter: blur(18px);
     }
 
-    .brand {
-      min-width: 0;
-    }
+    .brand { min-width: 0; }
 
     .brand-title {
       margin: 0;
@@ -108,7 +98,7 @@
       background: rgba(104, 225, 143, .1);
       color: #c9f9d7;
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 800;
       white-space: nowrap;
     }
 
@@ -116,6 +106,18 @@
       width: min(1180px, 100%);
       margin: 0 auto;
       padding: 16px;
+    }
+
+    .prototype-warning {
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      border: 1px solid rgba(91, 141, 255, .42);
+      border-radius: var(--radius);
+      background: rgba(91, 141, 255, .1);
+      color: #dce7ff;
+      font-size: 14px;
+      font-weight: 750;
+      line-height: 1.4;
     }
 
     .desktop-nav {
@@ -137,7 +139,7 @@
       min-width: 0;
       padding: 0 10px;
       color: var(--muted);
-      font-weight: 800;
+      font-weight: 850;
     }
 
     .nav-btn.is-active {
@@ -146,13 +148,13 @@
       color: var(--text);
     }
 
-    .view {
-      display: none;
+    .nav-icon {
+      font-size: 19px;
+      line-height: 1;
     }
 
-    .view.is-active {
-      display: block;
-    }
+    .view { display: none; }
+    .view.is-active { display: block; }
 
     .section-head {
       display: flex;
@@ -187,7 +189,7 @@
       min-width: 0;
       padding: 0 8px;
       color: var(--muted);
-      font-weight: 800;
+      font-weight: 850;
     }
 
     .date-controls button.is-active {
@@ -203,8 +205,7 @@
       margin-bottom: 16px;
     }
 
-    .field,
-    .select {
+    .field, .select {
       min-height: var(--tap);
       width: 100%;
       border: 1px solid var(--line);
@@ -212,6 +213,11 @@
       background: #0d121a;
       color: var(--text);
       padding: 0 12px;
+    }
+
+    .field[type="time"] {
+      text-align: center;
+      font-weight: 900;
     }
 
     .summary-grid {
@@ -256,10 +262,36 @@
       margin-top: 5px;
       color: var(--soft);
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 850;
       line-height: 1.25;
       overflow-wrap: anywhere;
     }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 2px);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .panel + .panel { margin-top: 14px; }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.1;
+    }
+
+    .panel-body { padding: 14px; }
 
     .quick-actions {
       display: grid;
@@ -282,54 +314,11 @@
       font-weight: 900;
     }
 
-    .panel {
-      border: 1px solid var(--line);
-      border-radius: calc(var(--radius) + 2px);
-      background: var(--panel);
-      box-shadow: var(--shadow);
-    }
-
-    .panel + .panel {
-      margin-top: 14px;
-    }
-
-    .panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 14px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .panel-title {
-      margin: 0;
-      font-size: 17px;
-      line-height: 1.1;
-    }
-
-    .panel-body {
-      padding: 14px;
-    }
-
-    .day-alerts {
-      display: grid;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
-    .alert-line {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-height: 46px;
-      padding: 10px 12px;
-      border: 1px solid rgba(245, 199, 96, .35);
-      border-radius: var(--radius);
-      background: rgba(245, 199, 96, .1);
-      color: #ffefc0;
-      font-weight: 750;
-      line-height: 1.25;
+    .danger {
+      border-color: rgba(255, 109, 109, .45);
+      background: #4b2025;
+      color: #ffe7e7;
+      font-weight: 900;
     }
 
     .mobile-paddocks {
@@ -344,9 +333,7 @@
       overscroll-behavior-x: contain;
     }
 
-    .mobile-paddocks::-webkit-scrollbar {
-      display: none;
-    }
+    .mobile-paddocks::-webkit-scrollbar { display: none; }
 
     .paddock-card {
       flex: 0 0 88vw;
@@ -376,7 +363,7 @@
     .paddock-hours {
       color: var(--muted);
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 750;
       white-space: nowrap;
     }
 
@@ -402,9 +389,7 @@
       font-weight: 900;
     }
 
-    .slot-main {
-      min-width: 0;
-    }
+    .slot-main { min-width: 0; }
 
     .slot-title {
       font-weight: 900;
@@ -419,9 +404,7 @@
       line-height: 1.3;
     }
 
-    .slot-card.is-free {
-      opacity: .72;
-    }
+    .slot-card.is-free { opacity: .72; }
 
     .slot-card.is-booked {
       border-color: rgba(104, 225, 143, .42);
@@ -447,8 +430,7 @@
       min-width: 760px;
     }
 
-    th,
-    td {
+    th, td {
       border-bottom: 1px solid var(--line);
       border-right: 1px solid var(--line);
       padding: 12px;
@@ -543,16 +525,9 @@
 
     .item-actions {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1fr;
       gap: 8px;
       margin-top: 12px;
-    }
-
-    .danger {
-      border-color: rgba(255, 109, 109, .45);
-      background: #4b2025;
-      color: #ffe7e7;
-      font-weight: 900;
     }
 
     .form-grid {
@@ -584,7 +559,7 @@
       border-radius: var(--radius);
       background: var(--panel-soft);
       color: var(--text);
-      font-weight: 800;
+      font-weight: 850;
     }
 
     .choice input {
@@ -621,17 +596,6 @@
       background: var(--panel-soft);
     }
 
-    .hours-row {
-      display: grid;
-      gap: 10px;
-      padding: 14px;
-    }
-
-    .field[type="time"] {
-      text-align: center;
-      font-weight: 900;
-    }
-
     .summary-status {
       display: flex;
       align-items: center;
@@ -646,6 +610,12 @@
       font-size: 12px;
       font-weight: 850;
       white-space: nowrap;
+    }
+
+    .hours-row {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
     }
 
     .bottom-nav {
@@ -677,11 +647,6 @@
       white-space: nowrap;
     }
 
-    .nav-icon {
-      font-size: 19px;
-      line-height: 1;
-    }
-
     .toast {
       position: fixed;
       right: 14px;
@@ -698,80 +663,25 @@
       box-shadow: var(--shadow);
     }
 
-    .prototype-warning {
-      margin-bottom: 16px;
-      padding: 12px 14px;
-      border: 1px solid rgba(91, 141, 255, .42);
-      border-radius: var(--radius);
-      background: rgba(91, 141, 255, .1);
-      color: #dce7ff;
-      font-size: 14px;
-      font-weight: 750;
-      line-height: 1.4;
-    }
-
     @media (min-width: 720px) {
-      .app-shell {
-        padding-bottom: 0;
-      }
-
-      .layout {
-        padding: 22px;
-      }
-
-      .status-pill {
-        display: inline-flex;
-      }
-
-      .desktop-nav {
-        display: grid;
-      }
-
-      .bottom-nav {
-        display: none;
-      }
-
-      .date-controls {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-
-      .summary-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-
-      .quick-actions {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .mobile-paddocks {
-        display: none;
-      }
-
-      .planning-table-wrap {
-        display: block;
-      }
-
-      .list-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .form-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .choice-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
+      .app-shell { padding-bottom: 0; }
+      .layout { padding: 22px; }
+      .status-pill { display: inline-flex; }
+      .desktop-nav { display: grid; }
+      .bottom-nav { display: none; }
+      .date-controls { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .summary-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .quick-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .mobile-paddocks { display: none; }
+      .planning-table-wrap { display: block; }
+      .list-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .choice-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .item-actions {
         display: flex;
         justify-content: flex-end;
       }
-
-      .item-actions button {
-        min-width: 160px;
-      }
-
+      .item-actions button { min-width: 160px; }
       .toast {
         right: 22px;
         bottom: 22px;
@@ -787,15 +697,11 @@
         gap: 16px;
         align-items: start;
       }
-
       .side-stack {
         display: grid;
         gap: 14px;
       }
-
-      .side-stack .panel + .panel {
-        margin-top: 0;
-      }
+      .side-stack .panel + .panel { margin-top: 0; }
     }
   </style>
 </head>
@@ -806,12 +712,12 @@
         <h1 class="brand-title">Backstage</h1>
         <div class="brand-subtitle">Gestion paddocks - prototype local</div>
       </div>
-      <div class="status-pill">Local uniquement</div>
+      <div class="status-pill">Firebase lecture seule</div>
     </header>
 
     <main class="layout">
       <div class="prototype-warning">
-        Prototype sans connexion Firebase: aucune reservation, aucun horaire, aucune exception et aucun blocage reel ne peut etre modifie depuis ce fichier.
+        Connecte a Firebase en lecture seule: aucune reservation, aucun horaire, aucune exception et aucun blocage reel ne peut etre modifie depuis ce fichier.
       </div>
 
       <nav class="desktop-nav" aria-label="Navigation principale">
@@ -834,6 +740,7 @@
           <button data-day-offset="1">Demain</button>
           <button data-day-offset="2">Apres-demain</button>
         </div>
+
         <div class="date-picker">
           <input class="field" id="customDate" type="date" aria-label="Choisir une date">
           <button id="customDateBtn">Voir</button>
@@ -876,10 +783,12 @@
             <option value="future">A venir</option>
           </select>
         </div>
+
         <div class="date-picker">
           <input class="field" id="reservationSearch" type="search" placeholder="Rechercher un nom" aria-label="Rechercher une reservation par nom">
           <button id="clearReservationSearch">Effacer</button>
         </div>
+
         <div class="list-grid" id="reservationList"></div>
       </section>
 
@@ -887,7 +796,7 @@
         <div class="section-head">
           <div>
             <h2 class="section-title">Blocages</h2>
-            <p class="section-note">Creation locale de demonstration: les donnees Firebase ne sont pas appelees.</p>
+            <p class="section-note">Lecture seule: le formulaire montre le futur comportement sans ecrire dans Firebase.</p>
           </div>
         </div>
 
@@ -901,7 +810,7 @@
                 <input class="field" id="blockDate" type="date">
               </label>
               <label class="field-label">Motif
-                <input class="field" id="blockReason" type="text" value="Entretien">
+                <input class="field" id="blockReason" type="text" value="Canicule">
               </label>
               <label class="field-label">Heure debut
                 <input class="field" id="blockStart" type="time" value="10:00">
@@ -960,7 +869,7 @@
         <div class="section-head">
           <div>
             <h2 class="section-title">Horaires</h2>
-            <p class="section-note">Meme logique metier: paddock, jour, ouvert/ferme, ouverture, fermeture, durees.</p>
+            <p class="section-note">Meme logique metier: paddock, jour, ouvert/ferme, ouverture, fermeture.</p>
           </div>
           <select class="select" id="hoursPaddock" aria-label="Choisir le paddock">
             <option value="all">Tous les paddocks</option>
@@ -972,15 +881,14 @@
 
         <section class="panel">
           <div class="panel-header">
-            <h3 class="panel-title" id="hoursTitle">Maison</h3>
-            <span class="badge amber" id="hoursScopeBadge">Prototype</span>
+            <h3 class="panel-title" id="hoursTitle">Tous les paddocks</h3>
+            <span class="badge amber" id="hoursScopeBadge">Les 3 paddocks</span>
           </div>
           <div class="panel-body">
             <div class="accordion" id="hoursAccordion"></div>
             <button class="primary-action" id="fakeSaveHours" style="width: 100%; margin-top: 12px;">Simuler la sauvegarde</button>
           </div>
         </section>
-
       </section>
     </main>
 
@@ -994,8 +902,20 @@
 
   <div class="toast" id="toast" role="status"></div>
 
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
   <script>
-    const LOCAL_ONLY = true;
+    const FIREBASE_READ_ONLY = true;
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBn6Hgu-xvsWqpwJ-i4lZyI0QjKMBvOeXA",
+      authDomain: "ecurie-paddock.firebaseapp.com",
+      projectId: "ecurie-paddock",
+      storageBucket: "ecurie-paddock.firebasestorage.app",
+      messagingSenderId: "501153278739",
+      appId: "1:501153278739:web:824b4344c381f2a94548e6"
+    };
 
     const paddocks = [
       { id: "maison", label: "Maison" },
@@ -1005,55 +925,39 @@
 
     const days = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
 
-    const horaires = {
+    let horaires = {
       maison: {
-        lundi: { closed: false, open: "08:00", close: "21:00", durations: [60, 90] },
-        mardi: { closed: false, open: "08:00", close: "22:00", durations: [60, 90] },
-        mercredi: { closed: false, open: "07:00", close: "22:00", durations: [60, 90] },
-        jeudi: { closed: false, open: "07:00", close: "22:00", durations: [60, 90] },
-        vendredi: { closed: true, open: "08:00", close: "21:00", durations: [60] },
-        samedi: { closed: true, open: "08:00", close: "19:00", durations: [60] },
-        dimanche: { closed: true, open: "07:00", close: "21:00", durations: [60] }
+        lundi: { closed: false, open: "08:00", close: "21:00" },
+        mardi: { closed: false, open: "08:00", close: "22:00" },
+        mercredi: { closed: false, open: "07:00", close: "22:00" },
+        jeudi: { closed: false, open: "07:00", close: "22:00" },
+        vendredi: { closed: true, open: "08:00", close: "21:00" },
+        samedi: { closed: true, open: "08:00", close: "19:00" },
+        dimanche: { closed: true, open: "07:00", close: "21:00" }
       },
       grande: {
-        lundi: { closed: false, open: "08:00", close: "20:00", durations: [60, 90] },
-        mardi: { closed: false, open: "08:00", close: "20:00", durations: [60, 90] },
-        mercredi: { closed: false, open: "08:00", close: "20:00", durations: [60, 90] },
-        jeudi: { closed: false, open: "08:00", close: "20:00", durations: [60, 90] },
-        vendredi: { closed: false, open: "08:00", close: "19:00", durations: [60] },
-        samedi: { closed: false, open: "09:00", close: "18:00", durations: [60] },
-        dimanche: { closed: true, open: "09:00", close: "18:00", durations: [60] }
+        lundi: { closed: false, open: "08:00", close: "20:00" },
+        mardi: { closed: false, open: "08:00", close: "20:00" },
+        mercredi: { closed: false, open: "08:00", close: "20:00" },
+        jeudi: { closed: false, open: "08:00", close: "20:00" },
+        vendredi: { closed: false, open: "08:00", close: "19:00" },
+        samedi: { closed: false, open: "09:00", close: "18:00" },
+        dimanche: { closed: true, open: "09:00", close: "18:00" }
       },
       beudot: {
-        lundi: { closed: false, open: "09:00", close: "19:00", durations: [60, 90] },
-        mardi: { closed: false, open: "09:00", close: "19:00", durations: [60, 90] },
-        mercredi: { closed: false, open: "08:00", close: "20:00", durations: [60, 90] },
-        jeudi: { closed: false, open: "08:00", close: "20:00", durations: [60, 90] },
-        vendredi: { closed: false, open: "09:00", close: "18:00", durations: [60] },
-        samedi: { closed: true, open: "09:00", close: "18:00", durations: [60] },
-        dimanche: { closed: true, open: "09:00", close: "18:00", durations: [60] }
+        lundi: { closed: false, open: "09:00", close: "19:00" },
+        mardi: { closed: false, open: "09:00", close: "19:00" },
+        mercredi: { closed: false, open: "08:00", close: "20:00" },
+        jeudi: { closed: false, open: "08:00", close: "20:00" },
+        vendredi: { closed: false, open: "09:00", close: "18:00" },
+        samedi: { closed: true, open: "09:00", close: "18:00" },
+        dimanche: { closed: true, open: "09:00", close: "18:00" }
       }
     };
 
-    const reservations = [
-      { id: "r1", date: offsetDate(0), paddock: "maison", time: "09:00", duration: 60, name: "Camille Martin", type: "Reservation paddock", email: "camille@example.com" },
-      { id: "r2", date: offsetDate(0), paddock: "grande", time: "10:30", duration: 90, name: "Julie R.", type: "Reservation paddock", email: "julie@example.com" },
-      { id: "r3", date: offsetDate(0), paddock: "beudot", time: "15:00", duration: 60, name: "Pauline D.", type: "Demande mise au paddock", email: "pauline@example.com" },
-      { id: "r4", date: offsetDate(1), paddock: "maison", time: "11:00", duration: 90, name: "Nina P.", type: "Reservation paddock", email: "nina@example.com" },
-      { id: "r5", date: offsetDate(2), paddock: "grande", time: "14:00", duration: 60, name: "Sarah L.", type: "Reservation paddock", email: "sarah@example.com" }
-    ];
-
-    const blocages = [
-      { id: "b1", date: offsetDate(0), paddock: "maison", time: "13:00", duration: 120, name: "Blocage entretien" },
-      { id: "b2", date: offsetDate(1), paddock: "grande", time: "16:00", duration: 90, name: "Blocage cours" },
-      { id: "b3", date: offsetDate(-1), paddock: "beudot", time: "10:00", duration: 60, name: "Blocage sol" }
-    ];
-
-    const restrictions = {
-      [offsetDate(0)]: { blockGrande90: true, blockBeudot90: false },
-      [offsetDate(2)]: { blockGrande90: false, blockBeudot90: true }
-    };
-
+    let reservations = [];
+    let blocages = [];
+    let restrictions = {};
     let selectedDate = offsetDate(0);
     let blockFilter = "future";
 
@@ -1073,6 +977,7 @@
     }
 
     function formatDate(value) {
+      if (!value) return "";
       return parseIsoDate(value).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
     }
 
@@ -1081,12 +986,13 @@
     }
 
     function minutes(time) {
+      if (!time || !time.includes(":")) return 0;
       const parts = time.split(":").map(Number);
       return parts[0] * 60 + parts[1];
     }
 
     function timeFromMinutes(value) {
-      return String(Math.floor(value / 60)).padStart(2, "0") + ":" + String(value % 60).padStart(2, "0");
+      return String(Math.floor(value / 60) % 24).padStart(2, "0") + ":" + String(value % 60).padStart(2, "0");
     }
 
     function paddockLabel(id) {
@@ -1113,10 +1019,9 @@
     }
 
     function handleViewNavigation(event) {
-      const viewButton = event.currentTarget;
       event.preventDefault();
       event.stopPropagation();
-      switchView(viewButton.dataset.viewTarget);
+      switchView(event.currentTarget.dataset.viewTarget);
     }
 
     function setSelectedDate(date) {
@@ -1132,16 +1037,17 @@
     }
 
     function recordsForDay(date) {
-      const dayReservations = reservations.filter((item) => item.date === date);
-      const dayBlocks = blocages.filter((item) => item.date === date);
-      return { dayReservations, dayBlocks };
+      return {
+        dayReservations: reservations.filter((item) => item.date === date),
+        dayBlocks: blocages.filter((item) => item.date === date)
+      };
     }
 
     function getSlots(date) {
       const name = dayName(date);
       const slotSet = new Set();
       paddocks.forEach((paddock) => {
-        const config = horaires[paddock.id][name];
+        const config = horaires[paddock.id]?.[name];
         if (!config || config.closed) return;
         for (let t = minutes(config.open); t < minutes(config.close); t += 60) {
           slotSet.add(timeFromMinutes(t));
@@ -1155,10 +1061,26 @@
         || blocages.find((item) => item.date === date && item.paddock === paddock && item.time === time);
     }
 
+    function isCoveredByBlockage(date, paddock, time) {
+      const slotStart = minutes(time);
+      return blocages.some((item) => {
+        if (item.date !== date || item.paddock !== paddock || item.time === time) return false;
+        const blockStart = minutes(item.time);
+        const blockEnd = blockStart + Number(item.duration || 60);
+        return slotStart > blockStart && slotStart < blockEnd;
+      });
+    }
+
+    function formatTimeRange(item) {
+      const start = minutes(item.time);
+      const end = start + Number(item.duration || 60);
+      return `${timeFromMinutes(start)} → ${timeFromMinutes(end)}`;
+    }
+
     function renderSummary(date) {
       const { dayReservations, dayBlocks } = recordsForDay(date);
       const restriction = restrictions[date];
-      const closedCount = paddocks.filter((paddock) => horaires[paddock.id][dayName(date)]?.closed).length;
+      const closedCount = paddocks.filter((paddock) => horaires[paddock.id]?.[dayName(date)]?.closed).length;
       const restrictedPaddocks = [];
       if (restriction?.blockGrande90) restrictedPaddocks.push("Grande voie");
       if (restriction?.blockBeudot90) restrictedPaddocks.push("Beudot");
@@ -1182,9 +1104,10 @@
       const slots = getSlots(date);
       const currentDay = dayName(date);
       document.getElementById("mobilePaddocks").innerHTML = paddocks.map((paddock) => {
-        const config = horaires[paddock.id][currentDay];
+        const config = horaires[paddock.id]?.[currentDay];
         const hours = config?.closed ? "Ferme" : `${config.open} - ${config.close}`;
         const rows = slots.map((time) => {
+          if (isCoveredByBlockage(date, paddock.id, time)) return "";
           if (!config || config.closed || minutes(time) < minutes(config.open) || minutes(time) >= minutes(config.close)) {
             return `<div class="slot-card is-free"><div class="slot-time">${time}</div><div class="slot-main"><div class="slot-title">Ferme</div></div></div>`;
           }
@@ -1192,13 +1115,14 @@
           if (!item) {
             return `<div class="slot-card is-free"><div class="slot-time">${time}</div><div class="slot-main"><div class="slot-title">Libre</div><div class="slot-meta">Creneau disponible</div></div></div>`;
           }
-          const isBlock = item.name.toLowerCase().includes("blocage");
+          const isBlock = String(item.name).toLowerCase().startsWith("blocage");
+          const meta = isBlock ? formatTimeRange(item) : `${item.duration} min${item.type ? " - " + item.type : ""}`;
           return `
             <div class="slot-card ${isBlock ? "is-blocked" : "is-booked"}">
               <div class="slot-time">${time}</div>
               <div class="slot-main">
                 <div class="slot-title">${item.name}</div>
-                <div class="slot-meta">${item.duration} min${item.type ? " - " + item.type : ""}</div>
+                <div class="slot-meta">${meta}</div>
               </div>
             </div>
           `;
@@ -1209,7 +1133,7 @@
               <div class="paddock-name">${paddock.label}</div>
               <div class="paddock-hours">${hours}</div>
             </div>
-            <div class="slot-list">${rows}</div>
+            <div class="slot-list">${rows || `<div class="slot-card is-free"><div class="slot-main"><div class="slot-title">Aucun creneau visible</div></div></div>`}</div>
           </article>
         `;
       }).join("");
@@ -1220,15 +1144,21 @@
       const currentDay = dayName(date);
       const rows = slots.map((time) => {
         const cells = paddocks.map((paddock) => {
-          const config = horaires[paddock.id][currentDay];
+          const config = horaires[paddock.id]?.[currentDay];
+          if (isCoveredByBlockage(date, paddock.id, time)) {
+            return { hidden: true, html: `<td class="cell-muted"></td>` };
+          }
           if (!config || config.closed || minutes(time) < minutes(config.open) || minutes(time) >= minutes(config.close)) {
-            return `<td class="cell-muted">Ferme</td>`;
+            return { hidden: false, html: `<td class="cell-muted">Ferme</td>` };
           }
           const item = itemAt(date, paddock.id, time);
-          if (!item) return `<td class="cell-muted">Libre</td>`;
-          return `<td>${item.name}<div class="slot-meta">${item.duration} min${item.type ? " - " + item.type : ""}</div></td>`;
-        }).join("");
-        return `<tr><td>${time}</td>${cells}</tr>`;
+          if (!item) return { hidden: false, html: `<td class="cell-muted">Libre</td>` };
+          const isBlock = String(item.name).toLowerCase().startsWith("blocage");
+          const meta = isBlock ? formatTimeRange(item) : `${item.duration} min${item.type ? " - " + item.type : ""}`;
+          return { hidden: false, html: `<td>${item.name}<div class="slot-meta">${meta}</div></td>` };
+        });
+        if (cells.every((cell) => cell.hidden)) return "";
+        return `<tr><td>${time}</td>${cells.map((cell) => cell.html).join("")}</tr>`;
       }).join("");
       document.getElementById("planningTable").innerHTML = `
         <thead><tr><th>Heure</th>${paddocks.map((paddock) => `<th>${paddock.label}</th>`).join("")}</tr></thead>
@@ -1251,8 +1181,8 @@
       if (filter === "today") filtered = reservations.filter((item) => item.date === today);
       if (filter === "tomorrow") filtered = reservations.filter((item) => item.date === tomorrow);
       if (filter === "future") filtered = reservations.filter((item) => item.date >= today);
-      if (query) filtered = filtered.filter((item) => item.name.toLowerCase().includes(query));
-      document.getElementById("reservationList").innerHTML = (filtered.length ? filtered : []).map((item) => `
+      if (query) filtered = filtered.filter((item) => String(item.name).toLowerCase().includes(query));
+      document.getElementById("reservationList").innerHTML = filtered.map((item) => `
         <article class="item-card">
           <div class="item-top">
             <h3 class="item-title">${item.name}</h3>
@@ -1262,14 +1192,13 @@
             <span>${formatDate(item.date)}</span>
             <span>${paddockLabel(item.paddock)}</span>
             <span>${item.time}</span>
-            <span>${item.type}</span>
+            <span>${item.type || "Reservation"}</span>
           </div>
           <div class="item-actions">
-            <button>Voir dans le planning</button>
             <button class="danger" data-demo-action="cancel">Annuler</button>
           </div>
         </article>
-      `).join("") || `<div class="alert-line">Aucune reservation dans ce filtre.</div>`;
+      `).join("") || `<div class="prototype-warning">Aucune reservation dans ce filtre.</div>`;
     }
 
     function renderBlocks() {
@@ -1281,19 +1210,18 @@
         <article class="item-card">
           <div class="item-top">
             <h3 class="item-title">${item.name}</h3>
-            <span class="badge red">${item.duration} min</span>
+            <span class="badge red">${formatTimeRange(item)}</span>
           </div>
           <div class="item-meta">
             <span>${formatDate(item.date)}</span>
             <span>${paddockLabel(item.paddock)}</span>
-            <span>${item.time}</span>
           </div>
           <div class="item-actions">
             <button>Modifier</button>
             <button class="danger" data-demo-action="delete">Supprimer</button>
           </div>
         </article>
-      `).join("") || `<div class="alert-line">Aucun blocage dans ce filtre.</div>`;
+      `).join("") || `<div class="prototype-warning">Aucun blocage dans ce filtre.</div>`;
     }
 
     function renderHours() {
@@ -1302,9 +1230,9 @@
       document.getElementById("hoursTitle").textContent = paddockLabel(paddock);
       document.getElementById("hoursScopeBadge").textContent = paddock === "all" ? "Les 3 paddocks" : "Prototype";
       document.getElementById("hoursAccordion").innerHTML = days.slice(1).concat("dimanche").map((day) => {
-        const config = horaires[sourcePaddock][day];
+        const config = horaires[sourcePaddock]?.[day] || { closed: true, open: "--:--", close: "--:--" };
         return `
-          <details ${day === dayName(selectedDate) ? "open" : ""}>
+          <details>
             <summary>
               <span>${day.charAt(0).toUpperCase() + day.slice(1)}</span>
               <span class="summary-status">
@@ -1341,7 +1269,80 @@
             <span>Beudot: ${value.blockBeudot90 ? "interdit" : "autorise"}</span>
           </div>
         </article>
-      `).join("");
+      `).join("") || `<div class="prototype-warning">Aucune exception enregistree.</div>`;
+    }
+
+    function refreshViews() {
+      renderPlanning();
+      renderReservations();
+      renderBlocks();
+      renderHours();
+      renderRestrictions();
+    }
+
+    function normalizeReservation(doc) {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        name: data.name || "",
+        email: data.email || "",
+        paddock: data.paddock || "",
+        date: data.date || "",
+        time: data.time || "",
+        duration: Number(data.duration || 60),
+        type: data.type || data.reservationType || ""
+      };
+    }
+
+    function subscribeFirebaseReadOnly() {
+      if (!window.firebase || !firebase.firestore) {
+        showToast("Firebase indisponible: affichage vide.");
+        return;
+      }
+
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+
+      const db = firebase.firestore();
+
+      db.collection("reservations").onSnapshot((snapshot) => {
+        const realReservations = [];
+        const realBlocages = [];
+
+        snapshot.forEach((doc) => {
+          const item = normalizeReservation(doc);
+          if (String(item.name).toLowerCase().startsWith("blocage")) {
+            realBlocages.push(item);
+          } else {
+            realReservations.push(item);
+          }
+        });
+
+        reservations = realReservations;
+        blocages = realBlocages;
+        refreshViews();
+      });
+
+      db.collection("horaires").onSnapshot((snapshot) => {
+        const nextHoraires = {};
+        snapshot.forEach((doc) => {
+          nextHoraires[doc.id] = doc.data();
+        });
+        if (Object.keys(nextHoraires).length) {
+          horaires = nextHoraires;
+          refreshViews();
+        }
+      });
+
+      db.collection("restrictions").onSnapshot((snapshot) => {
+        const nextRestrictions = {};
+        snapshot.forEach((doc) => {
+          nextRestrictions[doc.id] = doc.data();
+        });
+        restrictions = nextRestrictions;
+        refreshViews();
+      });
     }
 
     document.querySelectorAll("button").forEach((button) => {
@@ -1365,7 +1366,7 @@
       }
 
       if (event.target.closest("[data-demo-action]")) {
-        showToast("Action de demonstration uniquement: aucune donnee Firebase n'est modifiee.");
+        showToast("Lecture seule: aucune donnee Firebase n'est modifiee.");
       }
     });
 
@@ -1381,15 +1382,13 @@
       renderReservations();
     });
     document.getElementById("hoursPaddock").addEventListener("change", renderHours);
-    document.getElementById("fakeCreateBlock").addEventListener("click", () => showToast("Blocage simule localement. Rien n'est envoye a Firebase."));
-    document.getElementById("fakeSaveHours").addEventListener("click", () => showToast("Sauvegarde simulee localement. Rien n'est envoye a Firebase."));
-    document.getElementById("fakeSaveRestriction").addEventListener("click", () => showToast("Exception simulee localement. Rien n'est envoye a Firebase."));
+    document.getElementById("fakeCreateBlock").addEventListener("click", () => showToast("Lecture seule: aucun blocage n'est envoye a Firebase."));
+    document.getElementById("fakeSaveHours").addEventListener("click", () => showToast("Lecture seule: aucun horaire n'est modifie dans Firebase."));
+    document.getElementById("fakeSaveRestriction").addEventListener("click", () => showToast("Lecture seule: aucune exception n'est envoyee a Firebase."));
 
     setSelectedDate(offsetDate(0));
-    renderReservations();
-    renderBlocks();
-    renderHours();
-    renderRestrictions();
+    refreshViews();
+    subscribeFirebaseReadOnly();
   </script>
 </body>
 </html>
