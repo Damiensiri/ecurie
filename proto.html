@@ -34,7 +34,10 @@
       color: var(--text);
     }
 
-    button, input, select { font: inherit; }
+    button, input, select {
+      font: inherit;
+      max-width: 100%;
+    }
 
     button {
       min-height: var(--tap);
@@ -200,7 +203,7 @@
 
     .date-picker {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 8px;
       margin-bottom: 16px;
     }
@@ -208,6 +211,7 @@
     .field, .select {
       min-height: var(--tap);
       width: 100%;
+      min-width: 0;
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: #0d121a;
@@ -215,6 +219,30 @@
       padding: 0 12px;
     }
 
+    input[type="date"].field,
+    input[type="time"].field {
+      display: block;
+      appearance: none;
+      -webkit-appearance: none;
+      overflow: hidden;
+      line-height: var(--tap);
+    }
+
+    input[type="date"].field::-webkit-date-and-time-value,
+    input[type="time"].field::-webkit-date-and-time-value {
+      display: block;
+      min-width: 0;
+      width: 100%;
+      text-align: center;
+    }
+
+    input[type="date"].field::-webkit-calendar-picker-indicator,
+    input[type="time"].field::-webkit-calendar-picker-indicator {
+      margin: 0;
+      padding: 0;
+    }
+
+    .field[type="date"],
     .field[type="time"] {
       text-align: center;
       font-weight: 900;
@@ -532,11 +560,13 @@
 
     .form-grid {
       display: grid;
+      grid-template-columns: minmax(0, 1fr);
       gap: 10px;
     }
 
     .field-label {
       display: grid;
+      min-width: 0;
       gap: 7px;
       color: var(--soft);
       font-size: 13px;
