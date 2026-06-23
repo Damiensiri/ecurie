@@ -1,1074 +1,1420 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Backstage Écurie</title>
-
-<style>
-
-*{
-box-sizing:border-box;
-}
-
-:root{
-color-scheme:dark;
---bg:#090d12;
---surface:#121821;
---surface-raised:#18212c;
---surface-soft:#202a36;
---line:rgba(255,255,255,.075);
---text:#f5f7fa;
---muted:#8d99a8;
---green:#35f08b;
---green-deep:#0b5c36;
---red:#ff4d5e;
---red-deep:#7a1925;
---blue:#4f9cff;
---blue-deep:#123d7a;
---amber:#ffd17a;
-}
-
-body{
-margin:0;
-min-height:100vh;
-font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
-background:var(--bg);
-color:var(--text);
--webkit-font-smoothing:antialiased;
-}
-
-header{
-position:sticky;
-top:0;
-z-index:20;
-min-height:76px;
-padding:calc(12px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 12px max(16px,env(safe-area-inset-left));
-display:flex;
-justify-content:space-between;
-align-items:center;
-gap:12px;
-background:rgba(9,13,18,.88);
-border-bottom:1px solid var(--line);
-backdrop-filter:blur(20px) saturate(140%);
--webkit-backdrop-filter:blur(20px) saturate(140%);
-}
-
-header h1{
-margin:0;
-font-size:19px;
-font-weight:750;
-letter-spacing:0;
-white-space:nowrap;
-}
-
-.icons{
-display:flex;
-gap:8px;
-}
-
-.icons button{
-display:grid;
-place-items:center;
-width:44px;
-height:44px;
-padding:0;
-border:none;
-border-radius:50%;
-background:var(--surface-raised);
-color:var(--text);
-font-size:18px;
-cursor:pointer;
-box-shadow:inset 0 0 0 1px var(--line),0 6px 16px rgba(0,0,0,.2);
-transition:transform .18s ease,background .18s ease,box-shadow .18s ease;
-touch-action:manipulation;
-}
-
-.icons button:hover{
-background:var(--surface-soft);
-}
-
-.icons button:active{
-transform:scale(.93);
-box-shadow:inset 0 0 0 1px var(--line);
-}
-
-.container{
-width:100%;
-max-width:680px;
-margin:0 auto;
-padding:18px max(12px,env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
-}
-
-.card{
-background:var(--surface);
-border:1px solid var(--line);
-border-radius:20px;
-padding:14px;
-box-shadow:0 18px 45px rgba(0,0,0,.22);
-}
-
-.card + .card{
-margin-top:18px;
-}
-
-.tabs{
-display:grid;
-grid-template-columns:repeat(3,minmax(0,1fr));
-gap:4px;
-margin-bottom:12px;
-padding:4px;
-border-radius:14px;
-background:#090e14;
-box-shadow:inset 0 0 0 1px var(--line);
-}
-
-.tabs button{
-min-width:0;
-min-height:42px;
-padding:8px 4px;
-border:none;
-border-radius:10px;
-background:transparent;
-color:var(--muted);
-font:inherit;
-font-size:12px;
-font-weight:700;
-cursor:pointer;
-transition:color .2s ease,background .2s ease,transform .18s ease,box-shadow .2s ease;
-touch-action:manipulation;
-}
-
-.tabs button.active{
-background:var(--blue-deep);
-color:white;
-box-shadow:0 6px 16px rgba(18,61,122,.42),inset 0 0 0 1px rgba(79,156,255,.3);
-}
-
-.tabs button:active{
-transform:scale(.97);
-}
-
-table{
-width:100%;
-table-layout:fixed;
-border-collapse:separate;
-border-spacing:5px 7px;
-text-align:center;
-}
-
-td,th{
-border:0;
-overflow:hidden;
-overflow-wrap:anywhere;
-}
-
-th{
-height:34px;
-padding:4px 2px;
-color:var(--muted);
-font-size:10px;
-font-weight:750;
-line-height:1.1;
-text-transform:capitalize;
-}
-
-th:first-child,
-td:first-child{
-width:19%;
-}
-
-td{
-position:relative;
-height:52px;
-padding:8px 3px;
-border-radius:14px;
-background:var(--surface-raised);
-color:var(--text);
-font-size:12px;
-font-weight:700;
-line-height:1.2;
-vertical-align:middle;
-background-clip:padding-box;
-box-shadow:inset 0 1px 0 rgba(255,255,255,.055),inset 0 0 0 1px var(--line),0 6px 14px rgba(0,0,0,.2);
-transition:transform .16s ease,filter .16s ease,box-shadow .16s ease;
-}
-
-td:first-child{
-background:#0d131b;
-color:var(--muted);
-font-size:11px;
-font-variant-numeric:tabular-nums;
-box-shadow:inset 0 0 0 1px var(--line);
-}
-
-.free{
-background:var(--green-deep);
-color:var(--green);
-box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 0 0 1px rgba(53,240,139,.3),0 6px 16px rgba(11,92,54,.24);
-}
-
-.free::before{
-content:"🟢 Libre";
-font-size:10px;
-font-weight:750;
-white-space:nowrap;
-}
-
-.resa{
-background:var(--red-deep);
-color:#fff1f2;
-cursor:pointer;
-box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 0 0 1px rgba(255,77,94,.34),0 8px 20px rgba(122,25,37,.3);
-}
-
-.resa::before{
-content:"👤 ";
-}
-
-.resa.blockage{
-padding:12px 6px;
-background:linear-gradient(160deg,#d84b22 0%,#a92332 55%,#7d1828 100%);
-color:white;
-box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 0 0 1px rgba(255,133,72,.36),0 10px 24px rgba(126,24,40,.34);
-}
-
-.resa.blockage::before{
-content:none;
-}
-
-.blockage-content{
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-gap:6px;
-height:100%;
-min-height:100%;
-text-align:center;
-}
-
-.blockage-icon{
-font-size:20px;
-line-height:1;
-}
-
-.blockage-title{
-font-size:13px;
-font-weight:800;
-line-height:1.15;
-}
-
-.blockage-time{
-font-size:10px;
-font-weight:700;
-line-height:1.2;
-white-space:nowrap;
-opacity:.88;
-}
-
-.resa:hover{
-filter:brightness(1.08);
-}
-
-.resa:active{
-transform:scale(.97);
-}
-
-.closed{
-background:#242b34;
-color:#727d89;
-font-size:9px;
-font-weight:750;
-}
-
-.section-title{
-margin:0 0 14px;
-font-size:18px;
-font-weight:750;
-letter-spacing:0;
-}
-
-.card:nth-child(2){
-padding:0;
-background:transparent;
-border:0;
-box-shadow:none;
-}
-
-.restriction-form{
-display:grid;
-grid-template-columns:minmax(0,1fr) auto;
-gap:10px;
-align-items:center;
-margin-bottom:16px;
-padding:14px;
-border:1px solid var(--line);
-border-radius:18px;
-background:var(--surface);
-box-shadow:0 14px 35px rgba(0,0,0,.2);
-}
-
-.restriction-form input[type="date"]{
-width:100%;
-min-width:0;
-height:46px;
-padding:0 12px;
-border:1px solid var(--line);
-border-radius:12px;
-background:#0d131b;
-color:var(--text);
-font:inherit;
-font-size:14px;
-color-scheme:dark;
-}
-
-.restriction-form label{
-display:flex;
-align-items:center;
-grid-column:1/-1;
-gap:10px;
-min-height:46px;
-padding:10px 12px;
-border-radius:12px;
-background:var(--surface-raised);
-color:#dbe2ea;
-font-size:13px;
-font-weight:650;
-line-height:1.3;
-cursor:pointer;
-transition:background .18s ease,transform .18s ease;
-}
-
-.restriction-form input[type="checkbox"]{
-flex:0 0 auto;
-width:20px;
-height:20px;
-margin:0;
-accent-color:var(--red);
-}
-
-.restriction-form button{
-min-height:46px;
-padding:10px 14px;
-border:none;
-border-radius:12px;
-background:var(--blue-deep);
-color:var(--blue);
-font:inherit;
-font-size:13px;
-font-weight:bold;
-cursor:pointer;
-box-shadow:inset 0 0 0 1px rgba(140,184,255,.16);
-transition:transform .18s ease,filter .18s ease;
-touch-action:manipulation;
-}
-
-.restriction-form button:hover{
-filter:brightness(1.1);
-}
-
-.restriction-form button:active{
-transform:scale(.97);
-}
-
-#restrictionSaveBtn{
-grid-column:1/-1;
-background:var(--green);
-color:#072318;
-box-shadow:0 8px 20px rgba(120,215,161,.14);
-}
-
-.restrictions-empty{
-margin:0;
-padding:18px;
-border:1px dashed rgba(255,255,255,.12);
-border-radius:16px;
-color:var(--muted);
-font-size:13px;
-text-align:center;
-}
-
-.restriction-toast{
-display:none;
-margin:0 0 12px;
-padding:12px 14px;
-border:1px solid rgba(120,215,161,.2);
-border-radius:14px;
-background:var(--green-deep);
-color:var(--green);
-font-size:13px;
-font-weight:bold;
-box-shadow:0 8px 22px rgba(0,0,0,.2);
-animation:toastIn .22s ease both;
-}
-
-.restriction-item{
-position:relative;
-margin-bottom:10px;
-padding:15px;
-border:1px solid var(--line);
-border-radius:18px;
-background:var(--surface);
-box-shadow:0 12px 30px rgba(0,0,0,.18);
-transition:transform .18s ease,border-color .18s ease;
-}
-
-.restriction-item:hover{
-transform:translateY(-1px);
-border-color:rgba(255,255,255,.12);
-}
-
-.restriction-date{
-margin-bottom:10px;
-color:var(--text);
-font-size:15px;
-font-weight:750;
-}
-
-.restriction-status{
-margin:5px 0;
-color:#b6c0cb;
-font-size:13px;
-line-height:1.35;
-}
-
-.delete-btn{
-min-height:42px;
-margin-top:10px;
-padding:8px 12px;
-border:none;
-border-radius:12px;
-background:var(--red-deep);
-color:var(--red);
-font:inherit;
-font-size:12px;
-font-weight:700;
-cursor:pointer;
-transition:transform .18s ease,filter .18s ease;
-touch-action:manipulation;
-}
-
-.delete-btn:hover{
-filter:brightness(1.1);
-}
-
-.delete-btn:active{
-transform:scale(.97);
-}
-
-@keyframes toastIn{
-from{opacity:0;transform:translateY(-5px);}
-to{opacity:1;transform:translateY(0);}
-}
-
-@media(max-width:430px){
-header h1{
-font-size:17px;
-}
-
-.icons{
-gap:6px;
-}
-
-.icons button{
-width:40px;
-height:40px;
-font-size:16px;
-}
-
-.container{
-padding-top:14px;
-}
-
-.card{
-padding:10px;
-border-radius:18px;
-}
-
-.tabs button{
-font-size:11px;
-}
-
-table{
-border-spacing:4px 6px;
-}
-
-td{
-height:50px;
-padding:7px 2px;
-font-size:11px;
-border-radius:10px;
-}
-
-td:first-child{
-font-size:10px;
-}
-
-.restriction-form{
-padding:12px;
-}
-}
-
-@media(max-width:360px){
-header{
-padding-left:10px;
-padding-right:10px;
-gap:8px;
-}
-
-header h1{
-font-size:15px;
-}
-
-.icons{
-gap:4px;
-}
-
-.icons button{
-width:36px;
-height:36px;
-font-size:15px;
-}
-}
-
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Backstage Ecurie - Prototype local</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #090b0f;
+      --panel: #111720;
+      --panel-soft: #161e29;
+      --panel-strong: #1c2633;
+      --line: #283442;
+      --text: #f6f8fb;
+      --muted: #a8b2c0;
+      --soft: #cbd3df;
+      --green: #68e18f;
+      --blue: #5b8dff;
+      --red: #ff6d6d;
+      --amber: #f5c760;
+      --shadow: 0 18px 50px rgba(0, 0, 0, .28);
+      --radius: 8px;
+      --tap: 48px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      min-height: var(--tap);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+      color: var(--text);
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      padding-bottom: 86px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 74px;
+      padding: 14px clamp(14px, 3vw, 28px);
+      border-bottom: 1px solid var(--line);
+      background: rgba(9, 11, 15, .92);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      min-width: 0;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: clamp(20px, 2.6vw, 28px);
+      font-weight: 800;
+      line-height: 1.05;
+    }
+
+    .brand-subtitle {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .status-pill {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 0 12px;
+      border: 1px solid rgba(104, 225, 143, .35);
+      border-radius: 999px;
+      background: rgba(104, 225, 143, .1);
+      color: #c9f9d7;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .layout {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .desktop-nav {
+      display: none;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 6px);
+      background: var(--panel);
+    }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 0;
+      padding: 0 10px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .nav-btn.is-active {
+      border-color: rgba(91, 141, 255, .6);
+      background: #213358;
+      color: var(--text);
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.is-active {
+      display: block;
+    }
+
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: clamp(22px, 3vw, 34px);
+      line-height: 1.05;
+    }
+
+    .section-note {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .date-controls {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .date-controls button {
+      min-width: 0;
+      padding: 0 8px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .date-controls button.is-active {
+      border-color: rgba(91, 141, 255, .65);
+      background: #213358;
+      color: var(--text);
+    }
+
+    .date-picker {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .field,
+    .select {
+      min-height: var(--tap);
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #0d121a;
+      color: var(--text);
+      padding: 0 12px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .metric {
+      min-height: 84px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .metric.is-warning {
+      border-color: rgba(245, 199, 96, .42);
+      background: rgba(245, 199, 96, .1);
+    }
+
+    .metric.is-danger {
+      border-color: rgba(255, 109, 109, .42);
+      background: rgba(255, 109, 109, .1);
+    }
+
+    .metric-value {
+      font-size: 25px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .metric-label {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.25;
+    }
+
+    .metric-detail {
+      margin-top: 5px;
+      color: var(--soft);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .primary-action {
+      border-color: rgba(104, 225, 143, .42);
+      background: #1f5130;
+      color: #edfff2;
+      font-weight: 900;
+    }
+
+    .warning-action {
+      border-color: rgba(245, 199, 96, .45);
+      background: #4c3b17;
+      color: #fff4d4;
+      font-weight: 900;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 2px);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .panel + .panel {
+      margin-top: 14px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.1;
+    }
+
+    .panel-body {
+      padding: 14px;
+    }
+
+    .day-alerts {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .alert-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 46px;
+      padding: 10px 12px;
+      border: 1px solid rgba(245, 199, 96, .35);
+      border-radius: var(--radius);
+      background: rgba(245, 199, 96, .1);
+      color: #ffefc0;
+      font-weight: 750;
+      line-height: 1.25;
+    }
+
+    .mobile-paddocks {
+      display: flex;
+      gap: 12px;
+      margin: 0 -16px 16px;
+      overflow-x: auto;
+      padding: 0 16px 12px;
+      scroll-padding: 16px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+    }
+
+    .mobile-paddocks::-webkit-scrollbar {
+      display: none;
+    }
+
+    .paddock-card {
+      flex: 0 0 88vw;
+      max-width: 390px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 2px);
+      background: var(--panel);
+      scroll-snap-align: start;
+    }
+
+    .paddock-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel-soft);
+    }
+
+    .paddock-name {
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .paddock-hours {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .slot-list {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .slot-card {
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      gap: 10px;
+      min-height: 56px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #0d121a;
+    }
+
+    .slot-time {
+      color: var(--soft);
+      font-weight: 900;
+    }
+
+    .slot-main {
+      min-width: 0;
+    }
+
+    .slot-title {
+      font-weight: 900;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+
+    .slot-meta {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    .slot-card.is-free {
+      opacity: .72;
+    }
+
+    .slot-card.is-booked {
+      border-color: rgba(104, 225, 143, .42);
+      background: rgba(104, 225, 143, .1);
+    }
+
+    .slot-card.is-blocked {
+      border-color: rgba(255, 109, 109, .38);
+      background: rgba(255, 109, 109, .1);
+    }
+
+    .planning-table-wrap {
+      display: none;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 2px);
+      background: var(--panel);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      padding: 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--panel-soft);
+      color: var(--soft);
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    td {
+      background: #0d121a;
+      color: var(--text);
+      font-weight: 750;
+    }
+
+    .cell-muted {
+      color: var(--muted);
+      font-weight: 650;
+    }
+
+    .list-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .item-card {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .item-top {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .item-title {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 9px;
+      border-radius: 999px;
+      background: var(--panel-strong);
+      color: var(--soft);
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .badge.green {
+      background: rgba(104, 225, 143, .14);
+      color: #bdf5cc;
+    }
+
+    .badge.red {
+      background: rgba(255, 109, 109, .14);
+      color: #ffc6c6;
+    }
+
+    .badge.amber {
+      background: rgba(245, 199, 96, .14);
+      color: #ffe6aa;
+    }
+
+    .item-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .item-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .danger {
+      border-color: rgba(255, 109, 109, .45);
+      background: #4b2025;
+      color: #ffe7e7;
+      font-weight: 900;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .field-label {
+      display: grid;
+      gap: 7px;
+      color: var(--soft);
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .choice {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: var(--tap);
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+      color: var(--text);
+      font-weight: 800;
+    }
+
+    .choice input {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--green);
+    }
+
+    .accordion {
+      display: grid;
+      gap: 10px;
+    }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    summary {
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 14px;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    details[open] summary {
+      border-bottom: 1px solid var(--line);
+      background: var(--panel-soft);
+    }
+
+    .hours-row {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+    }
+
+    .field[type="time"] {
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .summary-status {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .hours-chip {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 30;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      padding: 8px;
+      padding-bottom: calc(8px + env(safe-area-inset-bottom));
+      border-top: 1px solid var(--line);
+      background: rgba(9, 11, 15, .94);
+      backdrop-filter: blur(18px);
+      pointer-events: auto;
+      transform: translateZ(0);
+    }
+
+    .bottom-nav .nav-btn {
+      flex-direction: column;
+      gap: 3px;
+      min-height: 58px;
+      padding: 0 4px;
+      font-size: 10px;
+      line-height: 1.1;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .nav-icon {
+      font-size: 19px;
+      line-height: 1;
+    }
+
+    .toast {
+      position: fixed;
+      right: 14px;
+      bottom: 92px;
+      left: 14px;
+      z-index: 40;
+      display: none;
+      padding: 12px 14px;
+      border: 1px solid rgba(104, 225, 143, .4);
+      border-radius: var(--radius);
+      background: #15351f;
+      color: #dfffe8;
+      font-weight: 850;
+      box-shadow: var(--shadow);
+    }
+
+    .prototype-warning {
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      border: 1px solid rgba(91, 141, 255, .42);
+      border-radius: var(--radius);
+      background: rgba(91, 141, 255, .1);
+      color: #dce7ff;
+      font-size: 14px;
+      font-weight: 750;
+      line-height: 1.4;
+    }
+
+    @media (min-width: 720px) {
+      .app-shell {
+        padding-bottom: 0;
+      }
+
+      .layout {
+        padding: 22px;
+      }
+
+      .status-pill {
+        display: inline-flex;
+      }
+
+      .desktop-nav {
+        display: grid;
+      }
+
+      .bottom-nav {
+        display: none;
+      }
+
+      .date-controls {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .quick-actions {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .mobile-paddocks {
+        display: none;
+      }
+
+      .planning-table-wrap {
+        display: block;
+      }
+
+      .list-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .choice-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .item-actions {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .item-actions button {
+        min-width: 160px;
+      }
+
+      .toast {
+        right: 22px;
+        bottom: 22px;
+        left: auto;
+        width: min(420px, calc(100vw - 44px));
+      }
+    }
+
+    @media (min-width: 980px) {
+      .planning-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 16px;
+        align-items: start;
+      }
+
+      .side-stack {
+        display: grid;
+        gap: 14px;
+      }
+
+      .side-stack .panel + .panel {
+        margin-top: 0;
+      }
+    }
+  </style>
 </head>
-
 <body>
-
-<header>
-
-<h1>🐎 Backstage</h1>
-
-<div class="icons">
-<button>🔔</button>
-
-<button onclick="location.href='https://app.damiensiri.com/planningpaddock.html'">
-🐎
-</button>
-
-<button onclick="location.href='https://app.damiensiri.com/blocagepaddock.html'">
-🚫
-</button>
-
-<button onclick="location.href='horaires.html'">
-⚙️
-</button>
-</div>
-
-</header>
-
-<div class="container">
-
-<div class="card">
-
-<div class="tabs">
-<button id="btn0" onclick="loadDay(0)">Aujourd'hui</button>
-<button id="btn1" onclick="loadDay(1)">Demain</button>
-<button id="btn2" onclick="loadDay(2)">Après-demain</button>
-</div>
-
-<table id="planning"></table>
-
-</div>
-
-<div class="card">
-
-<h2 class="section-title">Exceptions 1h30</h2>
-
-<div id="restrictionToast" class="restriction-toast"></div>
-
-<div class="restriction-form">
-<input type="date" id="restrictionDate" onchange="fillRestrictionForm()">
-<button onclick="setRestrictionToday()">Aujourd'hui</button>
-
-<label>
-<input type="checkbox" id="restrictionGrande">
-Interdire le 1h30 sur Grande voie
-</label>
-
-<label>
-<input type="checkbox" id="restrictionBeudot">
-Interdire le 1h30 sur Beudot
-</label>
-
-<button id="restrictionSaveBtn" onclick="saveRestriction()">Ajouter</button>
-</div>
-
-<div id="restrictionsList"></div>
-
-</div>
-
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<script>
-
-/* PASSWORD */
-
-const PASS="0359140"
-
-if(!localStorage.getItem("backstage_auth")){
-
-let p=prompt("Mot de passe")
-
-if(p!==PASS){
-document.body.innerHTML="Accès refusé"
-throw "stop"
-}
-
-localStorage.setItem("backstage_auth",true)
-
-}
-
-/* FIREBASE */
-
-const firebaseConfig={
-apiKey:"AIzaSyBn6Hgu-xvsWqpwJ-i4lZyI0QjKMBvOeXA",
-authDomain:"ecurie-paddock.firebaseapp.com",
-projectId:"ecurie-paddock",
-storageBucket:"ecurie-paddock.firebasestorage.app",
-messagingSenderId:"501153278739",
-appId:"1:501153278739:web:824b4344c381f2a94548e6"
-}
-
-firebase.initializeApp(firebaseConfig)
-const db=firebase.firestore()
-
-let reservations=[]
-let horaires={}
-let restrictions={}
-let currentDate=""
-let firstLoad=true
-
-/* DATE */
-
-function dateOffset(days){
-let d=new Date()
-d.setDate(d.getDate()+days)
-
-return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")
-}
-
-/* LOAD DAY */
-
-function loadDay(offset){
-
-currentDate=dateOffset(offset)
-
-document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"))
-document.getElementById("btn"+offset).classList.add("active")
-
-buildPlanning()
-}
-
-/* CHECK OUVERTURE PAR PADDOCK */
-
-function isOpen(paddock, time){
-
-if(!horaires[paddock]) return false
-
-const parts=currentDate.split("-")
-const d=new Date(parts[0],parts[1]-1,parts[2])
-
-const names=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"]
-let jour=names[d.getDay()]
-
-const config=horaires[paddock][jour]
-
-if(!config || config.closed) return false
-
-let [h,m]=time.split(":").map(Number)
-let current=h+(m/60)
-
-let [oh,om]=config.open.split(":").map(Number)
-let start=oh+(om/60)
-
-let [ch,cm]=config.close.split(":").map(Number)
-let end=ch+(cm/60)
-
-return current>=start && current<end
-}
-
-/* BUILD PLANNING */
-
-function buildPlanning(){
-
-if(!horaires.maison) return
-
-const paddocks=["maison","grande","beudot"]
-
-let skip={maison:0,grande:0,beudot:0}
-
-const parts=currentDate.split("-")
-const d=new Date(parts[0],parts[1]-1,parts[2])
-
-const names=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"]
-let jour=names[d.getDay()]
-
-let slots=[]
-
-paddocks.forEach(paddock=>{
-
-if(!horaires[paddock] || !horaires[paddock][jour]) return
-
-const config=horaires[paddock][jour]
-
-if(config.closed) return
-
-let [oh,om]=config.open.split(":").map(Number)
-let start=oh+(om/60)
-
-let [ch,cm]=config.close.split(":").map(Number)
-let end=ch+(cm/60)
-
-let current=start
-
-while(current < end){
-
-let hour=Math.floor(current)
-let minutes=current%1===0 ? "00":"30"
-
-let time=String(hour).padStart(2,"0")+":"+minutes
-
-slots.push(time)
-
-let reservation=reservations.find(r=>{
-
-if(r.date!==currentDate) return false
-if(r.paddock!==paddock) return false
-
-let [rh,rm]=r.time.split(":").map(Number)
-let resStart=rh+(rm/60)
-
-return resStart===current
-
-})
-
-if(reservation){
-current += reservation.duration/60
-}else{
-current += 1
-}
-
-}
-
-})
-
-slots=[...new Set(slots)]
-
-if(slots.length===0){
-slots=["--"]
-}
-
-slots.sort((a,b)=>{
-
-if(a==="--" || b==="--") return 0
-
-let [ah,am]=a.split(":").map(Number)
-let [bh,bm]=b.split(":").map(Number)
-
-return (ah*60+am)-(bh*60+bm)
-
-})
-
-let html="<tr><th>Heure</th>"
-
-paddocks.forEach(p=>html+="<th>"+p+"</th>")
-
-html+="</tr>"
-
-slots.forEach(time=>{
-
-html+="<tr>"
-html+="<td>"+time+"</td>"
-
-paddocks.forEach(p=>{
-
-if(time==="--"){
-html+="<td class='closed'>FERMÉ</td>"
-return
-}
-
-/* 🔥 CHECK OUVERTURE */
-if(!isOpen(p,time)){
-html+="<td class='closed'>FERMÉ</td>"
-return
-}
-
-let resa=reservations.find(r=>r.date===currentDate && r.paddock===p && r.time===time)
-
-if(resa){
-
-let span=resa.duration===90?2:1
-
-if(resa.duration>90){
-
-let [sh,sm]=resa.time.split(":").map(Number)
-let startMinutes=(sh*60)+sm
-let endMinutes=startMinutes+resa.duration
-
-span=slots.filter(slot=>{
-
-if(slot==="--") return false
-
-let [h,m]=slot.split(":").map(Number)
-let slotMinutes=(h*60)+m
-
-return slotMinutes>=startMinutes && slotMinutes<endMinutes
-
-}).length
-
-span=Math.max(span,1)
-
-}
-
-skip[p]=span-1
-
-if(resa.duration>90){
-
-let [sh,sm]=resa.time.split(":").map(Number)
-let endMinutes=(sh*60)+sm+resa.duration
-let endHour=Math.floor(endMinutes/60)%24
-let endMinute=endMinutes%60
-let startLabel=String(sh).padStart(2,"0")+"h"+String(sm).padStart(2,"0")
-let endLabel=String(endHour).padStart(2,"0")+"h"+String(endMinute).padStart(2,"0")
-let blockLabel=(resa.name || "Blocage").replace(/^blocage\s*/i,"").trim() || "Blocage"
-blockLabel=blockLabel.charAt(0).toUpperCase()+blockLabel.slice(1)
-
-html+=`<td class="resa blockage" rowspan="${span}" onclick="cancel('${resa.id}')"><div class="blockage-content"><div class="blockage-icon">🚫</div><div class="blockage-title">${blockLabel}</div><div class="blockage-time">${startLabel} → ${endLabel}</div></div></td>`
-
-}else{
-
-html+=`<td class="resa" rowspan="${span}" onclick="cancel('${resa.id}')">${resa.name}</td>`
-
-}
-
-}else{
-
-if(skip[p]>0){
-skip[p]--
-return
-}
-
-html+=`<td class="free"></td>`
-
-}
-
-})
-
-html+="</tr>"
-
-})
-
-document.getElementById("planning").innerHTML=html
-
-}
-
-/* EXCEPTIONS 1H30 */
-
-function fillRestrictionForm(){
-
-const date=document.getElementById("restrictionDate").value
-const restriction=restrictions[date]
-
-document.getElementById("restrictionGrande").checked=!!(restriction && restriction.blockGrande90)
-document.getElementById("restrictionBeudot").checked=!!(restriction && restriction.blockBeudot90)
-document.getElementById("restrictionSaveBtn").textContent=restriction ? "Mettre à jour" : "Ajouter"
-
-}
-
-let restrictionToastTimeout=null
-
-function showRestrictionToast(message){
-
-const toast=document.getElementById("restrictionToast")
-
-toast.textContent=message
-toast.style.display="block"
-
-clearTimeout(restrictionToastTimeout)
-restrictionToastTimeout=setTimeout(()=>{
-toast.style.display="none"
-},2500)
-
-}
-
-function setRestrictionToday(){
-
-document.getElementById("restrictionDate").value=dateOffset(0)
-fillRestrictionForm()
-
-}
-
-async function saveRestriction(){
-
-const date=document.getElementById("restrictionDate").value
-
-if(!date){
-showRestrictionToast("Choisissez une date")
-return
-}
-
-const exists=!!restrictions[date]
-const blockGrande90=document.getElementById("restrictionGrande").checked
-const blockBeudot90=document.getElementById("restrictionBeudot").checked
-
-if(!blockGrande90 && !blockBeudot90){
-
-await db.collection("restrictions").doc(date).delete()
-showRestrictionToast(exists ? "Exception supprimée" : "Aucune interdiction à enregistrer")
-return
-
-}
-
-await db.collection("restrictions").doc(date).set({
-blockGrande90:blockGrande90,
-blockBeudot90:blockBeudot90
-})
-
-showRestrictionToast(exists ? "Exception mise à jour" : "Exception ajoutée")
-
-}
-
-async function deleteRestriction(date){
-
-if(!confirm("Supprimer cette exception ?")) return
-
-await db.collection("restrictions").doc(date).delete()
-
-showRestrictionToast("Exception supprimée")
-
-}
-
-function formatDateFr(date){
-
-const parts=date.split("-")
-const d=new Date(parts[0],parts[1]-1,parts[2])
-
-return d.toLocaleDateString("fr-FR",{
-day:"numeric",
-month:"long",
-year:"numeric"
-})
-
-}
-
-function dateValue(date){
-
-const parts=date.split("-")
-const d=new Date(parts[0],parts[1]-1,parts[2])
-
-return d.getTime()
-
-}
-
-function renderRestrictions(){
-
-const list=document.getElementById("restrictionsList")
-const dates=Object.keys(restrictions).sort((a,b)=>dateValue(a)-dateValue(b))
-
-if(dates.length===0){
-list.innerHTML="<p class='restrictions-empty'>Aucune exception enregistrée.</p>"
-return
-}
-
-let html=""
-
-dates.forEach(date=>{
-const restriction=restrictions[date]
-html+="<div class='restriction-item'>"
-html+="<div class='restriction-date'>"+formatDateFr(date)+"</div>"
-html+="<div class='restriction-status'>Grande voie : "+(restriction.blockGrande90 ? "🚫 Interdit" : "✅ Autorisé")+"</div>"
-html+="<div class='restriction-status'>Beudot : "+(restriction.blockBeudot90 ? "🚫 Interdit" : "✅ Autorisé")+"</div>"
-html+=`<button class="delete-btn" onclick="deleteRestriction('${date}')" title="Supprimer">🗑️ Supprimer</button>`
-html+="</div>"
-})
-
-list.innerHTML=html
-
-}
-
-/* FIREBASE RESERVATIONS LIVE */
-
-db.collection("reservations").onSnapshot(snapshot=>{
-
-snapshot.docChanges().forEach(change=>{
-
-if(change.type==="added" && !firstLoad){
-
-let r=change.doc.data()
-
-new Notification("Nouvelle réservation paddock 🐎",{
-body:r.name+" — "+r.paddock+" "+r.time
-})
-
-}
-
-})
-
-firstLoad=false
-
-reservations=[]
-
-snapshot.forEach(doc=>{
-let r=doc.data()
-r.id=doc.id
-reservations.push(r)
-})
-
-buildPlanning()
-
-})
-
-/* 🔥 FIREBASE HORAIRES LIVE */
-
-db.collection("horaires").onSnapshot(snapshot=>{
-
-horaires={}
-
-snapshot.forEach(doc=>{
-horaires[doc.id]=doc.data()
-})
-
-buildPlanning()
-
-})
-
-/* FIREBASE EXCEPTIONS 1H30 LIVE */
-
-db.collection("restrictions").onSnapshot(snapshot=>{
-
-restrictions={}
-
-snapshot.forEach(doc=>{
-restrictions[doc.id]=doc.data()
-})
-
-renderRestrictions()
-fillRestrictionForm()
-
-})
-
-/* ANNULATION */
-
-async function cancel(id){
-
-if(!confirm("Annuler cette réservation ?")) return
-
-await db.collection("reservations").doc(id).delete()
-
-}
-
-/* INIT */
-
-loadDay(0)
-
-</script>
-
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <h1 class="brand-title">Backstage</h1>
+        <div class="brand-subtitle">Gestion paddocks - prototype local</div>
+      </div>
+      <div class="status-pill">Local uniquement</div>
+    </header>
+
+    <main class="layout">
+      <div class="prototype-warning">
+        Prototype sans connexion Firebase: aucune reservation, aucun horaire, aucune exception et aucun blocage reel ne peut etre modifie depuis ce fichier.
+      </div>
+
+      <nav class="desktop-nav" aria-label="Navigation principale">
+        <button class="nav-btn is-active" data-view-target="planning"><span class="nav-icon">▦</span>Planning</button>
+        <button class="nav-btn" data-view-target="reservations"><span class="nav-icon">●</span>Reservations</button>
+        <button class="nav-btn" data-view-target="blocages"><span class="nav-icon">■</span>Blocages</button>
+        <button class="nav-btn" data-view-target="horaires"><span class="nav-icon">⚙</span>Horaires</button>
+      </nav>
+
+      <section class="view is-active" id="view-planning">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Planning</h2>
+            <p class="section-note" id="selectedDateLabel">Aujourd'hui</p>
+          </div>
+        </div>
+
+        <div class="date-controls" aria-label="Choisir le jour">
+          <button class="is-active" data-day-offset="0">Aujourd'hui</button>
+          <button data-day-offset="1">Demain</button>
+          <button data-day-offset="2">Apres-demain</button>
+        </div>
+        <div class="date-picker">
+          <input class="field" id="customDate" type="date" aria-label="Choisir une date">
+          <button id="customDateBtn">Voir</button>
+        </div>
+
+        <div class="summary-grid" id="summaryGrid"></div>
+
+        <div class="planning-grid">
+          <div>
+            <div class="mobile-paddocks" id="mobilePaddocks"></div>
+            <div class="planning-table-wrap">
+              <table id="planningTable"></table>
+            </div>
+          </div>
+
+          <aside class="side-stack">
+            <section class="panel">
+              <div class="panel-header">
+                <h3 class="panel-title">Actions rapides</h3>
+              </div>
+              <div class="panel-body quick-actions">
+                <button class="primary-action" data-view-target="blocages">Creer un blocage</button>
+                <button data-view-target="reservations">Voir reservations</button>
+                <button class="warning-action" data-view-target="blocages">Exceptions 1h30</button>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <h3 class="panel-title">A surveiller</h3>
+              </div>
+              <div class="panel-body list-grid" id="watchList"></div>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section class="view" id="view-reservations">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Reservations</h2>
+            <p class="section-note">Vue simple pour controler les demandes sans chercher dans le planning.</p>
+          </div>
+          <select class="select" id="reservationFilter" aria-label="Filtrer les reservations">
+            <option value="today">Aujourd'hui</option>
+            <option value="tomorrow">Demain</option>
+            <option value="future">A venir</option>
+          </select>
+        </div>
+        <div class="date-picker">
+          <input class="field" id="reservationSearch" type="search" placeholder="Rechercher un nom" aria-label="Rechercher une reservation par nom">
+          <button id="clearReservationSearch">Effacer</button>
+        </div>
+        <div class="list-grid" id="reservationList"></div>
+      </section>
+
+      <section class="view" id="view-blocages">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Blocages</h2>
+            <p class="section-note">Creation locale de demonstration: les donnees Firebase ne sont pas appelees.</p>
+          </div>
+        </div>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h3 class="panel-title">Creer un blocage</h3>
+          </div>
+          <div class="panel-body">
+            <div class="form-grid">
+              <label class="field-label">Date
+                <input class="field" id="blockDate" type="date">
+              </label>
+              <label class="field-label">Motif
+                <input class="field" id="blockReason" type="text" value="Entretien">
+              </label>
+              <label class="field-label">Heure debut
+                <input class="field" id="blockStart" type="time" value="10:00">
+              </label>
+              <label class="field-label">Heure fin
+                <input class="field" id="blockEnd" type="time" value="12:00">
+              </label>
+            </div>
+            <div class="choice-grid" style="margin-top: 10px;">
+              <label class="choice"><input type="checkbox" value="maison" checked> Maison</label>
+              <label class="choice"><input type="checkbox" value="grande" checked> Grande voie</label>
+              <label class="choice"><input type="checkbox" value="beudot"> Beudot</label>
+            </div>
+            <button class="primary-action" id="fakeCreateBlock" style="width: 100%; margin-top: 12px;">Simuler la creation</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h3 class="panel-title">Blocages existants</h3>
+          </div>
+          <div class="panel-body">
+            <div class="date-controls">
+              <button class="is-active" data-block-filter="future">A venir</button>
+              <button data-block-filter="past">Historique</button>
+              <button data-block-filter="all">Tout</button>
+            </div>
+            <div class="list-grid" id="blockList"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h3 class="panel-title">Exceptions 1h30</h3>
+          </div>
+          <div class="panel-body">
+            <div class="form-grid">
+              <label class="field-label">Date
+                <input class="field" id="restrictionDate" type="date">
+              </label>
+              <label class="field-label">Action
+                <select class="select" id="restrictionTarget">
+                  <option value="grande">Interdire Grande voie</option>
+                  <option value="beudot">Interdire Beudot</option>
+                  <option value="both">Interdire les deux</option>
+                </select>
+              </label>
+            </div>
+            <button class="warning-action" id="fakeSaveRestriction" style="width: 100%; margin-top: 12px;">Simuler l'exception</button>
+            <div class="list-grid" id="restrictionList" style="margin-top: 12px;"></div>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" id="view-horaires">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Horaires</h2>
+            <p class="section-note">Meme logique metier: paddock, jour, ouvert/ferme, ouverture, fermeture, durees.</p>
+          </div>
+          <select class="select" id="hoursPaddock" aria-label="Choisir le paddock">
+            <option value="all">Tous les paddocks</option>
+            <option value="maison">Maison</option>
+            <option value="grande">Grande voie</option>
+            <option value="beudot">Beudot</option>
+          </select>
+        </div>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h3 class="panel-title" id="hoursTitle">Maison</h3>
+            <span class="badge amber" id="hoursScopeBadge">Prototype</span>
+          </div>
+          <div class="panel-body">
+            <div class="accordion" id="hoursAccordion"></div>
+            <button class="primary-action" id="fakeSaveHours" style="width: 100%; margin-top: 12px;">Simuler la sauvegarde</button>
+          </div>
+        </section>
+
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Navigation mobile">
+      <button class="nav-btn is-active" data-view-target="planning"><span class="nav-icon">▦</span>Planning</button>
+      <button class="nav-btn" data-view-target="reservations"><span class="nav-icon">●</span>Resas</button>
+      <button class="nav-btn" data-view-target="blocages"><span class="nav-icon">■</span>Bloc.</button>
+      <button class="nav-btn" data-view-target="horaires"><span class="nav-icon">⚙</span>Horaires</button>
+    </nav>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const LOCAL_ONLY = true;
+
+    const paddocks = [
+      { id: "maison", label: "Maison" },
+      { id: "grande", label: "Grande voie" },
+      { id: "beudot", label: "Beudot" }
+    ];
+
+    const days = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+
+    const horaires = {
+      maison: {
+        lundi: { closed: false, open: "08:00", close: "21:00", durations: [60, 90] },
+        mardi: { closed: false, open: "08:00", close: "22:00", durations: [60, 90] },
+        mercredi: { closed: false, open: "07:00", close: "22:00", durations: [60, 90] },
+        jeudi: { closed: false, open: "07:00", close: "22:00", durations: [60, 90] },
+        vendredi: { closed: true, open: "08:00", close: "21:00", durations: [60] },
+        samedi: { closed: true, open: "08:00", close: "19:00", durations: [60] },
+        dimanche: { closed: true, open: "07:00", close: "21:00", durations: [60] }
+      },
+      grande: {
+        lundi: { closed: false, open: "08:00", close: "20:00", durations: [60, 90] },
+        mardi: { closed: false, open: "08:00", close: "20:00", durations: [60, 90] },
+        mercredi: { closed: false, open: "08:00", close: "20:00", durations: [60, 90] },
+        jeudi: { closed: false, open: "08:00", close: "20:00", durations: [60, 90] },
+        vendredi: { closed: false, open: "08:00", close: "19:00", durations: [60] },
+        samedi: { closed: false, open: "09:00", close: "18:00", durations: [60] },
+        dimanche: { closed: true, open: "09:00", close: "18:00", durations: [60] }
+      },
+      beudot: {
+        lundi: { closed: false, open: "09:00", close: "19:00", durations: [60, 90] },
+        mardi: { closed: false, open: "09:00", close: "19:00", durations: [60, 90] },
+        mercredi: { closed: false, open: "08:00", close: "20:00", durations: [60, 90] },
+        jeudi: { closed: false, open: "08:00", close: "20:00", durations: [60, 90] },
+        vendredi: { closed: false, open: "09:00", close: "18:00", durations: [60] },
+        samedi: { closed: true, open: "09:00", close: "18:00", durations: [60] },
+        dimanche: { closed: true, open: "09:00", close: "18:00", durations: [60] }
+      }
+    };
+
+    const reservations = [
+      { id: "r1", date: offsetDate(0), paddock: "maison", time: "09:00", duration: 60, name: "Camille Martin", type: "Reservation paddock", email: "camille@example.com" },
+      { id: "r2", date: offsetDate(0), paddock: "grande", time: "10:30", duration: 90, name: "Julie R.", type: "Reservation paddock", email: "julie@example.com" },
+      { id: "r3", date: offsetDate(0), paddock: "beudot", time: "15:00", duration: 60, name: "Pauline D.", type: "Demande mise au paddock", email: "pauline@example.com" },
+      { id: "r4", date: offsetDate(1), paddock: "maison", time: "11:00", duration: 90, name: "Nina P.", type: "Reservation paddock", email: "nina@example.com" },
+      { id: "r5", date: offsetDate(2), paddock: "grande", time: "14:00", duration: 60, name: "Sarah L.", type: "Reservation paddock", email: "sarah@example.com" }
+    ];
+
+    const blocages = [
+      { id: "b1", date: offsetDate(0), paddock: "maison", time: "13:00", duration: 120, name: "Blocage entretien" },
+      { id: "b2", date: offsetDate(1), paddock: "grande", time: "16:00", duration: 90, name: "Blocage cours" },
+      { id: "b3", date: offsetDate(-1), paddock: "beudot", time: "10:00", duration: 60, name: "Blocage sol" }
+    ];
+
+    const restrictions = {
+      [offsetDate(0)]: { blockGrande90: true, blockBeudot90: false },
+      [offsetDate(2)]: { blockGrande90: false, blockBeudot90: true }
+    };
+
+    let selectedDate = offsetDate(0);
+    let blockFilter = "future";
+
+    function offsetDate(daysFromToday) {
+      const date = new Date();
+      date.setDate(date.getDate() + daysFromToday);
+      return toIsoDate(date);
+    }
+
+    function toIsoDate(date) {
+      return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+    }
+
+    function parseIsoDate(value) {
+      const parts = value.split("-").map(Number);
+      return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+
+    function formatDate(value) {
+      return parseIsoDate(value).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+    }
+
+    function dayName(value) {
+      return days[parseIsoDate(value).getDay()];
+    }
+
+    function minutes(time) {
+      const parts = time.split(":").map(Number);
+      return parts[0] * 60 + parts[1];
+    }
+
+    function timeFromMinutes(value) {
+      return String(Math.floor(value / 60)).padStart(2, "0") + ":" + String(value % 60).padStart(2, "0");
+    }
+
+    function paddockLabel(id) {
+      if (id === "all") return "Tous les paddocks";
+      return paddocks.find((paddock) => paddock.id === id)?.label || id;
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.style.display = "block";
+      window.clearTimeout(showToast.timeout);
+      showToast.timeout = window.setTimeout(() => {
+        toast.style.display = "none";
+      }, 2600);
+    }
+
+    function switchView(view) {
+      document.querySelectorAll(".view").forEach((el) => el.classList.toggle("is-active", el.id === "view-" + view));
+      document.querySelectorAll("[data-view-target]").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.viewTarget === view);
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function handleViewNavigation(event) {
+      const viewButton = event.currentTarget;
+      event.preventDefault();
+      event.stopPropagation();
+      switchView(viewButton.dataset.viewTarget);
+    }
+
+    function setSelectedDate(date) {
+      selectedDate = date;
+      document.getElementById("customDate").value = date;
+      document.getElementById("blockDate").value = date;
+      document.getElementById("restrictionDate").value = date;
+      document.getElementById("selectedDateLabel").textContent = formatDate(date);
+      document.querySelectorAll("[data-day-offset]").forEach((button) => {
+        button.classList.toggle("is-active", offsetDate(Number(button.dataset.dayOffset)) === date);
+      });
+      renderPlanning();
+    }
+
+    function recordsForDay(date) {
+      const dayReservations = reservations.filter((item) => item.date === date);
+      const dayBlocks = blocages.filter((item) => item.date === date);
+      return { dayReservations, dayBlocks };
+    }
+
+    function getSlots(date) {
+      const name = dayName(date);
+      const slotSet = new Set();
+      paddocks.forEach((paddock) => {
+        const config = horaires[paddock.id][name];
+        if (!config || config.closed) return;
+        for (let t = minutes(config.open); t < minutes(config.close); t += 60) {
+          slotSet.add(timeFromMinutes(t));
+        }
+      });
+      return [...slotSet].sort((a, b) => minutes(a) - minutes(b));
+    }
+
+    function itemAt(date, paddock, time) {
+      return reservations.find((item) => item.date === date && item.paddock === paddock && item.time === time)
+        || blocages.find((item) => item.date === date && item.paddock === paddock && item.time === time);
+    }
+
+    function renderSummary(date) {
+      const { dayReservations, dayBlocks } = recordsForDay(date);
+      const restriction = restrictions[date];
+      const closedCount = paddocks.filter((paddock) => horaires[paddock.id][dayName(date)]?.closed).length;
+      const restrictedPaddocks = [];
+      if (restriction?.blockGrande90) restrictedPaddocks.push("Grande voie");
+      if (restriction?.blockBeudot90) restrictedPaddocks.push("Beudot");
+      const blockedPaddocks = [...new Set(dayBlocks.map((item) => paddockLabel(item.paddock)))];
+      const metrics = [
+        { value: dayReservations.length, label: "reservations" },
+        { value: dayBlocks.length, label: "blocages", detail: blockedPaddocks.join(", "), tone: dayBlocks.length ? "is-danger" : "" },
+        { value: restrictedPaddocks.length ? "Oui" : "Non", label: "exception 1h30", detail: restrictedPaddocks.join(", "), tone: restrictedPaddocks.length ? "is-warning" : "" },
+        { value: closedCount, label: "paddocks fermes" }
+      ];
+      document.getElementById("summaryGrid").innerHTML = metrics.map((metric) => `
+        <div class="metric ${metric.tone || ""}">
+          <div class="metric-value">${metric.value}</div>
+          <div class="metric-label">${metric.label}</div>
+          ${metric.detail ? `<div class="metric-detail">${metric.detail}</div>` : ""}
+        </div>
+      `).join("");
+    }
+
+    function renderMobilePlanning(date) {
+      const slots = getSlots(date);
+      const currentDay = dayName(date);
+      document.getElementById("mobilePaddocks").innerHTML = paddocks.map((paddock) => {
+        const config = horaires[paddock.id][currentDay];
+        const hours = config?.closed ? "Ferme" : `${config.open} - ${config.close}`;
+        const rows = slots.map((time) => {
+          if (!config || config.closed || minutes(time) < minutes(config.open) || minutes(time) >= minutes(config.close)) {
+            return `<div class="slot-card is-free"><div class="slot-time">${time}</div><div class="slot-main"><div class="slot-title">Ferme</div></div></div>`;
+          }
+          const item = itemAt(date, paddock.id, time);
+          if (!item) {
+            return `<div class="slot-card is-free"><div class="slot-time">${time}</div><div class="slot-main"><div class="slot-title">Libre</div><div class="slot-meta">Creneau disponible</div></div></div>`;
+          }
+          const isBlock = item.name.toLowerCase().includes("blocage");
+          return `
+            <div class="slot-card ${isBlock ? "is-blocked" : "is-booked"}">
+              <div class="slot-time">${time}</div>
+              <div class="slot-main">
+                <div class="slot-title">${item.name}</div>
+                <div class="slot-meta">${item.duration} min${item.type ? " - " + item.type : ""}</div>
+              </div>
+            </div>
+          `;
+        }).join("");
+        return `
+          <article class="paddock-card">
+            <div class="paddock-head">
+              <div class="paddock-name">${paddock.label}</div>
+              <div class="paddock-hours">${hours}</div>
+            </div>
+            <div class="slot-list">${rows}</div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderTablePlanning(date) {
+      const slots = getSlots(date);
+      const currentDay = dayName(date);
+      const rows = slots.map((time) => {
+        const cells = paddocks.map((paddock) => {
+          const config = horaires[paddock.id][currentDay];
+          if (!config || config.closed || minutes(time) < minutes(config.open) || minutes(time) >= minutes(config.close)) {
+            return `<td class="cell-muted">Ferme</td>`;
+          }
+          const item = itemAt(date, paddock.id, time);
+          if (!item) return `<td class="cell-muted">Libre</td>`;
+          return `<td>${item.name}<div class="slot-meta">${item.duration} min${item.type ? " - " + item.type : ""}</div></td>`;
+        }).join("");
+        return `<tr><td>${time}</td>${cells}</tr>`;
+      }).join("");
+      document.getElementById("planningTable").innerHTML = `
+        <thead><tr><th>Heure</th>${paddocks.map((paddock) => `<th>${paddock.label}</th>`).join("")}</tr></thead>
+        <tbody>${rows}</tbody>
+      `;
+    }
+
+    function renderWatchList(date) {
+      const { dayReservations, dayBlocks } = recordsForDay(date);
+      const items = [
+        ...dayReservations.slice(0, 2).map((item) => ({ label: item.name, meta: `${paddockLabel(item.paddock)} - ${item.time}`, badge: "Reservation" })),
+        ...dayBlocks.slice(0, 2).map((item) => ({ label: item.name, meta: `${paddockLabel(item.paddock)} - ${item.time}`, badge: "Blocage" }))
+      ];
+      document.getElementById("watchList").innerHTML = (items.length ? items : [{ label: "Rien a signaler", meta: "Journee calme", badge: "OK" }]).map((item) => `
+        <article class="item-card">
+          <div class="item-top">
+            <h4 class="item-title">${item.label}</h4>
+            <span class="badge">${item.badge}</span>
+          </div>
+          <div class="item-meta">${item.meta}</div>
+        </article>
+      `).join("");
+    }
+
+    function renderPlanning() {
+      renderSummary(selectedDate);
+      renderMobilePlanning(selectedDate);
+      renderTablePlanning(selectedDate);
+      renderWatchList(selectedDate);
+    }
+
+    function renderReservations() {
+      const filter = document.getElementById("reservationFilter").value;
+      const query = document.getElementById("reservationSearch").value.trim().toLowerCase();
+      const today = offsetDate(0);
+      const tomorrow = offsetDate(1);
+      let filtered = reservations.filter((item) => item.date >= today);
+      if (filter === "today") filtered = reservations.filter((item) => item.date === today);
+      if (filter === "tomorrow") filtered = reservations.filter((item) => item.date === tomorrow);
+      if (filter === "future") filtered = reservations.filter((item) => item.date >= today);
+      if (query) filtered = filtered.filter((item) => item.name.toLowerCase().includes(query));
+      document.getElementById("reservationList").innerHTML = (filtered.length ? filtered : []).map((item) => `
+        <article class="item-card">
+          <div class="item-top">
+            <h3 class="item-title">${item.name}</h3>
+            <span class="badge green">${item.duration} min</span>
+          </div>
+          <div class="item-meta">
+            <span>${formatDate(item.date)}</span>
+            <span>${paddockLabel(item.paddock)}</span>
+            <span>${item.time}</span>
+            <span>${item.type}</span>
+          </div>
+          <div class="item-actions">
+            <button>Voir dans le planning</button>
+            <button class="danger" data-demo-action="cancel">Annuler</button>
+          </div>
+        </article>
+      `).join("") || `<div class="alert-line">Aucune reservation dans ce filtre.</div>`;
+    }
+
+    function renderBlocks() {
+      const today = offsetDate(0);
+      let filtered = blocages;
+      if (blockFilter === "future") filtered = blocages.filter((item) => item.date >= today);
+      if (blockFilter === "past") filtered = blocages.filter((item) => item.date < today);
+      document.getElementById("blockList").innerHTML = filtered.map((item) => `
+        <article class="item-card">
+          <div class="item-top">
+            <h3 class="item-title">${item.name}</h3>
+            <span class="badge red">${item.duration} min</span>
+          </div>
+          <div class="item-meta">
+            <span>${formatDate(item.date)}</span>
+            <span>${paddockLabel(item.paddock)}</span>
+            <span>${item.time}</span>
+          </div>
+          <div class="item-actions">
+            <button>Modifier</button>
+            <button class="danger" data-demo-action="delete">Supprimer</button>
+          </div>
+        </article>
+      `).join("") || `<div class="alert-line">Aucun blocage dans ce filtre.</div>`;
+    }
+
+    function renderHours() {
+      const paddock = document.getElementById("hoursPaddock").value;
+      const sourcePaddock = paddock === "all" ? "maison" : paddock;
+      document.getElementById("hoursTitle").textContent = paddockLabel(paddock);
+      document.getElementById("hoursScopeBadge").textContent = paddock === "all" ? "Les 3 paddocks" : "Prototype";
+      document.getElementById("hoursAccordion").innerHTML = days.slice(1).concat("dimanche").map((day) => {
+        const config = horaires[sourcePaddock][day];
+        return `
+          <details ${day === dayName(selectedDate) ? "open" : ""}>
+            <summary>
+              <span>${day.charAt(0).toUpperCase() + day.slice(1)}</span>
+              <span class="summary-status">
+                <span class="hours-chip">${config.open} - ${config.close}</span>
+                <span class="badge ${config.closed ? "red" : "green"}">${config.closed ? "Ferme" : "Ouvert"}</span>
+              </span>
+            </summary>
+            <div class="hours-row">
+              <label class="choice"><input type="checkbox" ${config.closed ? "" : "checked"}> Ouvert</label>
+              <div class="form-grid">
+                <label class="field-label">Ouverture
+                  <input class="field" type="time" value="${config.open}">
+                </label>
+                <label class="field-label">Fermeture
+                  <input class="field" type="time" value="${config.close}">
+                </label>
+              </div>
+            </div>
+          </details>
+        `;
+      }).join("");
+    }
+
+    function renderRestrictions() {
+      const entries = Object.entries(restrictions).sort(([a], [b]) => a.localeCompare(b));
+      document.getElementById("restrictionList").innerHTML = entries.map(([date, value]) => `
+        <article class="item-card">
+          <div class="item-top">
+            <h3 class="item-title">${formatDate(date)}</h3>
+            <span class="badge amber">1h30</span>
+          </div>
+          <div class="item-meta">
+            <span>Grande voie: ${value.blockGrande90 ? "interdit" : "autorise"}</span>
+            <span>Beudot: ${value.blockBeudot90 ? "interdit" : "autorise"}</span>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    document.querySelectorAll("button").forEach((button) => {
+      button.type = "button";
+    });
+
+    document.querySelectorAll("[data-view-target]").forEach((button) => {
+      button.addEventListener("click", handleViewNavigation);
+      button.addEventListener("touchend", handleViewNavigation, { passive: false });
+    });
+
+    document.addEventListener("click", (event) => {
+      const dayButton = event.target.closest("[data-day-offset]");
+      if (dayButton) setSelectedDate(offsetDate(Number(dayButton.dataset.dayOffset)));
+
+      const blockFilterButton = event.target.closest("[data-block-filter]");
+      if (blockFilterButton) {
+        blockFilter = blockFilterButton.dataset.blockFilter;
+        document.querySelectorAll("[data-block-filter]").forEach((button) => button.classList.toggle("is-active", button === blockFilterButton));
+        renderBlocks();
+      }
+
+      if (event.target.closest("[data-demo-action]")) {
+        showToast("Action de demonstration uniquement: aucune donnee Firebase n'est modifiee.");
+      }
+    });
+
+    document.getElementById("customDateBtn").addEventListener("click", () => {
+      const value = document.getElementById("customDate").value;
+      if (value) setSelectedDate(value);
+    });
+
+    document.getElementById("reservationFilter").addEventListener("change", renderReservations);
+    document.getElementById("reservationSearch").addEventListener("input", renderReservations);
+    document.getElementById("clearReservationSearch").addEventListener("click", () => {
+      document.getElementById("reservationSearch").value = "";
+      renderReservations();
+    });
+    document.getElementById("hoursPaddock").addEventListener("change", renderHours);
+    document.getElementById("fakeCreateBlock").addEventListener("click", () => showToast("Blocage simule localement. Rien n'est envoye a Firebase."));
+    document.getElementById("fakeSaveHours").addEventListener("click", () => showToast("Sauvegarde simulee localement. Rien n'est envoye a Firebase."));
+    document.getElementById("fakeSaveRestriction").addEventListener("click", () => showToast("Exception simulee localement. Rien n'est envoye a Firebase."));
+
+    setSelectedDate(offsetDate(0));
+    renderReservations();
+    renderBlocks();
+    renderHours();
+    renderRestrictions();
+  </script>
 </body>
 </html>
