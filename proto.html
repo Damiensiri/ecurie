@@ -815,9 +815,9 @@
       </div>
 
       <nav class="desktop-nav" aria-label="Navigation principale">
-        <button class="nav-btn is-active" data-view-target="planning"><span class="nav-icon">▦</span>Planning</button>
-        <button class="nav-btn" data-view-target="reservations"><span class="nav-icon">●</span>Reservations</button>
-        <button class="nav-btn" data-view-target="blocages"><span class="nav-icon">■</span>Blocages</button>
+        <button class="nav-btn is-active" data-view-target="planning"><span class="nav-icon">🗓️</span>Planning</button>
+        <button class="nav-btn" data-view-target="reservations"><span class="nav-icon">📒</span>Reservations</button>
+        <button class="nav-btn" data-view-target="blocages"><span class="nav-icon">🚫</span>Blocages</button>
         <button class="nav-btn" data-view-target="horaires"><span class="nav-icon">⚙</span>Horaires</button>
       </nav>
 
@@ -859,13 +859,6 @@
                 <button data-view-target="reservations">Voir reservations</button>
                 <button class="warning-action" data-view-target="blocages">Exceptions 1h30</button>
               </div>
-            </section>
-
-            <section class="panel">
-              <div class="panel-header">
-                <h3 class="panel-title">A surveiller</h3>
-              </div>
-              <div class="panel-body list-grid" id="watchList"></div>
             </section>
           </aside>
         </div>
@@ -992,9 +985,9 @@
     </main>
 
     <nav class="bottom-nav" aria-label="Navigation mobile">
-      <button class="nav-btn is-active" data-view-target="planning"><span class="nav-icon">▦</span>Planning</button>
-      <button class="nav-btn" data-view-target="reservations"><span class="nav-icon">●</span>Resas</button>
-      <button class="nav-btn" data-view-target="blocages"><span class="nav-icon">■</span>Bloc.</button>
+      <button class="nav-btn is-active" data-view-target="planning"><span class="nav-icon">🗓️</span>Planning</button>
+      <button class="nav-btn" data-view-target="reservations"><span class="nav-icon">📒</span>Resas</button>
+      <button class="nav-btn" data-view-target="blocages"><span class="nav-icon">🚫</span>Bloc.</button>
       <button class="nav-btn" data-view-target="horaires"><span class="nav-icon">⚙</span>Horaires</button>
     </nav>
   </div>
@@ -1243,28 +1236,10 @@
       `;
     }
 
-    function renderWatchList(date) {
-      const { dayReservations, dayBlocks } = recordsForDay(date);
-      const items = [
-        ...dayReservations.slice(0, 2).map((item) => ({ label: item.name, meta: `${paddockLabel(item.paddock)} - ${item.time}`, badge: "Reservation" })),
-        ...dayBlocks.slice(0, 2).map((item) => ({ label: item.name, meta: `${paddockLabel(item.paddock)} - ${item.time}`, badge: "Blocage" }))
-      ];
-      document.getElementById("watchList").innerHTML = (items.length ? items : [{ label: "Rien a signaler", meta: "Journee calme", badge: "OK" }]).map((item) => `
-        <article class="item-card">
-          <div class="item-top">
-            <h4 class="item-title">${item.label}</h4>
-            <span class="badge">${item.badge}</span>
-          </div>
-          <div class="item-meta">${item.meta}</div>
-        </article>
-      `).join("");
-    }
-
     function renderPlanning() {
       renderSummary(selectedDate);
       renderMobilePlanning(selectedDate);
       renderTablePlanning(selectedDate);
-      renderWatchList(selectedDate);
     }
 
     function renderReservations() {
