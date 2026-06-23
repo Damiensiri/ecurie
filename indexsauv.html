@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Backstage Écurie</title>
+
+<style>
+
+*{
+box-sizing:border-box;
+}
+
+:root{
+color-scheme:dark;
+--bg:#090d12;
+--surface:#121821;
+--surface-raised:#18212c;
+--surface-soft:#202a36;
+--line:rgba(255,255,255,.075);
+--text:#f5f7fa;
+--muted:#8d99a8;
+--green:#35f08b;
+--green-deep:#0b5c36;
+--red:#ff4d5e;
+--red-deep:#7a1925;
+--blue:#4f9cff;
+--blue-deep:#123d7a;
+--amber:#ffd17a;
+}
+
+body{
+margin:0;
+min-height:100vh;
+font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+background:var(--bg);
+color:var(--text);
+-webkit-font-smoothing:antialiased;
+}
+
+header{
+position:sticky;
+top:0;
+z-index:20;
+min-height:76px;
+padding:calc(12px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 12px max(16px,env(safe-area-inset-left));
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:12px;
+background:rgba(9,13,18,.88);
+border-bottom:1px solid var(--line);
+backdrop-filter:blur(20px) saturate(140%);
+-webkit-backdrop-filter:blur(20px) saturate(140%);
+}
+
+header h1{
+margin:0;
+font-size:19px;
+font-weight:750;
+letter-spacing:0;
+white-space:nowrap;
+}
+
+.icons{
+display:flex;
+gap:8px;
+}
+
+.icons button{
+display:grid;
+place-items:center;
+width:44px;
+height:44px;
+padding:0;
+border:none;
+border-radius:50%;
+background:var(--surface-raised);
+color:var(--text);
+font-size:18px;
+cursor:pointer;
+box-shadow:inset 0 0 0 1px var(--line),0 6px 16px rgba(0,0,0,.2);
+transition:transform .18s ease,background .18s ease,box-shadow .18s ease;
+touch-action:manipulation;
+}
+
+.icons button:hover{
+background:var(--surface-soft);
+}
+
+.icons button:active{
+transform:scale(.93);
+box-shadow:inset 0 0 0 1px var(--line);
+}
+
+.container{
+width:100%;
+max-width:680px;
+margin:0 auto;
+padding:18px max(12px,env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+}
+
+.card{
+background:var(--surface);
+border:1px solid var(--line);
+border-radius:20px;
+padding:14px;
+box-shadow:0 18px 45px rgba(0,0,0,.22);
+}
+
+.card + .card{
+margin-top:18px;
+}
+
+.tabs{
+display:grid;
+grid-template-columns:repeat(3,minmax(0,1fr));
+gap:4px;
+margin-bottom:12px;
+padding:4px;
+border-radius:14px;
+background:#090e14;
+box-shadow:inset 0 0 0 1px var(--line);
+}
+
+.tabs button{
+min-width:0;
+min-height:42px;
+padding:8px 4px;
+border:none;
+border-radius:10px;
+background:transparent;
+color:var(--muted);
+font:inherit;
+font-size:12px;
+font-weight:700;
+cursor:pointer;
+transition:color .2s ease,background .2s ease,transform .18s ease,box-shadow .2s ease;
+touch-action:manipulation;
+}
+
+.tabs button.active{
+background:var(--blue-deep);
+color:white;
+box-shadow:0 6px 16px rgba(18,61,122,.42),inset 0 0 0 1px rgba(79,156,255,.3);
+}
+
+.tabs button:active{
+transform:scale(.97);
+}
+
+table{
+width:100%;
+table-layout:fixed;
+border-collapse:separate;
+border-spacing:5px 7px;
+text-align:center;
+}
+
+td,th{
+border:0;
+overflow:hidden;
+overflow-wrap:anywhere;
+}
+
+th{
+height:34px;
+padding:4px 2px;
+color:var(--muted);
+font-size:10px;
+font-weight:750;
+line-height:1.1;
+text-transform:capitalize;
+}
+
+th:first-child,
+td:first-child{
+width:19%;
+}
+
+td{
+position:relative;
+height:52px;
+padding:8px 3px;
+border-radius:14px;
+background:var(--surface-raised);
+color:var(--text);
+font-size:12px;
+font-weight:700;
+line-height:1.2;
+vertical-align:middle;
+background-clip:padding-box;
+box-shadow:inset 0 1px 0 rgba(255,255,255,.055),inset 0 0 0 1px var(--line),0 6px 14px rgba(0,0,0,.2);
+transition:transform .16s ease,filter .16s ease,box-shadow .16s ease;
+}
+
+td:first-child{
+background:#0d131b;
+color:var(--muted);
+font-size:11px;
+font-variant-numeric:tabular-nums;
+box-shadow:inset 0 0 0 1px var(--line);
+}
+
+.free{
+background:var(--green-deep);
+color:var(--green);
+box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 0 0 1px rgba(53,240,139,.3),0 6px 16px rgba(11,92,54,.24);
+}
+
+.free::before{
+content:"🟢 Libre";
+font-size:10px;
+font-weight:750;
+white-space:nowrap;
+}
+
+.resa{
+background:var(--red-deep);
+color:#fff1f2;
+cursor:pointer;
+box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 0 0 1px rgba(255,77,94,.34),0 8px 20px rgba(122,25,37,.3);
+}
+
+.resa::before{
+content:"👤 ";
+}
+
+.resa.blockage{
+padding:12px 6px;
+background:linear-gradient(160deg,#d84b22 0%,#a92332 55%,#7d1828 100%);
+color:white;
+box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 0 0 1px rgba(255,133,72,.36),0 10px 24px rgba(126,24,40,.34);
+}
+
+.resa.blockage::before{
+content:none;
+}
+
+.blockage-content{
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:6px;
+height:100%;
+min-height:100%;
+text-align:center;
+}
+
+.blockage-icon{
+font-size:20px;
+line-height:1;
+}
+
+.blockage-title{
+font-size:13px;
+font-weight:800;
+line-height:1.15;
+}
+
+.blockage-time{
+font-size:10px;
+font-weight:700;
+line-height:1.2;
+white-space:nowrap;
+opacity:.88;
+}
+
+.resa:hover{
+filter:brightness(1.08);
+}
+
+.resa:active{
+transform:scale(.97);
+}
+
+.closed{
+background:#242b34;
+color:#727d89;
+font-size:9px;
+font-weight:750;
+}
+
+.section-title{
+margin:0 0 14px;
+font-size:18px;
+font-weight:750;
+letter-spacing:0;
+}
+
+.card:nth-child(2){
+padding:0;
+background:transparent;
+border:0;
+box-shadow:none;
+}
+
+.restriction-form{
+display:grid;
+grid-template-columns:minmax(0,1fr) auto;
+gap:10px;
+align-items:center;
+margin-bottom:16px;
+padding:14px;
+border:1px solid var(--line);
+border-radius:18px;
+background:var(--surface);
+box-shadow:0 14px 35px rgba(0,0,0,.2);
+}
+
+.restriction-form input[type="date"]{
+width:100%;
+min-width:0;
+height:46px;
+padding:0 12px;
+border:1px solid var(--line);
+border-radius:12px;
+background:#0d131b;
+color:var(--text);
+font:inherit;
+font-size:14px;
+color-scheme:dark;
+}
+
+.restriction-form label{
+display:flex;
+align-items:center;
+grid-column:1/-1;
+gap:10px;
+min-height:46px;
+padding:10px 12px;
+border-radius:12px;
+background:var(--surface-raised);
+color:#dbe2ea;
+font-size:13px;
+font-weight:650;
+line-height:1.3;
+cursor:pointer;
+transition:background .18s ease,transform .18s ease;
+}
+
+.restriction-form input[type="checkbox"]{
+flex:0 0 auto;
+width:20px;
+height:20px;
+margin:0;
+accent-color:var(--red);
+}
+
+.restriction-form button{
+min-height:46px;
+padding:10px 14px;
+border:none;
+border-radius:12px;
+background:var(--blue-deep);
+color:var(--blue);
+font:inherit;
+font-size:13px;
+font-weight:bold;
+cursor:pointer;
+box-shadow:inset 0 0 0 1px rgba(140,184,255,.16);
+transition:transform .18s ease,filter .18s ease;
+touch-action:manipulation;
+}
+
+.restriction-form button:hover{
+filter:brightness(1.1);
+}
+
+.restriction-form button:active{
+transform:scale(.97);
+}
+
+#restrictionSaveBtn{
+grid-column:1/-1;
+background:var(--green);
+color:#072318;
+box-shadow:0 8px 20px rgba(120,215,161,.14);
+}
+
+.restrictions-empty{
+margin:0;
+padding:18px;
+border:1px dashed rgba(255,255,255,.12);
+border-radius:16px;
+color:var(--muted);
+font-size:13px;
+text-align:center;
+}
+
+.restriction-toast{
+display:none;
+margin:0 0 12px;
+padding:12px 14px;
+border:1px solid rgba(120,215,161,.2);
+border-radius:14px;
+background:var(--green-deep);
+color:var(--green);
+font-size:13px;
+font-weight:bold;
+box-shadow:0 8px 22px rgba(0,0,0,.2);
+animation:toastIn .22s ease both;
+}
+
+.restriction-item{
+position:relative;
+margin-bottom:10px;
+padding:15px;
+border:1px solid var(--line);
+border-radius:18px;
+background:var(--surface);
+box-shadow:0 12px 30px rgba(0,0,0,.18);
+transition:transform .18s ease,border-color .18s ease;
+}
+
+.restriction-item:hover{
+transform:translateY(-1px);
+border-color:rgba(255,255,255,.12);
+}
+
+.restriction-date{
+margin-bottom:10px;
+color:var(--text);
+font-size:15px;
+font-weight:750;
+}
+
+.restriction-status{
+margin:5px 0;
+color:#b6c0cb;
+font-size:13px;
+line-height:1.35;
+}
+
+.delete-btn{
+min-height:42px;
+margin-top:10px;
+padding:8px 12px;
+border:none;
+border-radius:12px;
+background:var(--red-deep);
+color:var(--red);
+font:inherit;
+font-size:12px;
+font-weight:700;
+cursor:pointer;
+transition:transform .18s ease,filter .18s ease;
+touch-action:manipulation;
+}
+
+.delete-btn:hover{
+filter:brightness(1.1);
+}
+
+.delete-btn:active{
+transform:scale(.97);
+}
+
+@keyframes toastIn{
+from{opacity:0;transform:translateY(-5px);}
+to{opacity:1;transform:translateY(0);}
+}
+
+@media(max-width:430px){
+header h1{
+font-size:17px;
+}
+
+.icons{
+gap:6px;
+}
+
+.icons button{
+width:40px;
+height:40px;
+font-size:16px;
+}
+
+.container{
+padding-top:14px;
+}
+
+.card{
+padding:10px;
+border-radius:18px;
+}
+
+.tabs button{
+font-size:11px;
+}
+
+table{
+border-spacing:4px 6px;
+}
+
+td{
+height:50px;
+padding:7px 2px;
+font-size:11px;
+border-radius:10px;
+}
+
+td:first-child{
+font-size:10px;
+}
+
+.restriction-form{
+padding:12px;
+}
+}
+
+@media(max-width:360px){
+header{
+padding-left:10px;
+padding-right:10px;
+gap:8px;
+}
+
+header h1{
+font-size:15px;
+}
+
+.icons{
+gap:4px;
+}
+
+.icons button{
+width:36px;
+height:36px;
+font-size:15px;
+}
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+<h1>🐎 Backstage</h1>
+
+<div class="icons">
+<button>🔔</button>
+
+<button onclick="location.href='https://app.damiensiri.com/planningpaddock.html'">
+🐎
+</button>
+
+<button onclick="location.href='https://app.damiensiri.com/blocagepaddock.html'">
+🚫
+</button>
+
+<button onclick="location.href='horaires.html'">
+⚙️
+</button>
+</div>
+
+</header>
+
+<div class="container">
+
+<div class="card">
+
+<div class="tabs">
+<button id="btn0" onclick="loadDay(0)">Aujourd'hui</button>
+<button id="btn1" onclick="loadDay(1)">Demain</button>
+<button id="btn2" onclick="loadDay(2)">Après-demain</button>
+</div>
+
+<table id="planning"></table>
+
+</div>
+
+<div class="card">
+
+<h2 class="section-title">Exceptions 1h30</h2>
+
+<div id="restrictionToast" class="restriction-toast"></div>
+
+<div class="restriction-form">
+<input type="date" id="restrictionDate" onchange="fillRestrictionForm()">
+<button onclick="setRestrictionToday()">Aujourd'hui</button>
+
+<label>
+<input type="checkbox" id="restrictionGrande">
+Interdire le 1h30 sur Grande voie
+</label>
+
+<label>
+<input type="checkbox" id="restrictionBeudot">
+Interdire le 1h30 sur Beudot
+</label>
+
+<button id="restrictionSaveBtn" onclick="saveRestriction()">Ajouter</button>
+</div>
+
+<div id="restrictionsList"></div>
+
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+
+/* PASSWORD */
+
+const PASS="0359140"
+
+if(!localStorage.getItem("backstage_auth")){
+
+let p=prompt("Mot de passe")
+
+if(p!==PASS){
+document.body.innerHTML="Accès refusé"
+throw "stop"
+}
+
+localStorage.setItem("backstage_auth",true)
+
+}
+
+/* FIREBASE */
+
+const firebaseConfig={
+apiKey:"AIzaSyBn6Hgu-xvsWqpwJ-i4lZyI0QjKMBvOeXA",
+authDomain:"ecurie-paddock.firebaseapp.com",
+projectId:"ecurie-paddock",
+storageBucket:"ecurie-paddock.firebasestorage.app",
+messagingSenderId:"501153278739",
+appId:"1:501153278739:web:824b4344c381f2a94548e6"
+}
+
+firebase.initializeApp(firebaseConfig)
+const db=firebase.firestore()
+
+let reservations=[]
+let horaires={}
+let restrictions={}
+let currentDate=""
+let firstLoad=true
+
+/* DATE */
+
+function dateOffset(days){
+let d=new Date()
+d.setDate(d.getDate()+days)
+
+return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")
+}
+
+/* LOAD DAY */
+
+function loadDay(offset){
+
+currentDate=dateOffset(offset)
+
+document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"))
+document.getElementById("btn"+offset).classList.add("active")
+
+buildPlanning()
+}
+
+/* CHECK OUVERTURE PAR PADDOCK */
+
+function isOpen(paddock, time){
+
+if(!horaires[paddock]) return false
+
+const parts=currentDate.split("-")
+const d=new Date(parts[0],parts[1]-1,parts[2])
+
+const names=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"]
+let jour=names[d.getDay()]
+
+const config=horaires[paddock][jour]
+
+if(!config || config.closed) return false
+
+let [h,m]=time.split(":").map(Number)
+let current=h+(m/60)
+
+let [oh,om]=config.open.split(":").map(Number)
+let start=oh+(om/60)
+
+let [ch,cm]=config.close.split(":").map(Number)
+let end=ch+(cm/60)
+
+return current>=start && current<end
+}
+
+/* BUILD PLANNING */
+
+function buildPlanning(){
+
+if(!horaires.maison) return
+
+const paddocks=["maison","grande","beudot"]
+
+let skip={maison:0,grande:0,beudot:0}
+
+const parts=currentDate.split("-")
+const d=new Date(parts[0],parts[1]-1,parts[2])
+
+const names=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"]
+let jour=names[d.getDay()]
+
+let slots=[]
+
+paddocks.forEach(paddock=>{
+
+if(!horaires[paddock] || !horaires[paddock][jour]) return
+
+const config=horaires[paddock][jour]
+
+if(config.closed) return
+
+let [oh,om]=config.open.split(":").map(Number)
+let start=oh+(om/60)
+
+let [ch,cm]=config.close.split(":").map(Number)
+let end=ch+(cm/60)
+
+let current=start
+
+while(current < end){
+
+let hour=Math.floor(current)
+let minutes=current%1===0 ? "00":"30"
+
+let time=String(hour).padStart(2,"0")+":"+minutes
+
+slots.push(time)
+
+let reservation=reservations.find(r=>{
+
+if(r.date!==currentDate) return false
+if(r.paddock!==paddock) return false
+
+let [rh,rm]=r.time.split(":").map(Number)
+let resStart=rh+(rm/60)
+
+return resStart===current
+
+})
+
+if(reservation){
+current += reservation.duration/60
+}else{
+current += 1
+}
+
+}
+
+})
+
+slots=[...new Set(slots)]
+
+if(slots.length===0){
+slots=["--"]
+}
+
+slots.sort((a,b)=>{
+
+if(a==="--" || b==="--") return 0
+
+let [ah,am]=a.split(":").map(Number)
+let [bh,bm]=b.split(":").map(Number)
+
+return (ah*60+am)-(bh*60+bm)
+
+})
+
+let html="<tr><th>Heure</th>"
+
+paddocks.forEach(p=>html+="<th>"+p+"</th>")
+
+html+="</tr>"
+
+slots.forEach(time=>{
+
+html+="<tr>"
+html+="<td>"+time+"</td>"
+
+paddocks.forEach(p=>{
+
+if(time==="--"){
+html+="<td class='closed'>FERMÉ</td>"
+return
+}
+
+/* 🔥 CHECK OUVERTURE */
+if(!isOpen(p,time)){
+html+="<td class='closed'>FERMÉ</td>"
+return
+}
+
+let resa=reservations.find(r=>r.date===currentDate && r.paddock===p && r.time===time)
+
+if(resa){
+
+let span=resa.duration===90?2:1
+
+if(resa.duration>90){
+
+let [sh,sm]=resa.time.split(":").map(Number)
+let startMinutes=(sh*60)+sm
+let endMinutes=startMinutes+resa.duration
+
+span=slots.filter(slot=>{
+
+if(slot==="--") return false
+
+let [h,m]=slot.split(":").map(Number)
+let slotMinutes=(h*60)+m
+
+return slotMinutes>=startMinutes && slotMinutes<endMinutes
+
+}).length
+
+span=Math.max(span,1)
+
+}
+
+skip[p]=span-1
+
+if(resa.duration>90){
+
+let [sh,sm]=resa.time.split(":").map(Number)
+let endMinutes=(sh*60)+sm+resa.duration
+let endHour=Math.floor(endMinutes/60)%24
+let endMinute=endMinutes%60
+let startLabel=String(sh).padStart(2,"0")+"h"+String(sm).padStart(2,"0")
+let endLabel=String(endHour).padStart(2,"0")+"h"+String(endMinute).padStart(2,"0")
+let blockLabel=(resa.name || "Blocage").replace(/^blocage\s*/i,"").trim() || "Blocage"
+blockLabel=blockLabel.charAt(0).toUpperCase()+blockLabel.slice(1)
+
+html+=`<td class="resa blockage" rowspan="${span}" onclick="cancel('${resa.id}')"><div class="blockage-content"><div class="blockage-icon">🚫</div><div class="blockage-title">${blockLabel}</div><div class="blockage-time">${startLabel} → ${endLabel}</div></div></td>`
+
+}else{
+
+html+=`<td class="resa" rowspan="${span}" onclick="cancel('${resa.id}')">${resa.name}</td>`
+
+}
+
+}else{
+
+if(skip[p]>0){
+skip[p]--
+return
+}
+
+html+=`<td class="free"></td>`
+
+}
+
+})
+
+html+="</tr>"
+
+})
+
+document.getElementById("planning").innerHTML=html
+
+}
+
+/* EXCEPTIONS 1H30 */
+
+function fillRestrictionForm(){
+
+const date=document.getElementById("restrictionDate").value
+const restriction=restrictions[date]
+
+document.getElementById("restrictionGrande").checked=!!(restriction && restriction.blockGrande90)
+document.getElementById("restrictionBeudot").checked=!!(restriction && restriction.blockBeudot90)
+document.getElementById("restrictionSaveBtn").textContent=restriction ? "Mettre à jour" : "Ajouter"
+
+}
+
+let restrictionToastTimeout=null
+
+function showRestrictionToast(message){
+
+const toast=document.getElementById("restrictionToast")
+
+toast.textContent=message
+toast.style.display="block"
+
+clearTimeout(restrictionToastTimeout)
+restrictionToastTimeout=setTimeout(()=>{
+toast.style.display="none"
+},2500)
+
+}
+
+function setRestrictionToday(){
+
+document.getElementById("restrictionDate").value=dateOffset(0)
+fillRestrictionForm()
+
+}
+
+async function saveRestriction(){
+
+const date=document.getElementById("restrictionDate").value
+
+if(!date){
+showRestrictionToast("Choisissez une date")
+return
+}
+
+const exists=!!restrictions[date]
+const blockGrande90=document.getElementById("restrictionGrande").checked
+const blockBeudot90=document.getElementById("restrictionBeudot").checked
+
+if(!blockGrande90 && !blockBeudot90){
+
+await db.collection("restrictions").doc(date).delete()
+showRestrictionToast(exists ? "Exception supprimée" : "Aucune interdiction à enregistrer")
+return
+
+}
+
+await db.collection("restrictions").doc(date).set({
+blockGrande90:blockGrande90,
+blockBeudot90:blockBeudot90
+})
+
+showRestrictionToast(exists ? "Exception mise à jour" : "Exception ajoutée")
+
+}
+
+async function deleteRestriction(date){
+
+if(!confirm("Supprimer cette exception ?")) return
+
+await db.collection("restrictions").doc(date).delete()
+
+showRestrictionToast("Exception supprimée")
+
+}
+
+function formatDateFr(date){
+
+const parts=date.split("-")
+const d=new Date(parts[0],parts[1]-1,parts[2])
+
+return d.toLocaleDateString("fr-FR",{
+day:"numeric",
+month:"long",
+year:"numeric"
+})
+
+}
+
+function dateValue(date){
+
+const parts=date.split("-")
+const d=new Date(parts[0],parts[1]-1,parts[2])
+
+return d.getTime()
+
+}
+
+function renderRestrictions(){
+
+const list=document.getElementById("restrictionsList")
+const dates=Object.keys(restrictions).sort((a,b)=>dateValue(a)-dateValue(b))
+
+if(dates.length===0){
+list.innerHTML="<p class='restrictions-empty'>Aucune exception enregistrée.</p>"
+return
+}
+
+let html=""
+
+dates.forEach(date=>{
+const restriction=restrictions[date]
+html+="<div class='restriction-item'>"
+html+="<div class='restriction-date'>"+formatDateFr(date)+"</div>"
+html+="<div class='restriction-status'>Grande voie : "+(restriction.blockGrande90 ? "🚫 Interdit" : "✅ Autorisé")+"</div>"
+html+="<div class='restriction-status'>Beudot : "+(restriction.blockBeudot90 ? "🚫 Interdit" : "✅ Autorisé")+"</div>"
+html+=`<button class="delete-btn" onclick="deleteRestriction('${date}')" title="Supprimer">🗑️ Supprimer</button>`
+html+="</div>"
+})
+
+list.innerHTML=html
+
+}
+
+/* FIREBASE RESERVATIONS LIVE */
+
+db.collection("reservations").onSnapshot(snapshot=>{
+
+snapshot.docChanges().forEach(change=>{
+
+if(change.type==="added" && !firstLoad){
+
+let r=change.doc.data()
+
+new Notification("Nouvelle réservation paddock 🐎",{
+body:r.name+" — "+r.paddock+" "+r.time
+})
+
+}
+
+})
+
+firstLoad=false
+
+reservations=[]
+
+snapshot.forEach(doc=>{
+let r=doc.data()
+r.id=doc.id
+reservations.push(r)
+})
+
+buildPlanning()
+
+})
+
+/* 🔥 FIREBASE HORAIRES LIVE */
+
+db.collection("horaires").onSnapshot(snapshot=>{
+
+horaires={}
+
+snapshot.forEach(doc=>{
+horaires[doc.id]=doc.data()
+})
+
+buildPlanning()
+
+})
+
+/* FIREBASE EXCEPTIONS 1H30 LIVE */
+
+db.collection("restrictions").onSnapshot(snapshot=>{
+
+restrictions={}
+
+snapshot.forEach(doc=>{
+restrictions[doc.id]=doc.data()
+})
+
+renderRestrictions()
+fillRestrictionForm()
+
+})
+
+/* ANNULATION */
+
+async function cancel(id){
+
+if(!confirm("Annuler cette réservation ?")) return
+
+await db.collection("reservations").doc(id).delete()
+
+}
+
+/* INIT */
+
+loadDay(0)
+
+</script>
+
+</body>
+</html>
