@@ -314,15 +314,29 @@
     }
 
     .mobile-paddocks {
-      display: grid;
-      gap: 14px;
+      display: flex;
+      gap: 12px;
+      margin: 0 -16px 16px;
+      overflow-x: auto;
+      padding: 0 16px 12px;
+      scroll-padding: 16px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+    }
+
+    .mobile-paddocks::-webkit-scrollbar {
+      display: none;
     }
 
     .paddock-card {
+      flex: 0 0 88vw;
+      max-width: 390px;
       overflow: hidden;
       border: 1px solid var(--line);
       border-radius: calc(var(--radius) + 2px);
       background: var(--panel);
+      scroll-snap-align: start;
     }
 
     .paddock-head {
@@ -616,9 +630,11 @@
       flex-direction: column;
       gap: 3px;
       min-height: 58px;
-      font-size: 11px;
+      padding: 0 4px;
+      font-size: 10px;
       line-height: 1.1;
       user-select: none;
+      white-space: nowrap;
     }
 
     .nav-icon {
@@ -890,6 +906,7 @@
             <p class="section-note">Meme logique metier: paddock, jour, ouvert/ferme, ouverture, fermeture, durees.</p>
           </div>
           <select class="select" id="hoursPaddock" aria-label="Choisir le paddock">
+            <option value="all">Tous les paddocks</option>
             <option value="maison">Maison</option>
             <option value="grande">Grande voie</option>
             <option value="beudot">Beudot</option>
@@ -899,7 +916,7 @@
         <section class="panel">
           <div class="panel-header">
             <h3 class="panel-title" id="hoursTitle">Maison</h3>
-            <span class="badge amber">Prototype</span>
+            <span class="badge amber" id="hoursScopeBadge">Prototype</span>
           </div>
           <div class="panel-body">
             <div class="accordion" id="hoursAccordion"></div>
@@ -933,8 +950,8 @@
 
     <nav class="bottom-nav" aria-label="Navigation mobile">
       <button class="nav-btn is-active" data-view-target="planning"><span class="nav-icon">▦</span>Planning</button>
-      <button class="nav-btn" data-view-target="reservations"><span class="nav-icon">●</span>Reservations</button>
-      <button class="nav-btn" data-view-target="blocages"><span class="nav-icon">■</span>Blocages</button>
+      <button class="nav-btn" data-view-target="reservations"><span class="nav-icon">●</span>Resas</button>
+      <button class="nav-btn" data-view-target="blocages"><span class="nav-icon">■</span>Bloc.</button>
       <button class="nav-btn" data-view-target="horaires"><span class="nav-icon">⚙</span>Horaires</button>
     </nav>
   </div>
@@ -1037,6 +1054,7 @@
     }
 
     function paddockLabel(id) {
+      if (id === "all") return "Tous les paddocks";
       return paddocks.find((paddock) => paddock.id === id)?.label || id;
     }
 
@@ -1266,9 +1284,11 @@
 
     function renderHours() {
       const paddock = document.getElementById("hoursPaddock").value;
+      const sourcePaddock = paddock === "all" ? "maison" : paddock;
       document.getElementById("hoursTitle").textContent = paddockLabel(paddock);
+      document.getElementById("hoursScopeBadge").textContent = paddock === "all" ? "Les 3 paddocks" : "Prototype";
       document.getElementById("hoursAccordion").innerHTML = days.slice(1).concat("dimanche").map((day) => {
-        const config = horaires[paddock][day];
+        const config = horaires[sourcePaddock][day];
         return `
           <details ${day === dayName(selectedDate) ? "open" : ""}>
             <summary>
