@@ -90,21 +90,6 @@
       text-overflow: ellipsis;
     }
 
-    .status-pill {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      min-height: 40px;
-      padding: 0 12px;
-      border: 1px solid rgba(104, 225, 143, .35);
-      border-radius: 999px;
-      background: rgba(104, 225, 143, .1);
-      color: #c9f9d7;
-      font-size: 13px;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
     .layout {
       width: min(1180px, 100%);
       margin: 0 auto;
@@ -696,7 +681,6 @@
     @media (min-width: 720px) {
       .app-shell { padding-bottom: 0; }
       .layout { padding: 22px; }
-      .status-pill { display: inline-flex; }
       .desktop-nav { display: grid; }
       .bottom-nav { display: none; }
       .date-controls { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -742,14 +726,9 @@
         <h1 class="brand-title">Backstage</h1>
         <div class="brand-subtitle">Gestion paddocks</div>
       </div>
-      <div class="status-pill">Firebase lecture seule</div>
     </header>
 
     <main class="layout">
-      <div class="prototype-warning">
-        Connecte a Firebase en lecture seule: aucune reservation, aucun horaire, aucune exception et aucun blocage reel ne peut etre modifie depuis ce fichier.
-      </div>
-
       <nav class="desktop-nav" aria-label="Navigation principale">
         <button class="nav-btn is-active" data-view-target="planning"><span class="nav-icon">🗓️</span>Planning</button>
         <button class="nav-btn" data-view-target="reservations"><span class="nav-icon">📒</span>Reservations</button>
@@ -1033,6 +1012,16 @@
       return parts[0] * 60 + parts[1];
     }
 
+    function dateTimeValue(item) {
+      return parseIsoDate(item.date || "1970-01-01").getTime() + minutes(item.time || "00:00");
+    }
+
+    function sortByDateTime(a, b) {
+      const diff = dateTimeValue(a) - dateTimeValue(b);
+      if (diff !== 0) return diff;
+      return paddockLabel(a.paddock).localeCompare(paddockLabel(b.paddock), "fr");
+    }
+
     function timeFromMinutes(value) {
       return String(Math.floor(value / 60) % 24).padStart(2, "0") + ":" + String(value % 60).padStart(2, "0");
     }
@@ -1242,6 +1231,7 @@
       if (filter === "tomorrow") filtered = reservations.filter((item) => item.date === tomorrow);
       if (filter === "future") filtered = reservations.filter((item) => item.date >= today);
       if (query) filtered = filtered.filter((item) => String(item.name).toLowerCase().includes(query));
+      filtered = [...filtered].sort(sortByDateTime);
       document.getElementById("reservationList").innerHTML = filtered.map((item) => `
         <article class="item-card">
           <div class="item-top">
@@ -1266,6 +1256,7 @@
       let filtered = blocages;
       if (blockFilter === "future") filtered = blocages.filter((item) => item.date >= today);
       if (blockFilter === "past") filtered = blocages.filter((item) => item.date < today);
+      filtered = [...filtered].sort(sortByDateTime);
       document.getElementById("blockList").innerHTML = filtered.map((item) => `
         <article class="item-card">
           <div class="item-top">
@@ -1277,7 +1268,6 @@
             <span>${paddockLabel(item.paddock)}</span>
           </div>
           <div class="item-actions">
-            <button>Modifier</button>
             <button class="danger" data-delete-blockage="${item.id}">Supprimer</button>
           </div>
         </article>
@@ -1288,7 +1278,8 @@
       const paddock = document.getElementById("hoursPaddock").value;
       const sourcePaddock = paddock === "all" ? "maison" : paddock;
       document.getElementById("hoursTitle").textContent = paddockLabel(paddock);
-      document.getElementById("hoursScopeBadge").textContent = paddock === "all" ? "Les 3 paddocks" : "Prototype";
+      document.getElementById("hoursScopeBadge").textContent = "Les 3 paddocks";
+      document.getElementById("hoursScopeBadge").style.display = paddock === "all" ? "inline-flex" : "none";
       document.getElementById("hoursAccordion").innerHTML = days.slice(1).concat("dimanche").map((day) => {
         const config = horaires[sourcePaddock]?.[day] || { closed: true, open: "--:--", close: "--:--" };
         return `
@@ -1327,6 +1318,9 @@
           <div class="item-meta">
             <span>Grande voie: ${value.blockGrande90 ? "interdit" : "autorise"}</span>
             <span>Beudot: ${value.blockBeudot90 ? "interdit" : "autorise"}</span>
+          </div>
+          <div class="item-actions">
+            <button class="danger" data-delete-restriction="${date}">Supprimer</button>
           </div>
         </article>
       `).join("") || `<div class="prototype-warning">Aucune exception enregistree.</div>`;
@@ -1472,6 +1466,18 @@
       showToast("Exception enregistree.");
     }
 
+    async function deleteRestriction(date) {
+      if (!db) {
+        showToast("Firebase n'est pas encore pret.");
+        return;
+      }
+
+      if (!confirm(`Supprimer cette exception 1h30 ?\n\n${formatDate(date)}`)) return;
+
+      await db.collection("restrictions").doc(date).delete();
+      showToast("Exception supprimee.");
+    }
+
     async function saveHours() {
       if (!db) {
         showToast("Firebase n'est pas encore pret.");
@@ -1584,6 +1590,11 @@
       const cancelButton = event.target.closest("[data-cancel-reservation]");
       if (cancelButton) {
         cancelReservation(cancelButton.dataset.cancelReservation);
+      }
+
+      const deleteRestrictionButton = event.target.closest("[data-delete-restriction]");
+      if (deleteRestrictionButton) {
+        deleteRestriction(deleteRestrictionButton.dataset.deleteRestriction);
       }
     });
 
