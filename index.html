@@ -1259,7 +1259,7 @@
           </div>
           <div class="item-actions">
             <button>Modifier</button>
-            <button class="danger" data-demo-action="delete">Supprimer</button>
+            <button class="danger" data-delete-blockage="${item.id}">Supprimer</button>
           </div>
         </article>
       `).join("") || `<div class="prototype-warning">Aucun blocage dans ce filtre.</div>`;
@@ -1379,6 +1379,25 @@
       showToast("Blocage cree dans Firebase.");
     }
 
+    async function deleteBlockage(id) {
+      if (!db) {
+        showToast("Firebase n'est pas encore pret.");
+        return;
+      }
+
+      const item = blocages.find((blockage) => blockage.id === id);
+      if (!item) {
+        showToast("Blocage introuvable.");
+        return;
+      }
+
+      const label = `${item.name} - ${paddockLabel(item.paddock)} - ${formatDate(item.date)} - ${formatTimeRange(item)}`;
+      if (!confirm(`Supprimer ce blocage ?\n\n${label}`)) return;
+
+      await db.collection("reservations").doc(id).delete();
+      showToast("Blocage supprime.");
+    }
+
     function subscribeFirebaseReadOnly() {
       if (!window.firebase || !firebase.firestore) {
         showToast("Firebase indisponible: affichage vide.");
@@ -1452,6 +1471,11 @@
 
       if (event.target.closest("[data-demo-action]")) {
         showToast("Lecture seule: aucune donnee Firebase n'est modifiee.");
+      }
+
+      const deleteButton = event.target.closest("[data-delete-blockage]");
+      if (deleteButton) {
+        deleteBlockage(deleteButton.dataset.deleteBlockage);
       }
     });
 
