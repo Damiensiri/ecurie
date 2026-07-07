@@ -1098,9 +1098,25 @@
       paddocks.forEach((paddock) => {
         const config = horaires[paddock.id]?.[name];
         if (!config || config.closed) return;
-        for (let t = minutes(config.open); t < minutes(config.close); t += 60) {
+        const open = minutes(config.open);
+        const close = minutes(config.close);
+        for (let t = open; t < close; t += 60) {
           slotSet.add(timeFromMinutes(t));
         }
+      });
+      [...reservations, ...blocages].forEach((item) => {
+        if (item.date !== date || !item.time) return;
+        const config = horaires[item.paddock]?.[name];
+        const start = minutes(item.time);
+        const end = start + Number(item.duration || 60);
+        if (!config || config.closed) {
+          slotSet.add(timeFromMinutes(start));
+          return;
+        }
+        const open = minutes(config.open);
+        const close = minutes(config.close);
+        if (start >= open && start < close) slotSet.add(timeFromMinutes(start));
+        if (end > open && end < close) slotSet.add(timeFromMinutes(end));
       });
       return [...slotSet].sort((a, b) => minutes(a) - minutes(b));
     }
@@ -1110,13 +1126,13 @@
         || blocages.find((item) => item.date === date && item.paddock === paddock && item.time === time);
     }
 
-    function isCoveredByBlockage(date, paddock, time) {
+    function isCoveredByBusyItem(date, paddock, time) {
       const slotStart = minutes(time);
-      return blocages.some((item) => {
+      return [...reservations, ...blocages].some((item) => {
         if (item.date !== date || item.paddock !== paddock || item.time === time) return false;
-        const blockStart = minutes(item.time);
-        const blockEnd = blockStart + Number(item.duration || 60);
-        return slotStart > blockStart && slotStart < blockEnd;
+        const start = minutes(item.time);
+        const end = start + Number(item.duration || 60);
+        return slotStart > start && slotStart < end;
       });
     }
 
@@ -1156,7 +1172,7 @@
         const config = horaires[paddock.id]?.[currentDay];
         const hours = config?.closed ? "Ferme" : `${config.open} - ${config.close}`;
         const rows = slots.map((time) => {
-          if (isCoveredByBlockage(date, paddock.id, time)) return "";
+          if (isCoveredByBusyItem(date, paddock.id, time)) return "";
           if (!config || config.closed || minutes(time) < minutes(config.open) || minutes(time) >= minutes(config.close)) {
             return `<div class="slot-card is-free"><div class="slot-time">${time}</div><div class="slot-main"><div class="slot-title">Ferme</div></div></div>`;
           }
@@ -1194,7 +1210,7 @@
       const rows = slots.map((time) => {
         const cells = paddocks.map((paddock) => {
           const config = horaires[paddock.id]?.[currentDay];
-          if (isCoveredByBlockage(date, paddock.id, time)) {
+          if (isCoveredByBusyItem(date, paddock.id, time)) {
             return { hidden: true, html: `<td class="cell-muted"></td>` };
           }
           if (!config || config.closed || minutes(time) < minutes(config.open) || minutes(time) >= minutes(config.close)) {
