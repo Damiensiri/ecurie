@@ -1,0 +1,32 @@
+{
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log"
+      ]
+    }
+  ],
+  "hosting": {
+    "site": "ecurie-paddock",
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "functions/**",
+      "test/**",
+      "package.json",
+      "README.md",
+      "index2.html",
+      "indexsauv.html",
+      "proto.html",
+      "admin.html",
+      "horaires.html"
+    ]
+  }
+}

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Espaces — Backstage</title>
+<meta name="theme-color" content="#102b45">
+<link rel="stylesheet" href="assets/css/administration.css?v=20260716-2">
+<link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260716-1">
+</head>
+<body>
+<main class="admin-shell">
+  <header class="admin-header">
+    <div class="admin-heading">
+      <div class="admin-title-row">
+        <h1 id="adminPageTitle">Espaces</h1>
+        <span class="environment">PRODUCTION · PUSH ACTIF</span>
+      </div>
+      <p id="adminPageSubtitle">Statuts et horaires propres aux espaces de la PWA.</p>
+    </div>
+  </header>
+
+  <div data-admin-section="notifications" hidden>
+  <section class="panel" aria-labelledby="formTitle">
+    <div class="panel-heading">
+      <h2 id="formTitle">Nouvelle alerte</h2>
+      <button id="cancelEditBtn" class="secondary" type="button" hidden>Annuler</button>
+    </div>
+    <form id="alertForm">
+      <input id="editingId" type="hidden">
+      <label>Catégorie
+        <select id="categorie" required>
+          <option value="">Choisir une catégorie</option>
+          <option value="Espaces de travail">Espaces de travail</option>
+          <option value="Paddocks">Paddocks</option>
+          <option value="Informations">Informations</option>
+          <option value="Mise à jour">Mise à jour</option>
+        </select>
+      </label>
+      <label>Titre
+        <input id="titre" maxlength="160" required placeholder="Titre visible dans la liste">
+      </label>
+      <label>Message
+        <span class="format-toolbar" aria-label="Mise en forme du message">
+          <button type="button" data-format="bold" aria-label="Mettre en gras"><strong>G</strong></button>
+          <button type="button" data-format="underline" aria-label="Souligner"><u>S</u></button>
+          <button type="button" data-format="link" aria-label="Ajouter un lien">Lien</button>
+        </span>
+        <textarea id="message" maxlength="5000" rows="7" required placeholder="Message complet"></textarea>
+      </label>
+      <div class="switches single-option">
+        <label class="check"><input id="epingle" type="checkbox"> Épingler l’alerte</label>
+      </div>
+      <p class="safety-note">Les données sont publiées immédiatement dans la PWA de production. « Envoyer » déclenche également le push.</p>
+      <div class="form-actions">
+        <button id="publishBtn" type="submit" name="delivery" value="publish">Publier</button>
+        <button id="sendBtn" class="send" type="submit" name="delivery" value="send">Envoyer</button>
+      </div>
+      <p class="action-help"><strong>Publier</strong> : visible dans la PWA sans push. <strong>Envoyer</strong> : visible dans la PWA avec push.</p>
+      <p id="formStatus" class="status" role="status"></p>
+    </form>
+  </section>
+
+  <section class="panel" aria-labelledby="listTitle">
+    <div class="panel-heading">
+      <h2 id="listTitle">Alertes enregistrées</h2>
+      <button id="refreshBtn" class="secondary" type="button">Actualiser</button>
+    </div>
+    <div class="alerts-scroll">
+      <div id="alertsList" class="alerts-list">
+      <p class="empty">Connectez le backend pour afficher les alertes.</p>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <section class="admin-section" data-admin-section="spaces">
+    <div class="panel spaces-overview">
+      <div class="panel-heading">
+        <h2>Espaces</h2>
+        <button id="refreshSpacesBtn" class="secondary" type="button">Actualiser</button>
+      </div>
+      <p class="section-help">Touchez un statut pour le changer immédiatement. Le chevron ouvre tous les réglages.</p>
+      <div id="spacePills" class="space-pills"></div>
+      <p id="spaceListStatus" class="status" role="status"></p>
+    </div>
+    <div id="spaceEditor" class="space-editor-overlay" hidden>
+    <div class="space-editor-sheet" role="dialog" aria-modal="true" aria-labelledby="spaceEditorTitle">
+    <div class="panel">
+      <div class="panel-heading">
+        <h2 id="spaceEditorTitle">Modifier l’espace</h2>
+        <button id="closeSpaceEditorBtn" class="secondary" type="button">Fermer</button>
+      </div>
+      <select id="spaceSelect" hidden aria-label="Espace sélectionné"></select>
+      <label>Horaire spécial
+        <input id="spaceSpecial" maxlength="120" placeholder="Ex. 🌡️ Prévu 19h">
+      </label>
+      <label>Information
+        <textarea id="spaceInfo" maxlength="500" rows="3" placeholder="Information affichée sur cet espace"></textarea>
+      </label>
+      <button id="saveSpaceBtn" type="button">Enregistrer les informations</button>
+      <p id="spaceStatusMessage" class="status" role="status"></p>
+    </div>
+    <div class="panel">
+      <h2>Horaires propres à cet espace</h2>
+      <p class="section-help">Ces horaires sont indépendants des horaires généraux des écuries.</p>
+      <div id="spaceSchedules" class="schedule-grid"></div>
+      <button id="saveSpaceSchedulesBtn" type="button">Enregistrer les horaires</button>
+      <p id="spaceSchedulesStatus" class="status" role="status"></p>
+    </div>
+    </div>
+    </div>
+  </section>
+
+  <section class="admin-section" data-admin-section="general" hidden>
+    <div class="panel">
+      <h2>Horaires généraux des écuries</h2>
+      <p class="section-help">Utilisés uniquement par le bandeau de l’index et la page Horaires.</p>
+      <div id="generalSchedules" class="schedule-grid"></div>
+      <button id="saveGeneralSchedulesBtn" type="button">Enregistrer les horaires des écuries</button>
+      <p id="generalSchedulesStatus" class="status" role="status"></p>
+    </div>
+    <div class="panel">
+      <h2>Exception de date</h2>
+      <label>Date
+        <input id="exceptionDate" type="date">
+      </label>
+      <label>Texte affiché dans le bandeau
+        <textarea id="exceptionMessage" maxlength="500" rows="3"></textarea>
+      </label>
+      <button id="saveExceptionBtn" type="button">Enregistrer l’exception</button>
+      <p id="exceptionStatus" class="status" role="status"></p>
+    </div>
+    <div class="panel">
+      <h2>Exceptions enregistrées</h2>
+      <div id="exceptionsList" class="exceptions-list"></div>
+    </div>
+  </section>
+
+  <section class="admin-section" data-admin-section="home-alert" hidden>
+    <div class="panel">
+      <h2>Alerte affichée sur l’index</h2>
+      <label>Texte de l’alerte
+        <textarea id="homeAlertMessage" maxlength="500" rows="4" placeholder="Laisser vide pour masquer le bandeau"></textarea>
+      </label>
+      <label class="check"><input id="homeAlertUrgent" type="checkbox"> Alerte urgente</label>
+      <button id="saveHomeAlertBtn" type="button">Enregistrer l’alerte d’accueil</button>
+      <p id="homeAlertStatus" class="status" role="status"></p>
+    </div>
+  </section>
+
+  <section id="settingsPanel" class="admin-section" data-admin-section="settings" aria-labelledby="connectionTitle" hidden>
+    <div class="panel connection-panel">
+      <h2 id="connectionTitle">Connexion au backend de production</h2>
+      <p class="section-help">Ces réglages restent mémorisés uniquement sur cet appareil.</p>
+      <label>Adresse de l’API
+        <input id="apiUrl" type="url" inputmode="url" placeholder="https://…workers.dev">
+      </label>
+      <label>Jeton d’administration
+        <input id="adminToken" type="password" autocomplete="current-password" placeholder="Jeton mémorisé uniquement sur cet appareil">
+      </label>
+      <button id="connectBtn" type="button">Enregistrer et se connecter</button>
+      <button id="forgetTokenBtn" class="secondary forget-button" type="button">Oublier le jeton</button>
+      <p id="connectionStatus" class="status" role="status"></p>
+    </div>
+    <div class="panel connection-panel" aria-labelledby="pushSettingsTitle">
+      <h2 id="pushSettingsTitle">Notifications du Backstage</h2>
+      <p class="section-help">Active les notifications Firebase du Backstage sur cet appareil.</p>
+      <button id="enablePushBtn" class="push-settings-button" type="button">Activer les notifications</button>
+      <p id="pushSettingsStatus" class="status" role="status"></p>
+    </div>
+  </section>
+</main>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
+<script src="assets/js/notification-format.js?v=20260716-2"></script>
+<script src="assets/js/administration.js?v=20260716-2"></script>
+<script src="assets/js/firebase-push-settings.js?v=20260716-2"></script>
+<script src="assets/js/status-realtime.js?v=20260716-2"></script>
+<script src="assets/js/backstage-shell.js?v=20260716-2"></script>
+</body>
+</html>
