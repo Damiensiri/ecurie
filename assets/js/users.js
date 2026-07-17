@@ -3,9 +3,11 @@
   const elements={connection:byId("connectionStatus"),
     form:byId("userForm"),firstName:byId("firstName"),lastName:byId("lastName"),email:byId("email"),
     role:byId("role"),password:byId("temporaryPassword"),createStatus:byId("createStatus"),refresh:byId("refreshBtn"),list:byId("usersList"),
+    createToggle:byId("createPanelToggle"),createBody:byId("createPanelBody"),search:byId("usersSearch"),
     modal:byId("userDetailsModal"),modalTitle:byId("userDetailsTitle"),modalBody:byId("userDetailsBody"),modalClose:byId("closeUserDetails")};
   const apiBase=(localStorage.getItem("notifications_prod_api_url")||"https://ecurie-notifications-prod.damiensiri-pro.workers.dev").replace(/\/$/,"");
   const adminToken=localStorage.getItem("notifications_prod_admin_token")||"";
+  let loadedUsers=[];
   function status(element,message,type=""){element.textContent=message;element.className="status"+(type?" "+type:"");}
   async function api(path,options={}){
     if(!apiBase||!adminToken)throw new Error("Configurez la connexion dans Paramètres");
@@ -36,6 +38,12 @@
       const remove=document.createElement("button");remove.type="button";remove.className="danger";remove.textContent="Supprimer";remove.onclick=()=>deleteUser(user);
       actions.append(details,role,reset,toggle,remove);row.append(copy,actions);return row;
     }));
+  }
+  function normalizedSearch(value){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();}
+  function renderSearch(){
+    const query=normalizedSearch(elements.search.value);
+    const filtered=query?loadedUsers.filter(user=>normalizedSearch(`${user.firstName} ${user.lastName} ${user.email}`).includes(query)):loadedUsers;
+    render(filtered);
   }
   const escapeHTML=value=>String(value??"").replace(/[&<>'"]/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[char]);
   const formatDate=value=>value?new Date(value+"T12:00:00").toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric"}):"";
@@ -70,7 +78,7 @@
   }
   async function deleteCard(userId){if(!confirm("Supprimer cette carte paddock et ses consommations liées ?"))return;try{await api(`/api/admin/users/${userId}/paddock-card`,{method:"DELETE"});await refreshDetails(userId);}catch(error){status(elements.connection,error.message,"error");}}
   async function deleteUsage(userId,usageId){if(!confirm("Supprimer cette ligne ? Une unité sera restituée si elle provenait de la carte."))return;try{await api(`/api/admin/users/${userId}/paddock-usages/${usageId}`,{method:"DELETE"});await refreshDetails(userId);}catch(error){status(elements.connection,error.message,"error");}}
-  async function load(){status(elements.connection,"Chargement…");try{const users=await api("/api/admin/users");render(users);status(elements.connection,`${users.length} compte(s) production.`,"success");}catch(error){status(elements.connection,error.message,"error");}}
+  async function load(){status(elements.connection,"Chargement…");try{loadedUsers=await api("/api/admin/users");renderSearch();status(elements.connection,`${loadedUsers.length} compte(s) production.`,"success");}catch(error){status(elements.connection,error.message,"error");}}
   async function changeStatus(user){try{await api(`/api/admin/users/${user.id}`,{method:"PATCH",body:JSON.stringify({status:user.status==="active"?"disabled":"active"})});await load();}catch(error){status(elements.connection,error.message,"error");}}
   async function approveUser(user){try{const result=await api(`/api/admin/users/${user.id}`,{method:"PATCH",body:JSON.stringify({approvalStatus:"approved",status:"active"})});const sent=result.email?.sent||result.email?.duplicate;status(elements.connection,sent?`Accès de ${user.firstName} validé · email envoyé.`:`Accès validé, mais l’email n’a pas pu être envoyé${result.email?.error?` : ${result.email.error}`:"."}`,sent?"success":"error");await load();}catch(error){status(elements.connection,error.message,"error");}}
   async function rejectUser(user){if(!confirm(`Refuser et supprimer la demande de ${user.firstName} ${user.lastName} ?`))return;try{await api(`/api/admin/users/${user.id}`,{method:"DELETE"});status(elements.connection,"Demande refusée et supprimée.","success");await load();}catch(error){status(elements.connection,error.message,"error");}}
@@ -79,5 +87,7 @@
   async function resetPassword(user){const value=prompt(`Nouveau mot de passe temporaire pour ${user.firstName} (12 caractères minimum)`);if(value===null)return;try{await api(`/api/admin/users/${user.id}`,{method:"PATCH",body:JSON.stringify({temporaryPassword:value})});status(elements.connection,"Mot de passe temporaire remplacé et sessions fermées.","success");await load();}catch(error){status(elements.connection,error.message,"error");}}
   elements.form.addEventListener("submit",async event=>{event.preventDefault();status(elements.createStatus,"Création…");try{await api("/api/admin/users",{method:"POST",body:JSON.stringify({firstName:elements.firstName.value,lastName:elements.lastName.value,email:elements.email.value,cardNumber:"",role:elements.role.value,temporaryPassword:elements.password.value})});elements.form.reset();status(elements.createStatus,"Compte production créé.","success");await load();}catch(error){status(elements.createStatus,error.message,"error");}});
   elements.modalClose.onclick=()=>{elements.modal.hidden=true;};elements.modal.onclick=event=>{if(event.target===elements.modal)elements.modal.hidden=true;};
+  elements.createToggle.addEventListener("click",()=>{const open=elements.createToggle.getAttribute("aria-expanded")!=="true";elements.createToggle.setAttribute("aria-expanded",String(open));elements.createBody.classList.toggle("is-open",open);elements.createBody.setAttribute("aria-hidden",String(!open));if(open)elements.firstName.focus();});
+  elements.search.addEventListener("input",renderSearch);
   elements.refresh.addEventListener("click",load);load();
 })();

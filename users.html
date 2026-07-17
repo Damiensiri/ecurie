@@ -14,8 +14,11 @@
     <header class="users-header"><span class="beta-pill">PRODUCTION · D1</span><h1>Utilisateurs</h1>
       <p>Les comptes créés ici sont isolés dans Cloudflare/D1 production.</p></header>
     <p id="connectionStatus" class="status" role="status"></p>
-    <section class="users-panel" aria-labelledby="createTitle">
-      <h2 id="createTitle">Créer un compte</h2>
+    <section class="users-panel create-panel" aria-labelledby="createTitle">
+      <button id="createPanelToggle" class="create-panel-toggle" type="button" aria-expanded="false" aria-controls="createPanelBody">
+        <span id="createTitle">Créer un compte</span><span class="create-panel-arrow" aria-hidden="true">⌄</span>
+      </button>
+      <div id="createPanelBody" class="create-panel-body" aria-hidden="true"><div class="create-panel-inner">
       <form id="userForm"><div class="field-grid">
         <label>Prénom<input id="firstName" maxlength="60" autocomplete="given-name" required></label>
         <label>Nom<input id="lastName" maxlength="80" autocomplete="family-name" required></label>
@@ -24,8 +27,10 @@
         <label>Mot de passe temporaire<input id="temporaryPassword" type="password" minlength="12" maxlength="200" autocomplete="new-password" required></label>
       </div><p class="help">12 caractères minimum. L’utilisateur devra le remplacer à sa première connexion.</p>
       <button type="submit">Créer le compte production</button><p id="createStatus" class="status" role="status"></p></form>
+      </div></div>
     </section>
     <section class="users-panel"><div class="panel-heading"><h2>Comptes production</h2><button id="refreshBtn" class="secondary" type="button">Actualiser</button></div>
+      <label class="users-search"><span>Rechercher un compte</span><input id="usersSearch" type="search" autocomplete="off" placeholder="Nom, prénom ou adresse email…"></label>
       <div id="usersList" class="users-list"><p class="empty">Chargement…</p></div></section>
   </main>
   <div id="userDetailsModal" class="user-modal" hidden>
@@ -34,7 +39,7 @@
       <div id="userDetailsBody"></div>
     </div>
   </div>
-  <script src="assets/js/users.js?v=20260716-6"></script>
+  <script src="assets/js/users.js?v=20260717-1"></script>
   <script src="assets/js/backstage-shell.js?v=20260716-2"></script>
 </body>
 </html>
