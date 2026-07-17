@@ -381,7 +381,7 @@
       badges.append(
         badge(alert.active==="oui"?"Publiée":"Inactive",alert.active==="oui"?"active":"inactive"),
         badge(alert.epingle==="oui"?"Épinglée":"Non épinglée"),
-        badge(alert.push_sent_at?"Push envoyé":alert.push_requested?"Push en attente":"Sans push")
+        badge(alert.push_sent_at?"Push envoyé":alert.push_requested?"Push en attente (production)":"Sans push")
       );
 
       const edit=document.createElement("button");
@@ -465,7 +465,7 @@
         sent:"Alerte enregistrée et push envoyé.",
         "already-sent":"Alerte enregistrée. Le push avait déjà été envoyé.",
         "not-requested":"Alerte enregistrée sans push.",
-        "disabled-in-beta":"Alerte enregistrée. Le push est désactivé côté serveur.",
+        "disabled-in-beta":"Alerte enregistrée. L’envoi push est momentanément indisponible.",
         failed:`Alerte enregistrée, mais le push a échoué${result.push?.error?" : "+result.push.error:"."}`
       };
       const pushFailed=result.push?.status==="failed";
@@ -495,7 +495,7 @@
       notifications:{title:"Notifications",subtitle:"Publication des informations et envoi des notifications push."},
       general:{title:"Horaires",subtitle:"Horaires des écuries et exceptions de date."},
       "home-alert":{title:"Alertes",subtitle:"Bandeau d’information affiché sur l’accueil de la PWA."},
-      settings:{title:"Paramètres",subtitle:"Connexion sécurisée au backend de production."}
+      settings:{title:"Paramètres",subtitle:"Connexion sécurisée au backend de la production."}
     };
     const selectedName=sections[name]?name:"spaces";
     document.querySelectorAll("[data-admin-section]").forEach(section=>{
@@ -504,7 +504,7 @@
     if(selectedName!=="spaces")closeSpaceEditor();
     elements.pageTitle.textContent=sections[selectedName].title;
     elements.pageSubtitle.textContent=sections[selectedName].subtitle;
-    document.title=`${sections[selectedName].title} — Backstage`;
+    document.title=`${sections[selectedName].title} — Backstage production`;
     const url=new URL(window.location.href);
     url.searchParams.set("section",selectedName);
     history.replaceState(null,"",url);

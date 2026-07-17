@@ -6,35 +6,65 @@ const paddocks=fs.readFileSync("paddocks.html","utf8");
 const administration=fs.readFileSync("administration.html","utf8");
 const adminScript=fs.readFileSync("assets/js/administration.js","utf8");
 const realtime=fs.readFileSync("assets/js/status-realtime.js","utf8");
-const pushSettings=fs.readFileSync("assets/js/firebase-push-settings.js","utf8");
-const firebaseConfig=JSON.parse(fs.readFileSync("firebase.json","utf8"));
+const shell=fs.readFileSync("assets/js/backstage-shell.js","utf8");
+const pushSettings=fs.readFileSync("assets/js/backstage-push.js","utf8");
+const users=fs.readFileSync("assets/js/users.js","utf8");
+const usersPage=fs.readFileSync("users.html","utf8");
+
+test("le planning Backstage utilise uniquement Cloudflare D1 production",()=>{
+  assert.match(paddocks,/ecurie-notifications-prod\.damiensiri-pro\.workers\.dev/);
+  assert.doesNotMatch(paddocks,/beta|bêta/i);
+  assert.doesNotMatch(paddocks,/firebase-app-compat|firebase-firestore-compat|firebaseConfig|\.collection\(/);
+});
+
+test("les comptes utilisent uniquement le Worker Cloudflare production",()=>{
+  assert.match(users,/ecurie-notifications-prod\.damiensiri-pro\.workers\.dev/);
+  assert.doesNotMatch(users,/firebase/i);
+  assert.match(usersPage,/PRODUCTION · D1/);
+  assert.match(shell,/\["Utilisateurs","users\.html"/);
+});
+
+test("chaque action paddock sensible appelle l’API D1 production",()=>{
+  for(const name of ["createBlockage","deleteBlockage","cancelReservation","saveRestriction","deleteRestriction","saveHours"]){
+    const start=paddocks.indexOf(`function ${name}`);
+    assert.notEqual(start,-1,`${name} doit exister`);
+    assert.match(paddocks.slice(start,start+1800),/paddockAdminApi/,`${name} doit utiliser D1`);
+  }
+});
+
+test("le formulaire de réservation client conserve un vrai bouton de soumission",()=>{
+  assert.match(paddocks,/id="adminReservationSubmit" type="submit"/);
+  assert.match(paddocks,/if \(!button\.hasAttribute\("type"\)\) button\.type = "button"/);
+  assert.match(paddocks,/adminReservationForm"\)\.addEventListener\("submit", createAdminReservation\)/);
+});
 
 test("l’administration utilise uniquement Cloudflare production",()=>{
   assert.match(adminScript,/ecurie-notifications-prod\.damiensiri-pro\.workers\.dev/);
   assert.doesNotMatch(adminScript,/ecurie-notifications-beta/);
   assert.match(realtime,/ecurie-notifications-prod\.damiensiri-pro\.workers\.dev/);
   assert.doesNotMatch(realtime,/ecurie-notifications-beta/);
-  assert.match(administration,/PRODUCTION · PUSH ACTIF/);
+  assert.doesNotMatch(administration,/>BÊTA</);
 });
 
-test("les écritures Firebase sont activées en production",()=>{
-  assert.match(paddocks,/const FIREBASE_READ_ONLY = false;/);
-  assert.match(pushSettings,/const FIREBASE_PUSH_READ_ONLY=false;/);
-});
-
-test("les clés locales de production sont conservées",()=>{
-  assert.match(adminScript,/notifications_prod_api_url/);
-  assert.match(adminScript,/notifications_prod_admin_token/);
-  assert.doesNotMatch(adminScript,/notifications_beta_/);
-});
-
-test("les notifications Firebase sont uniquement dans Paramètres",()=>{
-  assert.doesNotMatch(paddocks,/id="enablePushBtn"/);
+test("la navigation et les paramètres ne sont pas dupliqués",()=>{
+  assert.doesNotMatch(administration,/class="admin-tabs"/);
   assert.match(administration,/data-admin-section="settings"/);
-  assert.match(administration,/id="enablePushBtn"/);
+  assert.match(shell,/\["Paramètres","administration\.html\?section=settings"/);
+  assert.ok(shell.indexOf('["Paramètres"')>shell.indexOf('["Utilisateurs"'));
 });
 
-test("Firebase Hosting publie l’interface unifiée",()=>{
-  assert.equal(firebaseConfig.hosting.site,"ecurie-paddock");
-  assert.equal(firebaseConfig.hosting.public,".");
+test("l’éditeur des espaces est une fenêtre modale",()=>{
+  assert.match(administration,/class="space-editor-overlay"/);
+  assert.match(administration,/role="dialog" aria-modal="true"/);
+  assert.match(adminScript,/document\.body\.classList\.add\("space-editor-open"\)/);
+});
+
+test("les notifications Backstage utilisent OneSignal et l’API Cloudflare production",()=>{
+  assert.doesNotMatch(paddocks,/id="enablePushBtn"/);
+  assert.match(administration,/id="enablePushBtn"/);
+  assert.match(administration,/OneSignalSDK\.page\.js/);
+  assert.doesNotMatch(administration,/firebase/i);
+  assert.match(pushSettings,/api\/admin\/push\/subscription/);
+  assert.match(pushSettings,/ecurie-notifications-prod\.damiensiri-pro\.workers\.dev/);
+  assert.match(pushSettings,/104b740c-3a7b-4e39-87b2-847d00f300fb/);
 });

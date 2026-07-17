@@ -2,7 +2,8 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <link rel="manifest" href="manifest.webmanifest">
   <title>Backstage Écurie</title>
   <link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260716-1">
   <style>
@@ -734,6 +735,7 @@
     </header>
 
     <main class="layout">
+      <div class="prototype-warning" role="status">Production Cloudflare/D1 : toutes les actions de cette page restent isolées de la production.</div>
       <nav class="desktop-nav" aria-label="Navigation principale">
         <button class="nav-btn is-active" data-view-target="planning"><span class="nav-icon">🗓️</span>Planning</button>
         <button class="nav-btn" data-view-target="reservations"><span class="nav-icon">📒</span>Reservations</button>
@@ -798,19 +800,62 @@
           </select>
         </div>
 
+        <section class="panel" style="margin-bottom:16px">
+          <div class="panel-header">
+            <div>
+              <h3 class="panel-title">Réserver pour un client</h3>
+              <p class="section-note">La réservation sera reliée à son compte. Les occupations et exceptions restent strictement bloquantes.</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <form id="adminReservationForm" class="form-grid">
+              <label class="field-label">Client
+                <select class="select" id="adminReservationUser" required><option value="">Chargement des clients…</option></select>
+              </label>
+              <label class="field-label">Jour
+                <input class="field" id="adminReservationDate" type="date" required>
+              </label>
+              <label class="field-label">Paddock
+                <select class="select" id="adminReservationPaddock" required>
+                  <option value="">Choisir</option><option value="maison">Maison</option><option value="grande">Grande voie</option><option value="beudot">Beudot</option>
+                </select>
+              </label>
+              <label class="field-label">Créneau disponible
+                <select class="select" id="adminReservationTime" required><option value="">Choisir d’abord le jour et le paddock</option></select>
+              </label>
+              <label class="field-label">Durée
+                <select class="select" id="adminReservationDuration" required>
+                  <option value="60">1 heure</option><option value="90">1 heure 30</option>
+                </select>
+              </label>
+              <button class="primary-action" id="adminReservationSubmit" type="submit">Créer la réservation</button>
+            </form>
+          </div>
+        </section>
+
         <div class="date-picker">
           <input class="field" id="reservationSearch" type="search" placeholder="Rechercher un nom" aria-label="Rechercher une reservation par nom">
           <button id="clearReservationSearch">Effacer</button>
         </div>
 
         <div class="list-grid" id="reservationList"></div>
+
+        <section class="panel" style="margin-top:16px">
+          <div class="panel-header">
+            <div>
+              <h3 class="panel-title">Demandes de mise au paddock</h3>
+              <p class="section-note">Statuts et commentaires enregistrés dans D1 production.</p>
+            </div>
+          </div>
+          <div class="panel-body"><div class="list-grid" id="paddockRequestList"></div></div>
+        </section>
       </section>
 
       <section class="view" id="view-blocages">
         <div class="section-head">
           <div>
             <h2 class="section-title">Blocages</h2>
-            <p class="section-note">Lecture seule: le formulaire montre le futur comportement sans ecrire dans Firebase.</p>
+            <p class="section-note">Le blocage sera enregistré uniquement dans D1 production.</p>
           </div>
         </div>
 
@@ -917,11 +962,21 @@
 
   <div class="toast" id="toast" role="status"></div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
   <script>
-    const FIREBASE_READ_ONLY = false;
+    const PADDOCK_API = "https://ecurie-notifications-prod.damiensiri-pro.workers.dev";
+    const PADDOCK_ADMIN_TOKEN_KEY = "notifications_prod_admin_token";
+
+    async function paddockAdminApi(path, options = {}) {
+      const token = localStorage.getItem(PADDOCK_ADMIN_TOKEN_KEY) || "";
+      if (!token) throw new Error("Jeton d’administration production manquant dans Paramètres.");
+      const response = await fetch(PADDOCK_API + path, {
+        ...options,
+        headers: { authorization: "Bearer " + token, ...(options.body ? { "content-type": "application/json" } : {}) }
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || `Erreur ${response.status}`);
+      return data;
+    }
 
     const PASS = "0359140";
     if (!localStorage.getItem("backstage_auth")) {
@@ -933,14 +988,6 @@
       localStorage.setItem("backstage_auth", "true");
     }
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBn6Hgu-xvsWqpwJ-i4lZyI0QjKMBvOeXA",
-      authDomain: "ecurie-paddock.firebaseapp.com",
-      projectId: "ecurie-paddock",
-      storageBucket: "ecurie-paddock.firebasestorage.app",
-      messagingSenderId: "501153278739",
-      appId: "1:501153278739:web:824b4344c381f2a94548e6"
-    };
 
     const paddocks = [
       { id: "maison", label: "Maison" },
@@ -982,10 +1029,11 @@
 
     let reservations = [];
     let blocages = [];
+    let paddockRequests = [];
+    let paddockUsers = [];
     let restrictions = {};
     let selectedDate = offsetDate(0);
     let blockFilter = "future";
-    let db = null;
 
     function offsetDate(daysFromToday) {
       const date = new Date();
@@ -1044,6 +1092,10 @@
       showToast.timeout = window.setTimeout(() => {
         toast.style.display = "none";
       }, 2600);
+    }
+
+    function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
     }
 
     function switchView(view) {
@@ -1272,6 +1324,122 @@
       `).join("") || `<div class="prototype-warning">Aucune reservation dans ce filtre.</div>`;
     }
 
+    function renderAdminReservationUsers() {
+      const select = document.getElementById("adminReservationUser");
+      const selected = select.value;
+      const users = paddockUsers.filter((user) => user.status === "active" && user.approvalStatus === "approved")
+        .sort((a, b) => `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`, "fr"));
+      select.innerHTML = `<option value="">Choisir un client</option>` + users.map((user) =>
+        `<option value="${user.id}">${escapeHTML(user.firstName)} ${escapeHTML(user.lastName)} — ${escapeHTML(user.email)}</option>`).join("");
+      if (users.some((user) => String(user.id) === selected)) select.value = selected;
+    }
+
+    function updateAdminReservationDurations() {
+      const paddock = document.getElementById("adminReservationPaddock").value;
+      const duration = document.getElementById("adminReservationDuration");
+      const ninety = duration.querySelector('option[value="90"]');
+      ninety.disabled = paddock === "maison" || !paddock;
+      if (ninety.disabled && duration.value === "90") duration.value = "60";
+      updateAdminReservationSlots();
+    }
+
+    function updateAdminReservationSlots() {
+      const select = document.getElementById("adminReservationTime");
+      const date = document.getElementById("adminReservationDate").value;
+      const paddock = document.getElementById("adminReservationPaddock").value;
+      const duration = Number(document.getElementById("adminReservationDuration").value);
+      const previous = select.value;
+      if (!date || !paddock || !duration) {
+        select.innerHTML = `<option value="">Choisir d’abord le jour et le paddock</option>`;
+        return;
+      }
+      const restriction = restrictions[date];
+      if (duration === 90 && ((paddock === "grande" && restriction?.blockGrande90) || (paddock === "beudot" && restriction?.blockBeudot90))) {
+        select.innerHTML = `<option value="">1 h 30 indisponible ce jour</option>`;
+        return;
+      }
+      const config = horaires[paddock]?.[dayName(date)];
+      if (!config || config.closed) {
+        select.innerHTML = `<option value="">Paddock fermé ce jour</option>`;
+        return;
+      }
+      const open = minutes(config.open);
+      const close = minutes(config.close);
+      const today = offsetDate(0);
+      const now = new Date();
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      const busy = [...reservations, ...blocages].filter((item) => item.date === date && item.paddock === paddock);
+      const slots = [];
+      for (let start = open; start + duration <= close; start += 60) {
+        if (date === today && start <= nowMinutes) continue;
+        const end = start + duration;
+        const conflict = busy.some((item) => {
+          const busyStart = minutes(item.time);
+          const busyEnd = busyStart + Number(item.duration || 60);
+          return start < busyEnd && end > busyStart;
+        });
+        if (!conflict) slots.push(timeFromMinutes(start));
+      }
+      select.innerHTML = slots.length
+        ? `<option value="">Choisir un créneau</option>` + slots.map((time) => {
+          const end = timeFromMinutes(minutes(time) + duration);
+          return `<option value="${time}">${time} → ${end}</option>`;
+        }).join("")
+        : `<option value="">Aucun créneau disponible</option>`;
+      if (slots.includes(previous)) select.value = previous;
+    }
+
+    async function createAdminReservation(event) {
+      event.preventDefault();
+      const button = document.getElementById("adminReservationSubmit");
+      const payload = {
+        userId: Number(document.getElementById("adminReservationUser").value),
+        date: document.getElementById("adminReservationDate").value,
+        paddock: document.getElementById("adminReservationPaddock").value,
+        time: document.getElementById("adminReservationTime").value,
+        duration: Number(document.getElementById("adminReservationDuration").value)
+      };
+      if (!payload.userId || !payload.date || !payload.paddock || !payload.time) {
+        showToast("Complète tous les champs de la réservation.");
+        return;
+      }
+      button.disabled = true;
+      try {
+        const result = await paddockAdminApi("/api/admin/paddocks/reservations", { method: "POST", body: JSON.stringify(payload) });
+        await loadD1Paddocks();
+        document.getElementById("adminReservationTime").value = "";
+        if (result.email?.sent || result.email?.duplicate) showToast(`Réservation créée pour ${result.reservation.name} et confirmation envoyée.`);
+        else showToast(`Réservation créée, mais e-mail non envoyé : ${result.email?.error || "erreur inconnue"}`);
+      } catch (error) { showToast(error.message); }
+      finally { button.disabled = false; }
+    }
+
+    function renderPaddockRequests() {
+      const labels = { pending: "En attente", accepted: "Accepté", refused: "Refusé", completed: "Réalisé", cancelled: "Annulé" };
+      const today = offsetDate(0);
+      const items = [...paddockRequests].sort((a, b) => b.date.localeCompare(a.date));
+      document.getElementById("paddockRequestList").innerHTML = items.map((item) => `
+        <article class="item-card" data-paddock-request="${item.id}">
+          <div class="item-top">
+            <h3 class="item-title">${escapeHTML(item.name)}</h3>
+            <span class="badge ${item.status === "pending" ? "amber" : "green"}">${escapeHTML(labels[item.status] || item.status)}</span>
+          </div>
+          <div class="item-meta"><span>${formatDate(item.date)}</span><span>${escapeHTML(item.email)}</span><span>${item.date < today ? "Historique" : "À venir"}</span></div>
+          <div class="form-grid" style="margin-top:12px">
+            <label class="field-label">Statut
+              <select class="select" data-request-status>
+                ${Object.entries(labels).map(([value, label]) => `<option value="${value}" ${item.status === value ? "selected" : ""}>${label}</option>`).join("")}
+              </select>
+            </label>
+            <label class="field-label">Commentaire
+              <input class="field" data-request-comment maxlength="500" value="${escapeHTML(item.comment)}" placeholder="Information pour le client">
+            </label>
+          </div>
+          <div class="item-actions"><button class="primary-action" data-save-paddock-request="${item.id}">Enregistrer</button><button class="danger" data-delete-paddock-request="${item.id}">Supprimer</button></div>
+        </article>
+      `).join("") || `<div class="prototype-warning">Aucune demande de mise au paddock.</div>`;
+    }
+
     function renderBlocks() {
       const today = offsetDate(0);
       let filtered = blocages;
@@ -1350,36 +1518,14 @@
     function refreshViews() {
       renderPlanning();
       renderReservations();
+      renderPaddockRequests();
       renderBlocks();
       renderHours();
       renderRestrictions();
       fillRestrictionForm();
     }
 
-    function normalizeReservation(doc) {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        name: data.name || "",
-        email: data.email || "",
-        paddock: data.paddock || "",
-        date: data.date || "",
-        time: data.time || "",
-        duration: Number(data.duration || 60),
-        type: data.type || data.reservationType || ""
-      };
-    }
-
     async function createBlockage() {
-      if (FIREBASE_READ_ONLY) {
-        showToast("Bêta en lecture seule : aucun blocage créé.");
-        return;
-      }
-      if (!db) {
-        showToast("Firebase n'est pas encore pret.");
-        return;
-      }
-
       const date = document.getElementById("blockDate").value;
       const reason = document.getElementById("blockReason").value.trim();
       const start = document.getElementById("blockStart").value;
@@ -1407,27 +1553,14 @@
       const cleanReason = reason || "Blocage";
       const blockName = cleanReason.toLowerCase().startsWith("blocage") ? cleanReason : `Blocage ${cleanReason}`;
 
-      await Promise.all(selectedPaddocks.map((paddock) => db.collection("reservations").add({
-        name: blockName,
-        paddock,
-        date,
-        time: start,
-        duration
-      })));
-
-      showToast("Blocage cree dans Firebase.");
+      try {
+        await paddockAdminApi("/api/admin/paddocks/blockages", { method: "POST", body: JSON.stringify({ name: blockName, paddocks: selectedPaddocks, date, time: start, duration }) });
+        await loadD1Paddocks();
+        showToast("Blocage créé dans D1 production.");
+      } catch (error) { showToast(error.message); }
     }
 
     async function deleteBlockage(id) {
-      if (FIREBASE_READ_ONLY) {
-        showToast("Bêta en lecture seule : aucun blocage supprimé.");
-        return;
-      }
-      if (!db) {
-        showToast("Firebase n'est pas encore pret.");
-        return;
-      }
-
       const item = blocages.find((blockage) => blockage.id === id);
       if (!item) {
         showToast("Blocage introuvable.");
@@ -1437,20 +1570,10 @@
       const label = `${item.name} - ${paddockLabel(item.paddock)} - ${formatDate(item.date)} - ${formatTimeRange(item)}`;
       if (!confirm(`Supprimer ce blocage ?\n\n${label}`)) return;
 
-      await db.collection("reservations").doc(id).delete();
-      showToast("Blocage supprime.");
+      try { await paddockAdminApi("/api/admin/paddocks/reservations/" + encodeURIComponent(id), { method: "DELETE" }); await loadD1Paddocks(); showToast("Blocage supprimé."); } catch (error) { showToast(error.message); }
     }
 
     async function cancelReservation(id) {
-      if (FIREBASE_READ_ONLY) {
-        showToast("Bêta en lecture seule : aucune réservation annulée.");
-        return;
-      }
-      if (!db) {
-        showToast("Firebase n'est pas encore pret.");
-        return;
-      }
-
       const item = reservations.find((reservation) => reservation.id === id);
       if (!item) {
         showToast("Reservation introuvable.");
@@ -1464,21 +1587,17 @@
 
       const label = `${item.name} - ${paddockLabel(item.paddock)} - ${formatDate(item.date)} - ${item.time}`;
       if (!confirm(`Annuler cette reservation ?\n\n${label}`)) return;
-
-      await db.collection("reservations").doc(id).delete();
-      showToast("Reservation annulee.");
+      const comment = prompt("Commentaire envoyé au client (facultatif) :", "") ?? null;
+      if (comment === null) return;
+      try {
+        const result=await paddockAdminApi("/api/admin/paddocks/reservations/" + encodeURIComponent(id), { method: "DELETE", body: JSON.stringify({comment:comment.trim()}) });
+        await loadD1Paddocks();
+        if(result.email?.sent||result.email?.duplicate)showToast("Réservation annulée et e-mail envoyé.");
+        else showToast("Réservation annulée, mais e-mail non envoyé : "+(result.email?.error||"adresse absente"));
+      } catch (error) { showToast(error.message); }
     }
 
     async function saveRestriction() {
-      if (FIREBASE_READ_ONLY) {
-        showToast("Bêta en lecture seule : aucune exception modifiée.");
-        return;
-      }
-      if (!db) {
-        showToast("Firebase n'est pas encore pret.");
-        return;
-      }
-
       const date = document.getElementById("restrictionDate").value;
       const target = document.getElementById("restrictionTarget").value;
 
@@ -1489,8 +1608,7 @@
 
       if (target === "none") {
         if (!confirm(`Supprimer les exceptions 1h30 du ${formatDate(date)} ?`)) return;
-        await db.collection("restrictions").doc(date).delete();
-        showToast("Exception supprimee.");
+        try { await paddockAdminApi("/api/admin/paddocks/restrictions/" + date, { method: "DELETE" }); await loadD1Paddocks(); showToast("Exception supprimée."); } catch (error) { showToast(error.message); }
         return;
       }
 
@@ -1499,36 +1617,16 @@
         blockBeudot90: target === "beudot" || target === "both"
       };
 
-      await db.collection("restrictions").doc(date).set(payload);
-      showToast("Exception enregistree.");
+      try { await paddockAdminApi("/api/admin/paddocks/restrictions", { method: "PUT", body: JSON.stringify({ date, ...payload }) }); await loadD1Paddocks(); showToast("Exception enregistrée."); } catch (error) { showToast(error.message); }
     }
 
     async function deleteRestriction(date) {
-      if (FIREBASE_READ_ONLY) {
-        showToast("Bêta en lecture seule : aucune exception supprimée.");
-        return;
-      }
-      if (!db) {
-        showToast("Firebase n'est pas encore pret.");
-        return;
-      }
-
       if (!confirm(`Supprimer cette exception 1h30 ?\n\n${formatDate(date)}`)) return;
 
-      await db.collection("restrictions").doc(date).delete();
-      showToast("Exception supprimee.");
+      try { await paddockAdminApi("/api/admin/paddocks/restrictions/" + date, { method: "DELETE" }); await loadD1Paddocks(); showToast("Exception supprimée."); } catch (error) { showToast(error.message); }
     }
 
     async function saveHours() {
-      if (FIREBASE_READ_ONLY) {
-        showToast("Bêta en lecture seule : aucun horaire modifié.");
-        return;
-      }
-      if (!db) {
-        showToast("Firebase n'est pas encore pret.");
-        return;
-      }
-
       const selectedPaddock = document.getElementById("hoursPaddock").value;
       const targetPaddocks = selectedPaddock === "all" ? ["maison", "grande", "beudot"] : [selectedPaddock];
       const nextConfig = {};
@@ -1548,63 +1646,32 @@
       const label = selectedPaddock === "all" ? "les 3 paddocks" : paddockLabel(selectedPaddock);
       if (!confirm(`Sauvegarder les horaires pour ${label} ?`)) return;
 
-      await Promise.all(targetPaddocks.map((paddock) => db.collection("horaires").doc(paddock).set(nextConfig)));
-      showToast("Horaires sauvegardes.");
+      try { await paddockAdminApi("/api/admin/paddocks/hours", { method: "PUT", body: JSON.stringify({ paddocks: targetPaddocks, schedule: nextConfig }) }); await loadD1Paddocks(); showToast("Horaires sauvegardés dans D1 production."); } catch (error) { showToast(error.message); }
     }
 
-    function subscribeFirebaseReadOnly() {
-      if (!window.firebase || !firebase.firestore) {
-        showToast("Firebase indisponible: affichage vide.");
-        return;
-      }
-
-      if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-      }
-
-      db = firebase.firestore();
-
-      db.collection("reservations").onSnapshot((snapshot) => {
-        const realReservations = [];
-        const realBlocages = [];
-
-        snapshot.forEach((doc) => {
-          const item = normalizeReservation(doc);
-          if (String(item.name).toLowerCase().startsWith("blocage")) {
-            realBlocages.push(item);
-          } else {
-            realReservations.push(item);
-          }
-        });
-
-        reservations = realReservations;
-        blocages = realBlocages;
+    async function loadD1Paddocks() {
+      try {
+        const [data, users] = await Promise.all([
+          paddockAdminApi("/api/admin/paddocks"),
+          paddockAdminApi("/api/admin/users")
+        ]);
+        const all = data.reservations || [];
+        reservations = all.filter((item) => !String(item.name).toLowerCase().startsWith("blocage"));
+        blocages = all.filter((item) => String(item.name).toLowerCase().startsWith("blocage"));
+        paddockRequests = data.requests || [];
+        if (Object.keys(data.horaires || {}).length) horaires = data.horaires;
+        restrictions = data.restrictions || {};
+        paddockUsers = Array.isArray(users) ? users : [];
+        renderAdminReservationUsers();
         refreshViews();
-      });
-
-      db.collection("horaires").onSnapshot((snapshot) => {
-        const nextHoraires = {};
-        snapshot.forEach((doc) => {
-          nextHoraires[doc.id] = doc.data();
-        });
-        if (Object.keys(nextHoraires).length) {
-          horaires = nextHoraires;
-          refreshViews();
-        }
-      });
-
-      db.collection("restrictions").onSnapshot((snapshot) => {
-        const nextRestrictions = {};
-        snapshot.forEach((doc) => {
-          nextRestrictions[doc.id] = doc.data();
-        });
-        restrictions = nextRestrictions;
-        refreshViews();
-      });
+        updateAdminReservationSlots();
+      } catch (error) {
+        showToast(error.message);
+      }
     }
 
     document.querySelectorAll("button").forEach((button) => {
-      button.type = "button";
+      if (!button.hasAttribute("type")) button.type = "button";
     });
 
     document.querySelectorAll("[data-view-target]").forEach((button) => {
@@ -1624,7 +1691,7 @@
       }
 
       if (event.target.closest("[data-demo-action]")) {
-        showToast("Lecture seule: aucune donnee Firebase n'est modifiee.");
+        showToast("Action disponible dans D1 production.");
       }
 
       const deleteButton = event.target.closest("[data-delete-blockage]");
@@ -1635,6 +1702,38 @@
       const cancelButton = event.target.closest("[data-cancel-reservation]");
       if (cancelButton) {
         cancelReservation(cancelButton.dataset.cancelReservation);
+      }
+
+      const requestButton = event.target.closest("[data-save-paddock-request]");
+      if (requestButton) {
+        const card = requestButton.closest("[data-paddock-request]");
+        const id = requestButton.dataset.savePaddockRequest;
+        const status = card.querySelector("[data-request-status]").value;
+        const comment = card.querySelector("[data-request-comment]").value.trim();
+        requestButton.disabled = true;
+        paddockAdminApi("/api/admin/paddocks/requests/" + encodeURIComponent(id), { method: "PATCH", body: JSON.stringify({ status, comment }) })
+          .then((result) => {
+            if (result.statusChanged && !result.email?.sent && !result.email?.duplicate) {
+              showToast("Statut enregistré, mais e-mail non envoyé : " + (result.email?.error || "erreur inconnue"));
+            } else if (result.statusChanged) {
+              showToast("Statut enregistré et e-mail envoyé.");
+            } else {
+              showToast("Commentaire enregistré dans D1 production.");
+            }
+            return loadD1Paddocks();
+          })
+          .catch((error) => showToast(error.message))
+          .finally(() => { requestButton.disabled = false; });
+      }
+
+      const deleteRequestButton = event.target.closest("[data-delete-paddock-request]");
+      if (deleteRequestButton) {
+        const id=deleteRequestButton.dataset.deletePaddockRequest;
+        if(confirm("Supprimer définitivement cette demande ? Elle disparaîtra aussi chez l’utilisateur.")){
+          paddockAdminApi("/api/admin/paddocks/requests/"+encodeURIComponent(id),{method:"DELETE"})
+            .then(result=>{showToast(result.creditRestored?"Demande supprimée et unité restituée.":"Demande supprimée.");return loadD1Paddocks();})
+            .catch(error=>showToast(error.message));
+        }
       }
 
       const deleteRestrictionButton = event.target.closest("[data-delete-restriction]");
@@ -1654,6 +1753,10 @@
       document.getElementById("reservationSearch").value = "";
       renderReservations();
     });
+    document.getElementById("adminReservationForm").addEventListener("submit", createAdminReservation);
+    document.getElementById("adminReservationPaddock").addEventListener("change", updateAdminReservationDurations);
+    document.getElementById("adminReservationDate").addEventListener("change", updateAdminReservationSlots);
+    document.getElementById("adminReservationDuration").addEventListener("change", updateAdminReservationSlots);
     document.getElementById("hoursPaddock").addEventListener("change", renderHours);
     document.getElementById("restrictionDate").addEventListener("change", fillRestrictionForm);
     document.getElementById("createBlockBtn").addEventListener("click", createBlockage);
@@ -1661,9 +1764,16 @@
     document.getElementById("saveRestrictionBtn").addEventListener("click", saveRestriction);
 
     setSelectedDate(offsetDate(0));
+    document.getElementById("adminReservationDate").value = offsetDate(0);
+    document.getElementById("adminReservationDate").min = offsetDate(0);
+    updateAdminReservationDurations();
     refreshViews();
-    subscribeFirebaseReadOnly();
+    loadD1Paddocks();
+    window.addEventListener("pwa-data-changed", (event) => {
+      if (event.detail?.type === "paddocks" || event.detail?.type === "paddock-requests" || event.detail?.type === "all") loadD1Paddocks();
+    });
   </script>
+  <script src="assets/js/status-realtime.js?v=20260716-3"></script>
   <script src="assets/js/backstage-shell.js?v=20260716-1"></script>
 </body>
 </html>

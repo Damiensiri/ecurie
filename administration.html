@@ -2,9 +2,10 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Espaces — Backstage</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Espaces — Backstage production</title>
 <meta name="theme-color" content="#102b45">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="assets/css/administration.css?v=20260716-2">
 <link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260716-1">
 </head>
@@ -14,7 +15,7 @@
     <div class="admin-heading">
       <div class="admin-title-row">
         <h1 id="adminPageTitle">Espaces</h1>
-        <span class="environment">PRODUCTION · PUSH ACTIF</span>
+        <span class="environment">PRODUCTION</span>
       </div>
       <p id="adminPageSubtitle">Statuts et horaires propres aux espaces de la PWA.</p>
     </div>
@@ -51,7 +52,7 @@
       <div class="switches single-option">
         <label class="check"><input id="epingle" type="checkbox"> Épingler l’alerte</label>
       </div>
-      <p class="safety-note">Les données sont publiées immédiatement dans la PWA de production. « Envoyer » déclenche également le push.</p>
+      <p class="safety-note">Les données et les push de cette page restent isolés dans l’environnement production.</p>
       <div class="form-actions">
         <button id="publishBtn" type="submit" name="delivery" value="publish">Publier</button>
         <button id="sendBtn" class="send" type="submit" name="delivery" value="send">Envoyer</button>
@@ -151,7 +152,7 @@
 
   <section id="settingsPanel" class="admin-section" data-admin-section="settings" aria-labelledby="connectionTitle" hidden>
     <div class="panel connection-panel">
-      <h2 id="connectionTitle">Connexion au backend de production</h2>
+      <h2 id="connectionTitle">Connexion au backend production</h2>
       <p class="section-help">Ces réglages restent mémorisés uniquement sur cet appareil.</p>
       <label>Adresse de l’API
         <input id="apiUrl" type="url" inputmode="url" placeholder="https://…workers.dev">
@@ -165,18 +166,16 @@
     </div>
     <div class="panel connection-panel" aria-labelledby="pushSettingsTitle">
       <h2 id="pushSettingsTitle">Notifications du Backstage</h2>
-      <p class="section-help">Active les notifications Firebase du Backstage sur cet appareil.</p>
+      <p class="section-help">Recevez immédiatement les nouvelles réservations, annulations, demandes, commandes et inscriptions.</p>
       <button id="enablePushBtn" class="push-settings-button" type="button">Activer les notifications</button>
       <p id="pushSettingsStatus" class="status" role="status"></p>
     </div>
   </section>
 </main>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script src="assets/js/notification-format.js?v=20260716-2"></script>
 <script src="assets/js/administration.js?v=20260716-2"></script>
-<script src="assets/js/firebase-push-settings.js?v=20260716-2"></script>
+<script src="assets/js/backstage-push.js?v=20260716-2"></script>
 <script src="assets/js/status-realtime.js?v=20260716-2"></script>
 <script src="assets/js/backstage-shell.js?v=20260716-2"></script>
 </body>

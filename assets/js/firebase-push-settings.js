@@ -26,7 +26,7 @@
 
   async function enablePushNotifications(){
     if(FIREBASE_PUSH_READ_ONLY){
-      setState("Bêta en lecture seule : l’abonnement Firebase n’a pas été modifié.");
+      setState("Production en lecture seule : l’abonnement Firebase n’a pas été modifié.");
       return;
     }
     if(!window.firebase||!firebase.firestore||!firebase.messaging){

@@ -1,9 +1,16 @@
-# Backstage Écurie
+# Backstage bêta
 
-Interface de production publiée sur `backstage.damiensiri.com` et sur Firebase Hosting (`ecurie-paddock.web.app`).
+Interface unifiée en cours de construction pour l’Écurie Damien Siri.
 
-- Paddocks utilise Firebase en lecture et écriture.
-- Espaces, notifications, horaires et alertes utilisent le Worker Cloudflare et la base D1 de production.
-- Les fonctions Firebase envoient les notifications liées aux réservations.
+## Sécurité des environnements
 
-Vérification locale : `npm test`.
+- Les modules Espaces, Notifications, Horaires et Alertes utilisent exclusivement le Worker Cloudflare et la base D1 bêta.
+- Il n’existe pas de projet Firebase bêta. Le module Paddocks peut lire les données Firebase existantes pour valider son rendu, mais toutes ses écritures sont bloquées dans cette branche.
+- Ne jamais lancer un déploiement Firebase de production depuis ce dépôt sans validation explicite.
+- La publication GitHub Pages n’entraîne aucun déploiement Firebase.
+
+## Vérification
+
+```sh
+npm test
+```
