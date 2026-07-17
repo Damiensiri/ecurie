@@ -3,11 +3,14 @@
     ["Accueil","index.html","⌂"],
     ["Espaces","administration.html?section=spaces","🏇"],
     ["Paddocks","paddocks.html","🗓️"],
+    ["Liberté","liberte.html","🌿"],
+    ["À facturer","billing.html","💶"],
     ["Notifications","administration.html?section=notifications","🔔"],
     ["Horaires","administration.html?section=general","🕘"],
     ["Alertes","administration.html?section=home-alert","⚠️"],
     ["Utilisateurs","users.html","👤"],
     ["Commandes","orders.html","🧾"],
+    ["Thèmes","https://app.damiensiri.com/admin.html","🎨"],
     ["Paramètres","administration.html?section=settings","⚙️"]
   ];
   const button=document.createElement("button");

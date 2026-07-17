@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#090b0f">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Liberté — Backstage production</title>
+  <link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260716-2">
+  <link rel="stylesheet" href="assets/css/liberte.css?v=20260717-1">
+</head>
+<body class="liberte-page">
+  <main class="liberte-shell">
+    <header class="liberte-header"><span class="beta-pill">PRODUCTION · D1</span><h1>Liberté</h1><p>Planning des demandes de mise au paddock.</p></header>
+    <p id="liberteStatus" class="status" role="status"></p>
+
+    <section class="rules-card">
+      <h2>Règles du service</h2>
+      <p>Demandes possibles du lundi au samedi, à enregistrer au plus tard la veille avant 20 h. Les exceptions ci-dessous sont prioritaires.</p>
+      <p><strong>Facturation inchangée :</strong> au statut « Réalisé », une unité est débitée de la carte ou un 🌿 est ajouté à facturer.</p>
+    </section>
+
+    <div class="liberte-grid">
+      <section class="liberte-panel">
+        <h2>Créer une demande</h2>
+        <form id="liberteRequestForm" class="form-grid">
+          <label>Client<select id="liberteUser" required><option value="">Chargement…</option></select></label>
+          <label>Date<input id="liberteDate" type="date" required></label>
+          <button type="submit">Enregistrer et confirmer par e-mail</button>
+        </form>
+      </section>
+
+      <section class="liberte-panel">
+        <h2>Ajouter une exception</h2>
+        <form id="exceptionForm" class="form-grid">
+          <label>Date<input id="exceptionDate" type="date" required></label>
+          <label>Service<select id="exceptionOpen"><option value="1">Ouvert exceptionnellement</option><option value="0">Fermé exceptionnellement</option></select></label>
+          <label class="full">Information<input id="exceptionComment" maxlength="500" placeholder="Motif ou information interne/client"></label>
+          <button type="submit">Enregistrer l’exception</button>
+        </form>
+        <div id="exceptionList" class="compact-list"></div>
+      </section>
+    </div>
+
+    <section class="liberte-panel requests-panel">
+      <div class="panel-heading"><div><h2>Demandes</h2><p id="requestCount" class="muted"></p></div><button id="refreshLiberte" class="secondary" type="button">Actualiser</button></div>
+      <div class="filters"><input id="requestSearch" type="search" placeholder="Rechercher un client ou un e-mail"><select id="requestFilter"><option value="active">À traiter et à venir</option><option value="all">Toutes</option><option value="pending">En attente</option><option value="completed">Réalisées</option></select></div>
+      <div id="liberteRequestList" class="request-list"><p class="muted">Chargement…</p></div>
+    </section>
+  </main>
+  <script src="assets/js/liberte.js?v=20260717-1"></script>
+  <script src="assets/js/backstage-shell.js?v=20260717-1"></script>
+</body>
+</html>
+

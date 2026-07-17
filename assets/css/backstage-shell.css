@@ -28,6 +28,7 @@
 .module-copy small{color:var(--shell-muted);font-size:13px;line-height:1.4}
 .module-arrow{font-size:38px;color:#dce5ef}
 .module-spaces{--card-accent:#68e18f}.module-paddocks{--card-accent:#5b8dff}.module-notifications{--card-accent:#c68cff}.module-hours{--card-accent:#5bd4e8}.module-alerts{--card-accent:#f5c760}.module-users{--card-accent:#8490a0}
+.module-liberte{--card-accent:#74dc92}.module-billing{--card-accent:#f0b85b}.module-themes{--card-accent:#d68cff}
 .module-card.is-disabled{opacity:.62}
 .coming-soon{padding:5px 8px;border-radius:999px;background:#ffffff10;color:#cbd3df;font-size:10px;font-weight:800;white-space:nowrap}
 
