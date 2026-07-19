@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#090b0f">
   <link rel="manifest" href="manifest.webmanifest">
   <title>Backstage — Production</title>
-  <link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260716-1">
+  <link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260719-3">
 </head>
 <body class="backstage-home">
   <main class="home-shell">
@@ -17,32 +17,48 @@
       <p class="home-intro">Toutes les commandes de l’écurie, accessibles simplement depuis votre téléphone.</p>
     </header>
 
+    <section class="home-summary" aria-labelledby="summaryTitle">
+      <div class="home-summary-heading">
+        <div><p class="eyebrow">À traiter</p><h2 id="summaryTitle">En attente</h2></div>
+        <button id="summaryRefresh" type="button" aria-label="Actualiser le récapitulatif">↻</button>
+      </div>
+      <div class="home-summary-grid">
+        <a href="billing.html"><span aria-hidden="true">💶</span><strong id="summaryBilling">—</strong><small>À facturer</small></a>
+        <a href="orders.html"><span aria-hidden="true">🧾</span><strong id="summaryOrders">—</strong><small>Commandes</small></a>
+        <a href="liberte.html"><span aria-hidden="true">🌿</span><strong id="summaryRequests">—</strong><small>Demandes de mise</small></a>
+        <a href="users.html"><span aria-hidden="true">👤</span><strong id="summaryUsers">—</strong><small>Utilisateurs</small></a>
+      </div>
+      <p id="summaryStatus" class="home-summary-status" role="status">Chargement…</p>
+    </section>
+
     <section class="module-grid" aria-label="Modules du Backstage">
       <a class="module-card module-spaces" href="administration.html?section=spaces">
         <span class="module-icon" aria-hidden="true">🏇</span>
         <span class="module-copy"><strong>Espaces</strong><small>Carrière, manège et espaces extérieurs</small></span>
         <span class="module-arrow" aria-hidden="true">›</span>
       </a>
+      <a class="module-card module-planning" href="planning.html"><span class="module-icon" aria-hidden="true">🐴</span><span class="module-copy"><strong>Planning</strong><small>Chevaux, tâches et suivi de la semaine</small></span><span class="module-arrow" aria-hidden="true">›</span></a>
       <a class="module-card module-paddocks" href="paddocks.html">
         <span class="module-icon" aria-hidden="true">🗓️</span>
         <span class="module-copy"><strong>Paddocks</strong><small>Planning, réservations et blocages</small></span>
         <span class="module-arrow" aria-hidden="true">›</span>
       </a>
       <a class="module-card module-liberte" href="liberte.html"><span class="module-icon" aria-hidden="true">🌿</span><span class="module-copy"><strong>Liberté</strong><small>Demandes, planning et exceptions</small></span><span class="module-arrow" aria-hidden="true">›</span></a>
-      <a class="module-card module-billing" href="billing.html"><span class="module-icon" aria-hidden="true">💶</span><span class="module-copy"><strong>À facturer</strong><small>Tout ce qui reste à facturer, regroupé par client</small></span><span class="module-arrow" aria-hidden="true">›</span></a>
       <a class="module-card module-notifications" href="administration.html?section=notifications">
         <span class="module-icon" aria-hidden="true">🔔</span>
         <span class="module-copy"><strong>Notifications</strong><small>Publier une information dans la PWA</small></span>
         <span class="module-arrow" aria-hidden="true">›</span>
       </a>
-      <a class="module-card module-hours" href="administration.html?section=general">
-        <span class="module-icon" aria-hidden="true">🕘</span>
-        <span class="module-copy"><strong>Horaires</strong><small>Écuries et exceptions de dates</small></span>
-        <span class="module-arrow" aria-hidden="true">›</span>
-      </a>
+      <a class="module-card module-billing" href="billing.html"><span class="module-icon" aria-hidden="true">💶</span><span class="module-copy"><strong>À facturer</strong><small>Tout ce qui reste à facturer, regroupé par client</small></span><span class="module-arrow" aria-hidden="true">›</span></a>
       <a class="module-card module-alerts" href="administration.html?section=home-alert">
         <span class="module-icon" aria-hidden="true">⚠️</span>
         <span class="module-copy"><strong>Alertes</strong><small>Bandeau affiché sur l’accueil</small></span>
+        <span class="module-arrow" aria-hidden="true">›</span>
+      </a>
+      <a class="module-card module-orders" href="orders.html"><span class="module-icon" aria-hidden="true">🧾</span><span class="module-copy"><strong>Commandes</strong><small>Services, soins, laverie et facturation</small></span><span class="module-arrow" aria-hidden="true">›</span></a>
+      <a class="module-card module-hours" href="administration.html?section=general">
+        <span class="module-icon" aria-hidden="true">🕘</span>
+        <span class="module-copy"><strong>Horaires</strong><small>Écuries et exceptions de dates</small></span>
         <span class="module-arrow" aria-hidden="true">›</span>
       </a>
       <a class="module-card module-users" href="users.html">
@@ -50,10 +66,10 @@
         <span class="module-copy"><strong>Utilisateurs</strong><small>Créer et gérer les comptes de la production</small></span>
         <span class="module-arrow" aria-hidden="true">›</span>
       </a>
-      <a class="module-card module-orders" href="orders.html"><span class="module-icon" aria-hidden="true">🧾</span><span class="module-copy"><strong>Commandes</strong><small>Services, soins, laverie et facturation</small></span><span class="module-arrow" aria-hidden="true">›</span></a>
       <a class="module-card module-themes" href="https://app.damiensiri.com/admin.html"><span class="module-icon" aria-hidden="true">🎨</span><span class="module-copy"><strong>Thèmes</strong><small>Gérer les visuels et thèmes de l’application</small></span><span class="module-arrow" aria-hidden="true">›</span></a>
     </section>
   </main>
-  <script src="assets/js/backstage-shell.js?v=20260716-1"></script>
+  <script src="assets/js/home-summary.js?v=20260719-1"></script>
+  <script src="assets/js/backstage-shell.js?v=20260719-2"></script>
 </body>
 </html>

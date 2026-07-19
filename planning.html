@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta name="generator" content="HTML Tidy for Mac OS X (vers 31 October 2006 - Apple Inc. build 13462), see www.w3.org">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+    <meta name="theme-color" content="#090b0f">
+    <title>
+      Planning — Backstage production
+    </title>
+    <link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260719-1" type="text/css">
+    <link rel="stylesheet" href="assets/css/planning.css?v=20260719-2" type="text/css">
+    <link rel="stylesheet" href="assets/css/planning-enhancements.css?v=20260719-1" type="text/css">
+  </head>
+  <body>
+    <main class="planning-shell">
+      <header>
+        <span class="beta-pill">PRODUCTION · D1</span>
+        <h1>
+          Planning des chevaux
+        </h1>
+        <p>
+          Organisation hebdomadaire et suivi des tâches.
+        </p>
+      </header>
+      <p id="status" class="status" role="status"></p>
+      <section class="toolbar panel">
+        <button id="previousWeek" type="button">‹</button><label>Semaine du <input id="week" type="date"></label><button id="nextWeek" type="button">›</button><button id="duplicate" class="secondary" type="button">Dupliquer les chevaux vers la semaine suivante</button>
+      </section>
+      <section class="panel">
+        <h2>
+          Chevaux de la semaine
+        </h2>
+        <form id="horseForm" class="inline-form">
+          <input id="horseName" maxlength="80" placeholder="Nom du cheval" required=""><button>Ajouter</button>
+        </form>
+        <div id="horseList" class="chips"></div>
+      </section>
+      <section class="panel">
+        <div class="heading">
+          <div>
+            <h2>
+              Suivi de la semaine
+            </h2>
+            <p id="progress" class="muted"></p>
+            <p class="muted">
+              Utilisez le bouton + directement dans une case pour ajouter une ou plusieurs tâches.
+            </p>
+          </div><label>Afficher <select id="taskFilter"><option value="all">Toutes</option><option value="todo">À faire</option><option value="completed">Réalisées</option><option value="overdue">En retard</option><option value="requests">Demandes paddock</option></select></label><button id="refresh" class="secondary">Actualiser</button>
+        </div>
+        <div id="board" class="board"></div>
+      </section>
+      <section class="panel device">
+        <h2>
+          Tablette
+        </h2>
+        <p>
+          Le jeton créé ne permet que de lire et valider ce planning. La création d’un nouveau jeton désactive l’ancien.
+        </p><button id="createToken">Créer le jeton de cette tablette</button>
+        <div id="tokenResult"></div><a href="https://damiensiri.github.io/ecran/planning.html" target="_blank" rel="noopener">Ouvrir l’écran tablette</a>
+      </section>
+    </main>
+    <dialog id="taskDialog">
+      <form id="taskForm" class="task-form">
+        <div class="dialog-heading">
+          <div>
+            <h2>
+              Ajouter une tâche
+            </h2>
+            <p id="taskContext" class="muted"></p>
+          </div><button id="closeTaskDialog" class="secondary close-dialog" type="button">×</button>
+        </div><label>Cheval<select id="taskHorse" required="">
+          </select></label><fieldset id="taskDays" class="day-picker"><legend>Jours</legend></fieldset><label>Type<select id="taskType">
+          <option value="travail">
+            Travail
+          </option>
+          <option value="longe">
+            Longe
+          </option>
+          <option value="paddock">
+            Paddock
+          </option>
+          <option value="proprietaire">
+            Propriétaire
+          </option>
+          <option value="repos">
+            Repos
+          </option>
+          <option value="concours">
+            Concours
+          </option>
+          <option value="autre">
+            Autre
+          </option>
+        </select></label><label id="paddockField">Paddock<select id="taskPaddock"><option value="Maison">Maison</option><option value="Grande Voie">Grande Voie</option><option value="Beudot">Beudot</option></select></label><label id="startField">Début<input id="taskStart" type="time"></label><label id="endField">Fin<input id="taskEnd" type="time"></label><label class="wide">Description<input id="taskDescription" maxlength="300" placeholder="Facultative"></label><label class="wide">Demande de mise au paddock liée (facultatif)<select id="taskRequest">
+          <option value="">
+            Aucune
+          </option>
+        </select></label>
+        <div class="dialog-actions wide">
+          <button type="submit" value="close">Ajouter et fermer</button><button type="submit" value="again" class="secondary">Ajouter une autre tâche</button>
+        </div>
+      </form>
+    </dialog><script src="assets/js/planning.js?v=20260719-4" type="text/javascript">
+</script><script src="assets/js/backstage-shell.js?v=20260719-2" type="text/javascript">
+</script>
+  </body>
+</html>

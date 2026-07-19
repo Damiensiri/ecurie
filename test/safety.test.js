@@ -10,6 +10,9 @@ const shell=fs.readFileSync("assets/js/backstage-shell.js","utf8");
 const pushSettings=fs.readFileSync("assets/js/backstage-push.js","utf8");
 const users=fs.readFileSync("assets/js/users.js","utf8");
 const usersPage=fs.readFileSync("users.html","utf8");
+const home=fs.readFileSync("index.html","utf8");
+const homeSummary=fs.readFileSync("assets/js/home-summary.js","utf8");
+const stablePlanning=fs.readFileSync("assets/js/planning.js","utf8");
 
 test("le planning Backstage utilise uniquement Cloudflare D1 production",()=>{
   assert.match(paddocks,/ecurie-notifications-prod\.damiensiri-pro\.workers\.dev/);
@@ -67,4 +70,18 @@ test("les notifications Backstage utilisent OneSignal et l’API Cloudflare prod
   assert.match(pushSettings,/api\/admin\/push\/subscription/);
   assert.match(pushSettings,/ecurie-notifications-prod\.damiensiri-pro\.workers\.dev/);
   assert.match(pushSettings,/104b740c-3a7b-4e39-87b2-847d00f300fb/);
+});
+
+test("le nouveau planning utilise uniquement D1 production",()=>{
+  assert.match(home,/href="planning\.html"/);
+  assert.match(shell,/\["Planning","planning\.html"/);
+  assert.match(stablePlanning,/ecurie-notifications-prod\.damiensiri-pro\.workers\.dev/);
+  assert.doesNotMatch(stablePlanning,/notifications_beta|notifications-beta|bêta/i);
+});
+
+test("l’accueil récapitule uniquement les actions D1 à traiter",()=>{
+  for(const id of ["summaryBilling","summaryOrders","summaryRequests","summaryUsers"])assert.match(home,new RegExp(`id="${id}"`));
+  for(const endpoint of ["billing","orders","liberte","users"])assert.match(homeSummary,new RegExp(`api/admin/${endpoint}`));
+  assert.match(homeSummary,/ecurie-notifications-prod\.damiensiri-pro\.workers\.dev/);
+  assert.doesNotMatch(homeSummary,/planning|reservations|beta/i);
 });
