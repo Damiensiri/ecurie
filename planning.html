@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="assets/css/planning.css?v=20260719-2" type="text/css">
     <link rel="stylesheet" href="assets/css/planning-enhancements.css?v=20260719-1" type="text/css">
     <link rel="stylesheet" href="assets/css/planning-actions.css?v=20260719-1" type="text/css">
+    <link rel="stylesheet" href="assets/css/planning-responsive.css?v=20260719-1" type="text/css">
   </head>
   <body>
     <main class="planning-shell">
@@ -49,6 +50,7 @@
             </p>
           </div><label>Afficher <select id="taskFilter"><option value="all">Toutes</option><option value="todo">À faire</option><option value="completed">Réalisées</option><option value="overdue">En retard</option><option value="requests">Demandes paddock</option></select></label><button id="refresh" class="secondary">Actualiser</button>
         </div>
+        <nav id="mobileDayNav" class="mobile-day-nav" aria-label="Jour affiché"></nav>
         <div id="board" class="board"></div>
       </section>
       <section class="panel device">
@@ -102,7 +104,7 @@
           <button type="submit" value="close">Ajouter et fermer</button><button type="submit" value="again" class="secondary">Ajouter une autre tâche</button>
         </div>
       </form>
-    </dialog><script src="assets/js/planning.js?v=20260719-4" type="text/javascript">
+    </dialog><script src="assets/js/planning.js?v=20260719-5" type="text/javascript">
 </script><script src="assets/js/backstage-shell.js?v=20260719-2" type="text/javascript">
 </script>
   </body>
