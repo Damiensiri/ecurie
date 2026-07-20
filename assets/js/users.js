@@ -52,16 +52,17 @@
     try{renderDetails(await api(`/api/admin/users/${user.id}/details`));}catch(error){elements.modalBody.innerHTML=`<p class="status error">${escapeHTML(error.message)}</p>`;}
   }
   function renderDetails(data){
-    const user=data.user,card=data.card,usages=data.usages||[],orders=data.orders||[];
+    const user=data.user,card=data.card,usages=data.usages||[],orders=data.orders||[],cardUsages=usages.filter(item=>item.mode==="card"),invoiceUsages=usages.filter(item=>item.mode==="invoice");
     elements.modalBody.innerHTML=`
       <div class="detail-block"><h3>Compte</h3><p>${escapeHTML(user.email)}</p><p>Rôle : ${escapeHTML(user.role)} · Statut : ${escapeHTML(user.status)}</p><button id="deleteDetailUser" class="danger">Supprimer définitivement ce compte</button></div>
       <div class="detail-block"><h3>Carte paddock</h3>
         ${card?`<p><strong>${card.remaining} / ${card.total}</strong> mises restantes</p>`:'<p>Aucune carte active.</p>'}
         <div class="card-fields"><input id="detailCardRemaining" type="number" min="0" max="999" value="${card?.remaining??card?.total??10}" aria-label="Solde restant" title="Solde restant"><input id="detailCardTotal" type="number" min="1" max="999" value="${card?.total||10}" aria-label="Solde de base" title="Solde de base"><button id="saveDetailCard">${card?"Réinitialiser":"Créer la carte"}</button></div>
         ${card?'<button id="deleteDetailCard" class="secondary" style="margin-top:8px">Supprimer la carte</button>':''}
+        ${card?`<h4>Historique de la carte en cours</h4><div class="usage-list">${cardUsages.map(item=>`<div class="usage-row"><span>Carte débitée · ${formatDate(item.date)}</span><button class="danger" data-delete-usage="${item.id}">Annuler</button></div>`).join("")||'<p class="empty">Aucune mise débitée sur cette carte.</p>'}</div>`:""}
       </div>
-      <div class="detail-block"><h3>Consommations et facturation</h3><div class="usage-list">
-        ${usages.map(item=>`<div class="usage-row"><span class="${item.mode==="invoice"?"leaf":""}">${item.mode==="invoice"?"🌿 À facturer":"Carte débitée"} · ${formatDate(item.date)}</span><button class="danger" data-delete-usage="${item.id}">${item.mode==="invoice"?"Facturé · supprimer":"Annuler"}</button></div>`).join("")||'<p class="empty">Aucune consommation.</p>'}
+      <div class="detail-block"><h3>Mises à facturer</h3><div class="usage-list">
+        ${invoiceUsages.map(item=>`<div class="usage-row"><span class="leaf">🌿 À facturer · ${formatDate(item.date)}</span><button class="danger" data-delete-usage="${item.id}">Facturé · supprimer</button></div>`).join("")||'<p class="empty">Aucune mise à facturer.</p>'}
       </div></div>
       <div class="detail-block"><h3>Commandes à facturer</h3><p><strong>${Number(data.orderDue||0).toLocaleString("fr-FR",{maximumFractionDigits:2})} €</strong></p><div class="usage-list">
         ${orders.filter(order=>!order.billed&&!['refused','cancelled'].includes(order.status)).map(order=>`<div class="usage-row"><span>#${escapeHTML(order.publicId)} · ${order.items.map(item=>`${escapeHTML(item.name)} × ${item.quantity}`).join(', ')}</span><strong>${Number(order.total).toLocaleString("fr-FR",{maximumFractionDigits:2})} €</strong></div>`).join('')||'<p class="empty">Aucune commande à facturer.</p>'}
