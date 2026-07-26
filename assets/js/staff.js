@@ -73,13 +73,13 @@ function parseDirectEntry(value,employeeId,date){
   if(["conge","conges"].includes(normalized))return{employeeId,date,status:"leave"};
   if(normalized==="at"||normalized.includes("arret")||normalized.includes("maladie"))return{employeeId,date,status:"sick"};
   if(normalized.includes("absence"))return{employeeId,date,status:"absence"};
-  const compact=[...text.matchAll(/\b(\d{3,4})\s*[.\s]\s*(\d{3,4})\b/g)];
+  const compact=[...text.matchAll(/\b(\d{3,4})\s*[.,\s]\s*(\d{3,4})\b/g)];
   const written=[...text.matchAll(/(\d{1,2})(?:\s*[:hH]\s*(\d{1,2}))?\s*[-–—]\s*(\d{1,2})(?:\s*[:hH]\s*(\d{1,2}))?/g)];
   const rawRanges=compact.length?compact.map(match=>{
     const from=match[1].padStart(4,"0"),to=match[2].padStart(4,"0");
     return[from.slice(0,2),from.slice(2),to.slice(0,2),to.slice(2)];
   }):written.map(match=>[match[1],match[2]||"0",match[3],match[4]||"0"]);
-  if(!rawRanges.length||rawRanges.length>2)return{error:"Écrivez 0700.1200/1300.1700, CFA, Congés ou Arrêt maladie"};
+  if(!rawRanges.length||rawRanges.length>2)return{error:"Écrivez 0700,1200/1300,1700, CFA, Congés ou Arrêt maladie"};
   const ranges=rawRanges.map(parts=>{
     const start=`${String(Number(parts[0])).padStart(2,"0")}:${String(Number(parts[1])).padStart(2,"0")}`;
     const end=`${String(Number(parts[2])).padStart(2,"0")}:${String(Number(parts[3])).padStart(2,"0")}`;
@@ -250,7 +250,7 @@ function beginInlineEdit(cell){
   const employeeId=Number(cell.dataset.employee),date=cell.dataset.date;
   const shift=state.shifts.find(item=>item.employeeId===employeeId&&item.date===date);
   const input=document.createElement("input");input.className="inline-entry";input.type="text";
-  input.value=directText(shift);input.placeholder="0700.1200/1300.1700";
+  input.value=directText(shift);input.placeholder="0700,1200/1300,1700";
   cell.innerHTML="";cell.append(input);input.focus();input.select();
   let saving=false;
   let moveAfterSave=0;
