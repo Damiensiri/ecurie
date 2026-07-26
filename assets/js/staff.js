@@ -179,30 +179,30 @@ function renderMonth(){
     const monday=addDays(date,-((parseDate(date).getUTCDay()+6)%7));
     if(monday!==currentWeek){
       currentWeek=monday;
-      rows+=`<tr class="week-divider"><th colspan="${state.employees.length+1+(showGoogle?1:0)}">Semaine ${isoWeek(date)} · ${shortDate(monday)} au ${shortDate(addDays(monday,6))}</th></tr>`;
+      rows+=`<tr class="week-divider"><th colspan="${state.employees.length+1}">Semaine ${isoWeek(date)} · ${shortDate(monday)} au ${shortDate(addDays(monday,6))}</th></tr>`;
     }
+    const googleEvents=showGoogle?(googleMap.get(date)||[]):[];
     const cells=state.employees.map(employee=>{
       const shift=map.get(shiftKey(employee.id,date));const total=shiftMinutes(shift);
       return`<td class="month-cell status-${shift?.status||"empty"}${date===today?" today":""}" data-employee="${employee.id}" data-date="${date}">
         <button class="cell-details" type="button" data-details-employee="${employee.id}" data-details-date="${date}" aria-label="Ouvrir les détails">•••</button>
         <span class="day-main">${workText(shift)}</span>${total?`<span class="day-total">${duration(total)}</span>`:""}
         ${shift?.note?`<span class="day-note">${esc(shift.note)}</span>`:""}
+        ${googleEvents.length?`<div class="cell-google-events">${googleEvents.map(event=>`<div class="google-event">
+          <strong>${esc(googleTime(event))}</strong><span>${esc(event.title)}</span>${event.location?`<small>${esc(event.location)}</small>`:""}
+        </div>`).join("")}</div>`:""}
       </td>`;
     }).join("");
-    const googleEvents=googleMap.get(date)||[];
-    const googleCell=showGoogle?`<td class="google-column google-events">${googleEvents.map(event=>`<div class="google-event">
-      <strong>${esc(googleTime(event))}</strong><span>${esc(event.title)}</span>${event.location?`<small>${esc(event.location)}</small>`:""}
-    </div>`).join("")||'<span class="google-empty">—</span>'}</td>`:"";
-    rows+=`<tr><th class="date-cell">${rowDate(date)}</th>${cells}${googleCell}</tr>`;
+    rows+=`<tr><th class="date-cell">${rowDate(date)}</th>${cells}</tr>`;
     const nextDate=dates[index+1];const nextMonday=nextDate?addDays(nextDate,-((parseDate(nextDate).getUTCDay()+6)%7)):"";
     if(!nextDate||nextMonday!==monday){
       const totals=state.employees.map(employee=>`<td>${duration(weekEmployeeTotal(employee.id,monday))}</td>`).join("");
-      rows+=`<tr class="weekly-total"><th>Total semaine ${isoWeek(monday)}</th>${totals}${showGoogle?'<td class="google-column">—</td>':""}</tr>`;
+      rows+=`<tr class="weekly-total"><th>Total semaine ${isoWeek(monday)}</th>${totals}</tr>`;
     }
   });
   $("staffMonthGrid").innerHTML=`<article class="month-card"><div class="month-scroll">
-    <table class="month-table" style="min-width:${Math.max(760,190+state.employees.length*180+(showGoogle?210:0))}px">
-      <thead><tr><th>Date</th>${state.employees.map(employee=>`<th style="--employee-color:${employee.color}">${esc(employee.name)}</th>`).join("")}${showGoogle?'<th class="google-column">📅 Mon agenda</th>':""}</tr></thead>
+    <table class="month-table" style="min-width:${Math.max(760,190+state.employees.length*180)}px">
+      <thead><tr><th>Date</th>${state.employees.map(employee=>`<th style="--employee-color:${employee.color}">${esc(employee.name)}</th>`).join("")}</tr></thead>
       <tbody>${rows}</tbody>
     </table></div></article>`;
   document.querySelectorAll(".month-cell").forEach(cell=>cell.onclick=event=>{if(!event.target.closest(".cell-details"))beginInlineEdit(cell)});

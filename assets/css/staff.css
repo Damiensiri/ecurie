@@ -79,6 +79,8 @@ label{display:grid;gap:6px;color:#cbd5e1;font-size:.82rem;font-weight:750}
 .cell-details:hover{background:#ffffff14;color:#fff}.inline-entry{width:100%;min-height:38px;padding:6px 7px;border:2px solid #5ee08c;border-radius:8px;background:#07110c;color:#fff;font-size:.76rem;font-weight:800}
 .google-events{padding:4px;background:#101d2e;vertical-align:top}.google-event{display:grid;gap:1px;margin:2px;padding:5px 6px;border-left:3px solid #6fa6ff;border-radius:6px;background:#3977d322;color:#fff;font-size:.67rem}
 .google-event strong{color:#8eb7ff;font-size:.62rem}.google-event small{overflow:hidden;color:#9fb0c3;text-overflow:ellipsis;white-space:nowrap}.google-empty{display:block;padding:10px;color:#526176;text-align:center}
+.cell-google-events{clear:both;display:grid;gap:2px;margin-top:6px;padding-top:4px;border-top:1px solid #6fa6ff38}.cell-google-events .google-event{margin:0;padding:3px 5px;font-size:.61rem}.cell-google-events .google-event strong{font-size:.58rem}
+.month-table thead th:last-child{width:auto}
 .google-overview-name{border-left-color:#6fa6ff!important;color:#b8ceff}.google-overview-row .google-events{height:58px}
 .rest-label{color:#718092;font-weight:650}.all-total{padding:7px;text-align:center;background:#152131;color:#b9c6d5;font-size:.72rem;font-weight:800}
 .month-table tfoot th,.month-table tfoot td{position:sticky;bottom:0;z-index:2;padding:9px 7px;background:#263951;color:#fff;text-align:center;font-size:.78rem;font-weight:900}
