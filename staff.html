@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#090b0f">
+  <title>Planning salariés — Backstage</title>
+  <link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260726-1">
+  <link rel="stylesheet" href="assets/css/staff.css?v=20260726-9">
+</head>
+<body>
+  <main class="staff-shell">
+    <header class="staff-header">
+      <span class="beta-pill">PRODUCTION · D1</span>
+      <p class="eyebrow">Organisation de l’équipe</p>
+      <h1>Planning mensuel des salariés</h1>
+      <p id="printTitle" class="print-title"></p>
+      <p>Cliquez dans une case, écrivez par exemple 0700.1200/1300.1700, puis Entrée pour passer au jour suivant. Le copier-coller fonctionne comme dans Excel.</p>
+    </header>
+
+    <p id="staffStatus" class="staff-status" role="status"></p>
+
+    <nav class="staff-tabs" aria-label="Sections du planning">
+      <button class="staff-tab active" type="button" data-section="planning">Planning</button>
+      <button class="staff-tab" type="button" data-section="settings">Paramètres</button>
+    </nav>
+
+    <section id="planningSection">
+    <section class="staff-panel staff-toolbar">
+      <button id="previousMonth" type="button" aria-label="Mois précédent">‹</button>
+      <label>Mois <input id="staffMonth" type="month"></label>
+      <button id="nextMonth" type="button" aria-label="Mois suivant">›</button>
+      <button id="refreshStaff" class="secondary" type="button">Actualiser</button>
+      <label class="print-employee">Imprimer pour
+        <select id="printEmployee"><option value="">Tous les salariés</option></select>
+      </label>
+      <button id="exportStaffPdf" class="export" type="button">Imprimer / partager en PDF</button>
+    </section>
+
+    <section class="staff-panel copy-panel">
+      <div>
+        <p class="eyebrow">Copier-coller</p>
+        <h2>Reprendre les horaires d’une semaine</h2>
+        <p class="staff-help">La semaine de destination sera remplacée pour toute l’équipe.</p>
+      </div>
+      <label>Semaine source<select id="copySourceWeek"></select></label>
+      <span class="copy-arrow">→</span>
+      <label>Semaine de destination<select id="copyTargetWeek"></select></label>
+      <button id="copyWeek" type="button">Copier les heures</button>
+    </section>
+
+    <section class="staff-panel copy-panel month-copy-panel">
+      <div>
+        <p class="eyebrow">Copier-coller mensuel</p>
+        <h2>Reprendre les horaires d’un mois</h2>
+        <p class="staff-help">Les journées du mois de destination seront remplacées pour toute l’équipe.</p>
+      </div>
+      <label>Mois source<input id="copySourceMonth" type="month"></label>
+      <span class="copy-arrow">→</span>
+      <label>Mois de destination<input id="copyTargetMonth" type="month"></label>
+      <button id="copyMonth" type="button">Copier le mois</button>
+    </section>
+
+    <nav class="view-tabs" aria-label="Vues du planning">
+      <button class="view-tab active" type="button" data-view="entry">Saisie quotidienne</button>
+      <button class="view-tab" type="button" data-view="overview">Vue mensuelle</button>
+    </nav>
+
+    <section id="staffMonthGrid" class="staff-month-grid" aria-live="polite"></section>
+    <section id="staffOverviewGrid" class="staff-weeks" aria-live="polite" hidden></section>
+    </section>
+
+    <section id="settingsSection" hidden>
+    <section class="staff-panel employee-panel">
+      <div class="panel-heading">
+        <div><p class="eyebrow">Équipe</p><h2>Salariés actifs</h2></div>
+        <button id="toggleEmployeeForm" class="secondary" type="button">Ajouter</button>
+      </div>
+      <form id="employeeForm" class="employee-form" hidden>
+        <label>Nom<input id="employeeName" maxlength="80" required placeholder="Prénom ou nom"></label>
+        <label>Couleur<input id="employeeColor" type="color" value="#F27D2C"></label>
+        <button type="submit">Ajouter le salarié</button>
+      </form>
+      <div id="employeeList" class="employee-list"></div>
+      <p class="staff-help">Ajoutez autant de salariés que nécessaire. Touchez un nom pour le modifier ou × pour le supprimer avec ses heures.</p>
+    </section>
+
+    <section class="staff-panel google-panel">
+      <div>
+        <p class="eyebrow">Votre organisation</p>
+        <h2>Mon calendrier</h2>
+        <p class="staff-help">Le calendrier public iCal est lu automatiquement en lecture seule. Il reste visible uniquement dans Backstage et est toujours exclu du PDF des salariés.</p>
+      </div>
+      <p id="googleConfiguredMessage" class="google-message">Le calendrier iCal public n’est pas configuré dans Cloudflare bêta.</p>
+      <div id="googleConnected" class="google-connected" hidden>
+        <div><strong id="googleCalendarName">Calendrier Damien Siri</strong><span id="googleEventCount"></span></div>
+        <label class="google-switch"><input id="googleToggle" type="checkbox" checked> Afficher dans le planning</label>
+      </div>
+    </section>
+    </section>
+  </main>
+
+  <dialog id="shiftDialog">
+    <form id="shiftForm" class="shift-form">
+      <div class="dialog-heading">
+        <div><p class="eyebrow" id="shiftEmployee"></p><h2 id="shiftDate">Journée</h2></div>
+        <button id="closeShiftDialog" class="secondary close-dialog" type="button">×</button>
+      </div>
+      <input id="shiftEmployeeId" type="hidden">
+      <input id="shiftIsoDate" type="hidden">
+      <label class="wide">Type de journée
+        <select id="shiftType">
+          <option value="work">Travail</option>
+          <option value="cfa">CFA — 7h</option>
+          <option value="rest">Repos</option>
+          <option value="leave">Congés</option>
+          <option value="sick">Arrêt maladie</option>
+          <option value="absence">Absence</option>
+        </select>
+      </label>
+      <fieldset id="shiftHours" class="shift-hours wide">
+        <legend>Horaires</legend>
+        <label>Matin — début<input id="morningStart" type="time"></label>
+        <label>Matin — fin<input id="morningEnd" type="time"></label>
+        <label>Après-midi — début<input id="afternoonStart" type="time"></label>
+        <label>Après-midi — fin<input id="afternoonEnd" type="time"></label>
+      </fieldset>
+      <fieldset id="shiftRange" class="shift-range wide" hidden>
+        <legend>Période complète</legend>
+        <label>Date de début<input id="shiftRangeStart" type="date"></label>
+        <label>Date de fin<input id="shiftRangeEnd" type="date"></label>
+        <p>Chaque journée de cette période sera enregistrée automatiquement.</p>
+      </fieldset>
+      <label class="wide">Note<input id="shiftNote" maxlength="200" placeholder="Facultative"></label>
+      <div class="shift-total wide">Total de la journée : <strong id="shiftTotal">0h00</strong></div>
+      <div class="dialog-actions wide">
+        <button type="submit">Enregistrer</button>
+        <button id="deleteShift" class="danger" type="button">Effacer la journée</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="assets/js/staff.js?v=20260726-13"></script>
+  <script src="assets/js/backstage-shell.js?v=20260726-4"></script>
+</body>
+</html>

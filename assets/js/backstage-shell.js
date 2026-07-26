@@ -10,6 +10,7 @@
     ["Alertes","administration.html?section=home-alert","⚠️"],
     ["Commandes","orders.html","🧾"],
     ["Horaires","administration.html?section=general","🕘"],
+    ["Planning salariés","staff.html","👥"],
     ["Utilisateurs","users.html","👤"],
     ["Thèmes","https://app.damiensiri.com/admin.html","🎨"],
     ["Paramètres","administration.html?section=settings","⚙️"]

@@ -13,6 +13,9 @@ const usersPage=fs.readFileSync("users.html","utf8");
 const home=fs.readFileSync("index.html","utf8");
 const homeSummary=fs.readFileSync("assets/js/home-summary.js","utf8");
 const stablePlanning=fs.readFileSync("assets/js/planning.js","utf8");
+const staffPage=fs.readFileSync("staff.html","utf8");
+const staffScript=fs.readFileSync("assets/js/staff.js","utf8");
+const staffStyles=fs.readFileSync("assets/css/staff.css","utf8");
 
 test("le planning Backstage utilise uniquement Cloudflare D1 production",()=>{
   assert.match(paddocks,/ecurie-notifications-prod\.damiensiri-pro\.workers\.dev/);
@@ -77,6 +80,19 @@ test("le nouveau planning utilise uniquement D1 production",()=>{
   assert.match(shell,/\["Planning","planning\.html"/);
   assert.match(stablePlanning,/ecurie-notifications-prod\.damiensiri-pro\.workers\.dev/);
   assert.doesNotMatch(stablePlanning,/notifications_beta|notifications-beta|bêta/i);
+});
+
+test("le planning salariés est complet et isolé en production",()=>{
+  assert.match(home,/href="staff\.html"/);
+  assert.match(shell,/\["Planning salariés","staff\.html"/);
+  assert.ok(shell.indexOf('["Planning salariés"')>shell.indexOf('["Horaires"'));
+  assert.ok(shell.indexOf('["Planning salariés"')<shell.indexOf('["Utilisateurs"'));
+  assert.match(staffPage,/PRODUCTION · D1/);
+  assert.match(staffPage,/id="printEmployee"/);
+  assert.match(staffScript,/ecurie-notifications-prod\.damiensiri-pro\.workers\.dev/);
+  assert.match(staffScript,/\/api\/admin\/staff-planning\/copy-month/);
+  assert.doesNotMatch(staffScript,/notifications_beta|notifications-beta|bêta/i);
+  assert.match(staffStyles,/print-color-adjust:exact!important/);
 });
 
 test("l’accueil récapitule uniquement les actions D1 à traiter",()=>{
