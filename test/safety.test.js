@@ -91,6 +91,10 @@ test("le planning salariés est complet et isolé en production",()=>{
   assert.match(staffPage,/id="printEmployee"/);
   assert.match(staffScript,/ecurie-notifications-prod\.damiensiri-pro\.workers\.dev/);
   assert.match(staffScript,/\/api\/admin\/staff-planning\/copy-month/);
+  assert.match(staffScript,/normalized==="amdel"\|\|normalized==="pmdel"/);
+  assert.match(staffScript,/normalized==="del"/);
+  assert.match(staffScript,/function undoLastChange/);
+  assert.match(staffScript,/Dernière modification annulée/);
   assert.doesNotMatch(staffScript,/notifications_beta|notifications-beta|bêta/i);
   assert.match(staffStyles,/print-color-adjust:exact!important/);
 });

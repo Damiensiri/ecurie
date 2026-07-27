@@ -5,6 +5,8 @@ const TOKEN=localStorage.getItem("notifications_prod_admin_token")||"";
 const TYPES={work:"Travail",cfa:"CFA",rest:"Repos",leave:"Congés",sick:"Arrêt maladie",absence:"Absence"};
 const $=id=>document.getElementById(id);
 let state={employees:[],shifts:[],range:null,month:"",google:{configured:false,connected:false,events:[],visible:true}};
+const undoStack=[];
+let undoing=false;
 
 function esc(value){return String(value??"").replace(/[&<>'"]/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]))}
 function setStatus(message,type=""){$("staffStatus").textContent=message;$("staffStatus").className="staff-status "+type}
@@ -31,6 +33,39 @@ function shiftMinutes(shift){
 function duration(value){const total=Math.max(0,Number(value)||0);return`${Math.floor(total/60)}h${String(total%60).padStart(2,"0")}`}
 function shiftKey(employeeId,date){return`${employeeId}:${date}`}
 function shiftMap(){return new Map(state.shifts.map(shift=>[shiftKey(shift.employeeId,shift.date),shift]))}
+function shiftSnapshot(shift,employeeId=shift?.employeeId,date=shift?.date){
+  if(!shift)return null;
+  return{employeeId:Number(employeeId),date,status:shift.status||"rest",
+    morningStart:shift.morningStart||"",morningEnd:shift.morningEnd||"",
+    afternoonStart:shift.afternoonStart||"",afternoonEnd:shift.afternoonEnd||"",note:shift.note||""};
+}
+function sameShift(left,right){return JSON.stringify(left)===JSON.stringify(right)}
+function rememberChange(employeeId,date,before,after){
+  undoStack.push({employeeId,date,before:shiftSnapshot(before,employeeId,date),after:shiftSnapshot(after,employeeId,date)});
+  if(undoStack.length>30)undoStack.shift();
+}
+async function undoLastChange(){
+  if(undoing)return;
+  const change=undoStack.at(-1);
+  if(!change){setStatus("Aucune modification à annuler.","error");return}
+  undoing=true;
+  try{
+    const planning=await api("/api/admin/staff-planning?month="+encodeURIComponent(change.date.slice(0,7)));
+    const current=planning.shifts.find(item=>item.employeeId===change.employeeId&&item.date===change.date);
+    if(!sameShift(shiftSnapshot(current,change.employeeId,change.date),change.after)){
+      setStatus("Annulation impossible : cette journée a été modifiée depuis.","error");return;
+    }
+    if(change.before){
+      await api("/api/admin/staff-planning/shifts",{method:"PUT",body:JSON.stringify(change.before)});
+    }else{
+      await api(`/api/admin/staff-planning/shifts/${change.employeeId}/${change.date}`,{method:"DELETE"});
+    }
+    undoStack.pop();
+    await load(true);
+    setStatus("Dernière modification annulée.","success");
+  }catch(error){setStatus(error.message,"error")}
+  finally{undoing=false}
+}
 function isoWeek(value){
   const date=parseDate(value);const day=(date.getUTCDay()+6)%7;date.setUTCDate(date.getUTCDate()-day+3);
   const firstThursday=new Date(Date.UTC(date.getUTCFullYear(),0,4));const firstDay=(firstThursday.getUTCDay()+6)%7;
@@ -65,16 +100,27 @@ function directText(shift){
   return ranges.join(" / ");
 }
 function normalizeWord(value){return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim()}
-function parseDirectEntry(value,employeeId,date){
+function parseDirectEntry(value,employeeId,date,currentShift=null){
   const text=String(value||"").trim();const normalized=normalizeWord(text);
   if(!text)return{empty:true};
+  if(normalized==="del")return{empty:true};
+  if(normalized==="amdel"||normalized==="pmdel"){
+    if(currentShift?.status!=="work")return{empty:true};
+    const payload={employeeId,date,status:"work",morningStart:currentShift.morningStart||"",morningEnd:currentShift.morningEnd||"",
+      afternoonStart:currentShift.afternoonStart||"",afternoonEnd:currentShift.afternoonEnd||"",note:currentShift.note||""};
+    if(normalized==="amdel"){payload.morningStart="";payload.morningEnd=""}
+    else{payload.afternoonStart="";payload.afternoonEnd=""}
+    if(!payload.morningStart&&!payload.afternoonStart)return{empty:true};
+    return payload;
+  }
   if(["repos","repo"].includes(normalized))return{employeeId,date,status:"rest"};
   if(normalized==="cfa")return{employeeId,date,status:"cfa"};
   if(["conge","conges"].includes(normalized))return{employeeId,date,status:"leave"};
   if(normalized==="at"||normalized.includes("arret")||normalized.includes("maladie"))return{employeeId,date,status:"sick"};
   if(normalized.includes("absence"))return{employeeId,date,status:"absence"};
-  const compact=[...text.matchAll(/\b(\d{3,4})\s*[.,\s]\s*(\d{3,4})\b/g)];
-  const written=[...text.matchAll(/(\d{1,2})(?:\s*[:hH]\s*(\d{1,2}))?\s*[-–—]\s*(\d{1,2})(?:\s*[:hH]\s*(\d{1,2}))?/g)];
+  const clockText=text.replace(/\b(\d{1,2})[.,](\d{2})\b/g,"$1$2");
+  const compact=[...clockText.matchAll(/\b(\d{3,4})\s*[.,\s]\s*(\d{3,4})\b/g)];
+  const written=[...clockText.matchAll(/(\d{1,2})(?:\s*[:hH]\s*(\d{1,2}))?\s*[-–—]\s*(\d{1,2})(?:\s*[:hH]\s*(\d{1,2}))?/g)];
   const rawRanges=compact.length?compact.map(match=>{
     const from=match[1].padStart(4,"0"),to=match[2].padStart(4,"0");
     return[from.slice(0,2),from.slice(2),to.slice(0,2),to.slice(2)];
@@ -90,9 +136,15 @@ function parseDirectEntry(value,employeeId,date){
   const payload={employeeId,date,status:"work",morningStart:"",morningEnd:"",afternoonStart:"",afternoonEnd:"",note:""};
   if(ranges.length===1&&Number(ranges[0].start.slice(0,2))>=13){
     payload.afternoonStart=ranges[0].start;payload.afternoonEnd=ranges[0].end;
+    if(currentShift?.status==="work"){
+      payload.morningStart=currentShift.morningStart||"";payload.morningEnd=currentShift.morningEnd||"";
+    }
   }else{
     payload.morningStart=ranges[0].start;payload.morningEnd=ranges[0].end;
     if(ranges[1]){payload.afternoonStart=ranges[1].start;payload.afternoonEnd=ranges[1].end}
+    else if(currentShift?.status==="work"){
+      payload.afternoonStart=currentShift.afternoonStart||"";payload.afternoonEnd=currentShift.afternoonEnd||"";
+    }
   }
   return payload;
 }
@@ -250,19 +302,23 @@ function beginInlineEdit(cell){
   const employeeId=Number(cell.dataset.employee),date=cell.dataset.date;
   const shift=state.shifts.find(item=>item.employeeId===employeeId&&item.date===date);
   const input=document.createElement("input");input.className="inline-entry";input.type="text";
-  input.value=directText(shift);input.placeholder="0700,1200/1300,1700";
-  cell.innerHTML="";cell.append(input);input.focus();input.select();
+  const progressive=shift?.status==="work";
+  input.value=progressive?"":directText(shift);
+  input.placeholder=progressive?"Horaire, AMDEL, PMDEL ou DEL":"0700,1200/1300,1700";
+  cell.innerHTML="";cell.append(input);input.focus();if(!progressive)input.select();
   let saving=false;
   let moveAfterSave=0;
   const save=async()=>{
     if(saving)return;saving=true;
-    const payload=parseDirectEntry(input.value,employeeId,date);
+    if(progressive&&!input.value.trim()){renderMonth();return}
+    const payload=parseDirectEntry(input.value,employeeId,date,shift);
     if(payload.error){saving=false;setStatus(payload.error,"error");input.focus();input.select();return}
     if(!payload.empty)payload.note=shift?.note||"";
     try{
       if(payload.empty){
         if(shift)await api(`/api/admin/staff-planning/shifts/${employeeId}/${date}`,{method:"DELETE"});
       }else await api("/api/admin/staff-planning/shifts",{method:"PUT",body:JSON.stringify(payload)});
+      if(shift||!payload.empty)rememberChange(employeeId,date,shift,payload.empty?null:payload);
       await load(true);setStatus(payload.empty?"Journée en repos.":"Case enregistrée.","success");
       if(moveAfterSave){
         const nextDate=addDays(date,moveAfterSave);
@@ -273,7 +329,7 @@ function beginInlineEdit(cell){
     }catch(error){saving=false;setStatus(error.message,"error");renderMonth()}
   };
   input.onkeydown=event=>{
-    if(event.key==="Enter"){event.preventDefault();moveAfterSave=event.shiftKey?-1:1;input.blur()}
+    if(event.key==="Enter"){event.preventDefault();moveAfterSave=event.shiftKey?-1:1;void save()}
     if(event.key==="Escape"){event.preventDefault();renderMonth()}
   };
   input.onblur=save;
@@ -342,6 +398,13 @@ window.addEventListener("afterprint",()=>{
   document.querySelectorAll(".print-excluded").forEach(row=>row.classList.remove("print-excluded"));
   $("printTitle").textContent="";
   delete document.body.dataset.printEmployee;
+});
+document.addEventListener("keydown",event=>{
+  if(!(event.metaKey||event.ctrlKey)||event.altKey||event.shiftKey||event.key.toLowerCase()!=="z")return;
+  const inline=document.activeElement?.classList?.contains("inline-entry")?document.activeElement:null;
+  if(inline?.value.trim())return;
+  event.preventDefault();
+  void undoLastChange();
 });
 document.querySelectorAll("[data-section]").forEach(button=>button.onclick=()=>selectSection(button.dataset.section));
 document.querySelectorAll("[data-view]").forEach(button=>button.onclick=()=>selectView(button.dataset.view));
