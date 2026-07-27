@@ -95,6 +95,10 @@ test("le planning salariés est complet et isolé en production",()=>{
   assert.match(staffScript,/normalized==="del"/);
   assert.match(staffScript,/function undoLastChange/);
   assert.match(staffScript,/Dernière modification annulée/);
+  assert.match(staffPage,/id="refreshGoogleCalendar"/);
+  assert.match(staffScript,/refresh=1/);
+  assert.match(staffScript,/function googleWeekHtml/);
+  assert.match(staffScript,/grid-row:\$\{row\}/);
   assert.doesNotMatch(staffScript,/notifications_beta|notifications-beta|bêta/i);
   assert.match(staffStyles,/print-color-adjust:exact!important/);
 });

@@ -177,6 +177,44 @@ function googleTime(event){
   const end=new Intl.DateTimeFormat("fr-FR",options).format(new Date(event.end));
   return`${start}–${end}`;
 }
+function calendarColor(event){
+  return/^#[0-9a-f]{6}$/i.test(event.calendarColor||"")?event.calendarColor:"#6FA6FF";
+}
+function googleEventHtml(event,extraClass=""){
+  return`<div class="google-event ${extraClass}" style="--calendar-color:${calendarColor(event)}" title="${esc(event.calendarName||"Calendrier")}">
+    <strong>${esc(googleTime(event))}</strong><span>${esc(event.title)}</span>${event.location?`<small>${esc(event.location)}</small>`:""}
+  </div>`;
+}
+function dayDistance(from,to){return Math.round((parseDate(to)-parseDate(from))/86400000)}
+function googleWeekHtml(days){
+  const first=days[0],last=days[6];
+  const events=(state.google.events||[]).filter(event=>{
+    const start=String(event.start||event.date||"").slice(0,10);
+    let end=String(event.end||start).slice(0,10);
+    if(event.allDay&&end>start)end=addDays(end,-1);
+    return start<=last&&end>=first;
+  });
+  if(!events.length)return'<span class="google-empty">—</span>';
+  const occupied=[];
+  const items=events.map(event=>{
+    const eventStart=String(event.start||event.date||"").slice(0,10);
+    let eventEnd=String(event.end||eventStart).slice(0,10);
+    if(event.allDay&&eventEnd>eventStart)eventEnd=addDays(eventEnd,-1);
+    const start=eventStart<first?first:eventStart;
+    const end=eventEnd>last?last:eventEnd;
+    const column=dayDistance(first,start)+1;
+    const span=Math.max(1,dayDistance(start,end)+1);
+    let row=0;
+    while(occupied[row]?.some(day=>day>=column&&day<column+span))row++;
+    if(!occupied[row])occupied[row]=[];
+    for(let day=column;day<column+span;day++)occupied[row].push(day);
+    return{event,eventStart,eventEnd,column,span,row:row+1};
+  });
+  return`<div class="google-week-grid">${items.map(({event,eventStart,eventEnd,column,span,row})=>
+    `<div class="google-event google-week-event" style="--calendar-color:${calendarColor(event)};grid-column:${column}/span ${span};grid-row:${row}"
+      title="${esc(event.calendarName||"Calendrier")}"><strong>${span>1?`${shortDate(eventStart)} → ${shortDate(eventEnd)}`:esc(googleTime(event))}</strong>
+      <span>${esc(event.title)}</span>${event.location?`<small>${esc(event.location)}</small>`:""}</div>`).join("")}</div>`;
+}
 function renderGooglePanel(){
   const google=state.google;
   $("googleConfiguredMessage").hidden=google.configured;
@@ -185,18 +223,20 @@ function renderGooglePanel(){
   $("googleEventCount").textContent=`${google.events?.length||0} événement(s) ce mois`;
   $("googleToggle").checked=google.visible;
 }
-async function loadGoogleCalendar(){
+async function loadGoogleCalendar(force=false){
   const visible=state.google.visible;
   try{
     const status=await api("/api/admin/google-calendar/status");
     state.google={...status,events:[],visible};
     if(status.connected){
-      const events=await api("/api/admin/google-calendar/events?month="+encodeURIComponent(state.month));
+      const events=await api("/api/admin/google-calendar/events?month="+encodeURIComponent(state.month)+
+        (force?"&refresh=1&_="+Date.now():""));
       state.google={...state.google,...events,visible};
     }
   }catch(error){
     state.google={...state.google,events:[],visible,error:error.message};
     setStatus(error.message,"error");
+    if(force)throw error;
   }
   renderGooglePanel();
 }
@@ -240,9 +280,7 @@ function renderMonth(){
         <button class="cell-details" type="button" data-details-employee="${employee.id}" data-details-date="${date}" aria-label="Ouvrir les détails">•••</button>
         <span class="day-main">${workText(shift)}</span>${total?`<span class="day-total">${duration(total)}</span>`:""}
         ${shift?.note?`<span class="day-note">${esc(shift.note)}</span>`:""}
-        ${googleEvents.length?`<div class="cell-google-events">${googleEvents.map(event=>`<div class="google-event">
-          <strong>${esc(googleTime(event))}</strong><span>${esc(event.title)}</span>${event.location?`<small>${esc(event.location)}</small>`:""}
-        </div>`).join("")}</div>`:""}
+        ${googleEvents.length?`<div class="cell-google-events">${googleEvents.map(event=>googleEventHtml(event)).join("")}</div>`:""}
       </td>`;
     }).join("");
     rows+=`<tr><th class="date-cell">${rowDate(date)}</th>${cells}</tr>`;
@@ -281,9 +319,7 @@ function renderOverview(map,today){
         <td class="week-total">${duration(weekEmployeeTotal(employee.id,monday))}</td></tr>`;
     }).join("");
     const calendarRow=showGoogle?`<tr class="google-overview-row"><td class="employee-name google-overview-name">📅 Agendas Google</td>
-      ${days.map(date=>`<td class="google-events${date.startsWith(state.month)?"":" outside-month"}">${(googleMap.get(date)||[]).map(event=>`<div class="google-event">
-        <strong>${esc(googleTime(event))}</strong><span>${esc(event.title)}</span>${event.location?`<small>${esc(event.location)}</small>`:""}
-      </div>`).join("")||'<span class="google-empty">—</span>'}</td>`).join("")}<td class="week-total">—</td></tr>`:"";
+      <td class="google-events google-week-events" colspan="7">${googleWeekHtml(days)}</td><td class="week-total">—</td></tr>`:"";
     return`<article class="week-card"><header class="week-heading"><h2>Semaine ${isoWeek(monday)}</h2>
       <span>${shortDate(monday)} au ${shortDate(days[6])}</span></header><div class="week-scroll">
       <table class="week-table"><thead><tr><th>Salarié</th>${head}<th>Total</th></tr></thead>
@@ -409,6 +445,12 @@ document.addEventListener("keydown",event=>{
 document.querySelectorAll("[data-section]").forEach(button=>button.onclick=()=>selectSection(button.dataset.section));
 document.querySelectorAll("[data-view]").forEach(button=>button.onclick=()=>selectView(button.dataset.view));
 $("googleToggle").onchange=()=>{state.google.visible=$("googleToggle").checked;renderMonth();renderGooglePanel()};
+$("refreshGoogleCalendar").onclick=async()=>{
+  const button=$("refreshGoogleCalendar");button.disabled=true;setStatus("Synchronisation Google Agenda…");
+  try{await loadGoogleCalendar(true);renderMonth();setStatus("Google Agenda synchronisé à l’instant.","success")}
+  catch(error){setStatus(error.message,"error")}
+  finally{button.disabled=false}
+};
 $("copyWeek").onclick=async()=>{
   const sourceStart=$("copySourceWeek").value,targetStart=$("copyTargetWeek").value;
   if(sourceStart===targetStart){setStatus("Choisissez deux semaines différentes.","error");return}
