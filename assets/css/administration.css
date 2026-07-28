@@ -131,3 +131,92 @@ button.compact{width:auto;padding:8px 10px;font-size:11px}
   .quick-options{grid-template-columns:1fr}
   .schedule-row{grid-template-columns:82px 1fr 1fr}
 }
+
+/* UX 2026-07-28 : administration compacte, logique inchangée. */
+.admin-shell{width:min(900px,100%);padding-top:calc(18px + env(safe-area-inset-top))}
+.admin-header{align-items:flex-start;margin-bottom:8px;padding-right:62px}
+.admin-heading h1{margin:0;font-size:clamp(30px,5vw,42px);line-height:1.05}
+.admin-header> .environment{flex:0 0 auto;margin-top:0}
+.admin-eyebrow{margin:0 0 4px!important;color:#9fb3c4!important;font-size:11px!important;font-weight:850;letter-spacing:.1em;text-transform:uppercase}
+.admin-header p#adminPageSubtitle{margin-top:5px;font-size:12px;line-height:1.35}
+.environment{padding:5px 8px;font-size:9px}
+.panel{margin:10px 0;padding:14px;border-radius:16px;box-shadow:0 10px 28px #00101f40}
+.panel h2{margin-bottom:9px;font-size:17px}
+.panel-heading{align-items:flex-start}
+.panel-heading h2{margin:0}
+label{margin:9px 0 4px;font-size:11px}
+input,textarea,select{margin-top:4px;padding:10px 11px;border-radius:10px;font-size:14px}
+button{min-height:42px;padding:9px 12px;border-radius:10px}
+button.secondary{padding:7px 10px;font-size:11px}
+.section-help{margin:-3px 0 9px;font-size:11px;line-height:1.35}
+.format-toolbar{margin-top:5px}
+.format-toolbar button{min-height:36px;padding:6px 9px}
+.switches{margin:9px 0}
+.check{padding:8px 10px;border-radius:10px}
+.form-actions{gap:6px}
+.action-help{margin-top:7px}
+.status{min-height:16px;margin-top:6px}
+.alerts-list{gap:7px}
+.alerts-scroll{max-height:min(70vh,760px)}
+.alert-item{padding:10px 11px;border-radius:12px}
+.alert-message{margin:7px 0;font-size:12px;line-height:1.4}
+.badges{gap:4px;margin-bottom:7px}
+.alert-actions{gap:5px}
+.space-pills{gap:7px}
+.space-pill{padding:10px 11px;border-radius:13px}
+.space-summary strong{font-size:14px}
+.space-summary span{font-size:10px}
+.space-chevron{flex-basis:36px;width:36px;height:36px;font-size:23px}
+.quick-actions{gap:4px;margin-top:8px}
+.quick-options{gap:5px;margin-top:5px}
+.quick-toggle{padding:5px 6px;border-radius:9px}
+.schedule-grid{gap:5px;margin-bottom:9px}
+.schedule-row{padding:6px;border-radius:9px}
+.schedule-row input{padding:8px 6px}
+.exceptions-list{gap:6px}
+.exception-item{padding:9px 10px;border-radius:11px}
+.space-editor-sheet{border-radius:18px}
+@media(max-width:520px){
+  .admin-shell{padding-inline:11px}
+  .admin-header{display:flex;padding-right:58px}
+  .admin-header> .environment{position:absolute;top:calc(18px + env(safe-area-inset-top));right:72px}
+  .panel{padding:11px}
+  .space-editor-sheet .panel{padding:13px}
+}
+
+/* L’onglet Espaces conserve volontairement sa présentation historique. */
+body.admin-section-spaces .admin-shell{
+  width:min(760px,100%);
+  padding:calc(20px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));
+}
+body.admin-section-spaces .admin-header{margin-bottom:20px}
+body.admin-section-spaces .admin-heading h1{font-size:34px}
+body.admin-section-spaces .admin-header p#adminPageSubtitle{margin-top:0;font-size:initial;line-height:1.45}
+body.admin-section-spaces .environment{padding:6px 10px;font-size:11px}
+body.admin-section-spaces .panel{margin:16px 0;padding:18px;border-radius:24px;box-shadow:0 18px 48px #00101f4d}
+body.admin-section-spaces .panel h2{margin-bottom:16px;font-size:19px}
+body.admin-section-spaces .spaces-overview .panel-heading{margin-bottom:12px}
+body.admin-section-spaces .spaces-overview .section-help{margin:0 0 14px;font-size:12px;line-height:1.45}
+body.admin-section-spaces .space-pills{gap:12px}
+body.admin-section-spaces .space-pill{padding:14px;border-radius:20px}
+body.admin-section-spaces .space-summary strong{font-size:16px}
+body.admin-section-spaces .space-summary span{font-size:12px}
+body.admin-section-spaces .space-chevron{flex-basis:42px;width:42px;height:42px;font-size:28px}
+body.admin-section-spaces .quick-actions{gap:6px;margin-top:12px}
+body.admin-section-spaces .quick-options{gap:8px;margin-top:8px}
+body.admin-section-spaces .quick-toggle{padding:7px 8px;border-radius:12px}
+body.admin-section-spaces .schedule-grid{gap:8px;margin-bottom:14px}
+body.admin-section-spaces .schedule-row{padding:9px;border-radius:14px}
+body.admin-section-spaces .schedule-row input{padding:10px 7px}
+body.admin-section-spaces .exceptions-list{gap:10px}
+body.admin-section-spaces .exception-item{padding:13px;border-radius:16px}
+body.admin-section-spaces .space-editor-sheet{border-radius:28px}
+
+@media(max-width:520px){
+  body.admin-section-spaces .admin-shell{padding-inline:16px}
+  body.admin-section-spaces .admin-header{display:block}
+  body.admin-section-spaces .admin-heading h1{font-size:28px}
+  body.admin-section-spaces .environment{padding:4px 7px;font-size:8px}
+  body.admin-section-spaces .space-editor-sheet{border-radius:26px 26px 0 0}
+  body.admin-section-spaces .space-editor-sheet .panel{padding:18px}
+}

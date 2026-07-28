@@ -498,6 +498,7 @@
       settings:{title:"Paramètres",subtitle:"Connexion sécurisée au backend de la production."}
     };
     const selectedName=sections[name]?name:"spaces";
+    document.body.classList.toggle("admin-section-spaces",selectedName==="spaces");
     document.querySelectorAll("[data-admin-section]").forEach(section=>{
       section.hidden=section.dataset.adminSection!==selectedName;
     });
