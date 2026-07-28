@@ -1,1 +1,44 @@
 :root{--panel:#111821;--line:#2a394b;--text:#f7f9fc;--muted:#9eacbd;--green:#62df91;--red:#ff7777}*{box-sizing:border-box}body{margin:0;background:#090b0f;color:var(--text);font-family:system-ui,sans-serif}.planning-shell{width:min(1500px,calc(100% - 28px));margin:auto;padding:38px 0 80px}.planning-shell h1{font-size:clamp(2.2rem,7vw,4.5rem);margin:.25rem 0}.planning-shell h2{margin-top:0}.panel{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:22px;margin-top:18px}.toolbar,.inline-form,.heading{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.toolbar label{flex:1}.toolbar input{margin-left:8px}.task-form{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.task-form label{display:grid;gap:7px}.task-form .wide{grid-column:span 2}input,select,button{font:inherit;min-height:48px;border-radius:13px;border:1px solid #40516a;background:#09111b;color:white;padding:0 14px}button{font-weight:800;background:#54d786;color:#07130c;border:0;cursor:pointer}.secondary{background:#26374c;color:white}.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.chip{display:flex;gap:8px;align-items:center;background:#213044;border-radius:999px;padding:8px 12px}.chip button{min-height:30px;padding:0 8px;background:#50303a;color:white}.board{overflow:auto;max-height:75vh;overscroll-behavior:contain}.week-grid{min-width:1180px;display:grid;grid-template-columns:160px repeat(7,minmax(140px,1fr));gap:7px}.cell,.day-head,.horse-head{border:1px solid var(--line);border-radius:12px;padding:10px;min-height:105px}.day-head,.horse-head{font-weight:800;min-height:auto;background:#172435;position:sticky;z-index:2}.day-head{top:0}.horse-head{left:0}.cell{position:relative;padding-top:45px}.cell-add{position:absolute;right:8px;top:7px;width:31px;min-height:31px;padding:0;border-radius:50%;font-size:1.25rem}.task{background:#26374c;border-left:5px solid #63b3ed;border-radius:9px;padding:8px;margin-bottom:7px;font-size:.83rem}.task.completed{opacity:.58;border-left-color:var(--green)}.task.request{box-shadow:inset 0 0 0 2px #ffcf55}.task-actions{display:flex;gap:5px;margin-top:7px}.task-actions button{min-height:32px;font-size:.75rem;padding:0 8px}.task-actions .delete{background:#5b2c34;color:white}.status{min-height:24px;color:var(--muted)}.status.error{color:var(--red)}.status.success{color:var(--green)}.muted{color:var(--muted)}#tokenResult code{display:block;word-break:break-all;background:#05080c;padding:12px;border-radius:10px;margin:12px 0}.device a{color:#72d39f;display:inline-block;margin-top:12px}dialog{width:min(780px,calc(100% - 24px));max-height:90vh;overflow:auto;background:#111821;color:white;border:1px solid var(--line);border-radius:22px;padding:22px}dialog::backdrop{background:#000b}.dialog-heading,.dialog-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}.dialog-heading{grid-column:1/-1}.dialog-heading h2{margin:0}.close-dialog{width:46px;padding:0;font-size:1.4rem}.dialog-actions{justify-content:flex-end}@media(max-width:760px){.task-form{grid-template-columns:1fr}.task-form .wide,.dialog-heading{grid-column:auto}.dialog-actions{align-items:stretch;flex-direction:column}.planning-shell{width:min(100% - 18px,1500px)}}
+
+/* Interface compacte validée le 2026-07-28. */
+.planning-shell{padding-top:18px}
+.planning-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding-right:64px;margin-bottom:4px}
+.planning-header h1{margin:0;font-size:clamp(1.9rem,4vw,3rem);line-height:1.05}
+.planning-header .beta-pill{flex:0 0 auto;margin:0}
+.planning-eyebrow{margin:0 0 4px;color:var(--muted);font-size:.7rem;font-weight:850;letter-spacing:.1em;text-transform:uppercase}
+.planning-shell>.status{min-height:18px;margin:4px 2px 6px;font-size:.78rem}
+.panel{padding:14px;margin-top:10px;border-radius:16px}
+.planning-shell h2{margin-bottom:9px;font-size:1.12rem}
+.toolbar,.inline-form,.heading{gap:8px}
+.toolbar{padding-block:10px}
+.toolbar input{margin-left:5px}
+.toolbar button{min-height:42px}
+.inline-form input,.inline-form button{min-height:42px}
+.chips{gap:6px;margin-top:9px}
+.chip{padding:6px 9px;font-size:.8rem}
+.heading>div p{margin-block:4px;font-size:.78rem}
+.heading label{font-size:.78rem}
+.heading select,.heading button{min-height:42px}
+.board{max-height:78vh}
+.week-grid{grid-template-columns:145px repeat(7,minmax(135px,1fr));gap:5px}
+.cell,.day-head,.horse-head{padding:8px;min-height:88px;border-radius:9px}
+.day-head,.horse-head{min-height:auto}
+.cell{padding-top:39px}
+.cell-add{right:6px;top:5px;width:29px;min-height:29px}
+.task{padding:7px;margin-bottom:5px;font-size:.78rem}
+.task-actions{gap:4px;margin-top:5px}
+.task-actions button{min-height:30px;padding-inline:7px;font-size:.7rem}
+.device{padding:0;overflow:hidden}
+.device summary{min-height:44px;padding:0 13px;display:flex;align-items:center;cursor:pointer;color:#cbd7e4;font-size:.82rem;font-weight:850}
+.device[open] summary{border-bottom:1px solid var(--line);background:#ffffff05}
+.device-body{padding:13px}
+.device-body p{margin-top:0;color:var(--muted);font-size:.78rem}
+dialog{border-radius:16px;padding:16px}
+@media(max-width:760px){
+  .planning-shell{padding-top:16px}
+  .planning-header{padding-right:58px}
+  .planning-header .beta-pill{position:absolute;top:calc(16px + env(safe-area-inset-top));right:72px}
+  .panel{padding:11px;border-radius:14px}
+  .device{padding:0}
+  .planning-shell h1{font-size:2rem}
+}

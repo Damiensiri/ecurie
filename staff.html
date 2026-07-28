@@ -6,16 +6,23 @@
   <meta name="theme-color" content="#090b0f">
   <title>Planning salariés — Backstage</title>
   <link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260726-1">
-  <link rel="stylesheet" href="assets/css/staff.css?v=20260727-2">
+  <link rel="stylesheet" href="assets/css/staff.css?v=20260728-1">
 </head>
 <body>
   <main class="staff-shell">
     <header class="staff-header">
-      <span class="beta-pill">PRODUCTION · D1</span>
-      <p class="eyebrow">Organisation de l’équipe</p>
-      <h1>Planning mensuel des salariés</h1>
+      <div class="staff-title-row">
+        <div>
+          <p class="eyebrow">Organisation de l’équipe</p>
+          <h1>Planning salariés</h1>
+        </div>
+        <span class="beta-pill">PRODUCTION · D1</span>
+      </div>
       <p id="printTitle" class="print-title"></p>
-      <p>Cliquez dans une case, puis saisissez une journée complète comme 0700.1200/1400.1700. Vous pouvez aussi compléter séparément le matin ou l’après-midi. DEL efface la journée, AMDEL efface seulement le matin et PMDEL seulement l’après-midi. Une journée sans aucun horaire redevient Repos.</p>
+      <details class="staff-help-details">
+        <summary>Aide à la saisie</summary>
+        <p>Cliquez dans une case, puis saisissez une journée complète comme 0700.1200/1400.1700. Vous pouvez aussi compléter séparément le matin ou l’après-midi. DEL efface la journée, AMDEL efface seulement le matin et PMDEL seulement l’après-midi. Une journée sans aucun horaire redevient Repos.</p>
+      </details>
     </header>
 
     <p id="staffStatus" class="staff-status" role="status"></p>
@@ -37,34 +44,38 @@
       <button id="exportStaffPdf" class="export" type="button">Imprimer / partager en PDF</button>
     </section>
 
-    <section class="staff-panel copy-panel">
-      <div>
-        <p class="eyebrow">Copier-coller</p>
-        <h2>Reprendre les horaires d’une semaine</h2>
-        <p class="staff-help">La semaine de destination sera remplacée pour toute l’équipe.</p>
-      </div>
-      <label>Semaine source<select id="copySourceWeek"></select></label>
-      <span class="copy-arrow">→</span>
-      <label>Semaine de destination<select id="copyTargetWeek"></select></label>
-      <button id="copyWeek" type="button">Copier les heures</button>
-    </section>
-
-    <section class="staff-panel copy-panel month-copy-panel">
-      <div>
-        <p class="eyebrow">Copier-coller mensuel</p>
-        <h2>Reprendre les horaires d’un mois</h2>
-        <p class="staff-help">Les journées du mois de destination seront remplacées pour toute l’équipe.</p>
-      </div>
-      <label>Mois source<input id="copySourceMonth" type="month"></label>
-      <span class="copy-arrow">→</span>
-      <label>Mois de destination<input id="copyTargetMonth" type="month"></label>
-      <button id="copyMonth" type="button">Copier le mois</button>
-    </section>
-
     <nav class="view-tabs" aria-label="Vues du planning">
       <button class="view-tab active" type="button" data-view="entry">Saisie quotidienne</button>
       <button class="view-tab" type="button" data-view="overview">Vue mensuelle</button>
     </nav>
+
+    <details class="staff-panel staff-utilities">
+      <summary>Actions de copie</summary>
+      <div class="staff-utilities-content">
+        <section class="copy-panel">
+          <div>
+            <p class="eyebrow">Semaine</p>
+            <h2>Reprendre les horaires</h2>
+            <p class="staff-help">La semaine de destination sera remplacée pour toute l’équipe.</p>
+          </div>
+          <label>Semaine source<select id="copySourceWeek"></select></label>
+          <span class="copy-arrow">→</span>
+          <label>Semaine de destination<select id="copyTargetWeek"></select></label>
+          <button id="copyWeek" type="button">Copier les heures</button>
+        </section>
+        <section class="copy-panel month-copy-panel">
+          <div>
+            <p class="eyebrow">Mois</p>
+            <h2>Reprendre les horaires</h2>
+            <p class="staff-help">Les journées du mois de destination seront remplacées pour toute l’équipe.</p>
+          </div>
+          <label>Mois source<input id="copySourceMonth" type="month"></label>
+          <span class="copy-arrow">→</span>
+          <label>Mois de destination<input id="copyTargetMonth" type="month"></label>
+          <button id="copyMonth" type="button">Copier le mois</button>
+        </section>
+      </div>
+    </details>
 
     <section id="staffMonthGrid" class="staff-month-grid" aria-live="polite"></section>
     <section id="staffOverviewGrid" class="staff-weeks" aria-live="polite" hidden></section>
@@ -91,7 +102,7 @@
         <h2>Mon calendrier</h2>
         <p class="staff-help">Le calendrier public iCal est lu automatiquement en lecture seule. Il reste visible uniquement dans Backstage et est toujours exclu du PDF des salariés.</p>
       </div>
-      <p id="googleConfiguredMessage" class="google-message">Le calendrier iCal public n’est pas configuré dans Cloudflare bêta.</p>
+      <p id="googleConfiguredMessage" class="google-message">Le calendrier iCal public n’est pas configuré dans Cloudflare production.</p>
       <div id="googleConnected" class="google-connected" hidden>
         <div><strong id="googleCalendarName">Calendrier Damien Siri</strong><span id="googleEventCount"></span></div>
         <label class="google-switch"><input id="googleToggle" type="checkbox" checked> Afficher dans le planning</label>

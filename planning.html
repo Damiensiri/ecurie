@@ -9,21 +9,21 @@
       Planning — Backstage production
     </title>
     <link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260719-1" type="text/css">
-    <link rel="stylesheet" href="assets/css/planning.css?v=20260719-2" type="text/css">
+    <link rel="stylesheet" href="assets/css/planning.css?v=20260728-1" type="text/css">
     <link rel="stylesheet" href="assets/css/planning-enhancements.css?v=20260719-1" type="text/css">
     <link rel="stylesheet" href="assets/css/planning-actions.css?v=20260719-1" type="text/css">
     <link rel="stylesheet" href="assets/css/planning-responsive.css?v=20260719-1" type="text/css">
   </head>
   <body>
     <main class="planning-shell">
-      <header>
+      <header class="planning-header">
+        <div>
+          <p class="planning-eyebrow">Organisation hebdomadaire</p>
+          <h1>
+            Planning chevaux
+          </h1>
+        </div>
         <span class="beta-pill">PRODUCTION · D1</span>
-        <h1>
-          Planning des chevaux
-        </h1>
-        <p>
-          Organisation hebdomadaire et suivi des tâches.
-        </p>
       </header>
       <p id="status" class="status" role="status"></p>
       <section class="toolbar panel">
@@ -53,15 +53,15 @@
         <nav id="mobileDayNav" class="mobile-day-nav" aria-label="Jour affiché"></nav>
         <div id="board" class="board"></div>
       </section>
-      <section class="panel device">
-        <h2>
-          Tablette
-        </h2>
-        <p>
-          Le jeton créé ne permet que de lire et valider ce planning. La création d’un nouveau jeton désactive l’ancien.
-        </p><button id="createToken">Créer le jeton de cette tablette</button>
-        <div id="tokenResult"></div><a href="https://app.damiensiri.com/ecran.html" target="_blank" rel="noopener">Ouvrir l’écran tablette</a>
-      </section>
+      <details class="panel device">
+        <summary>Configuration de la tablette</summary>
+        <div class="device-body">
+          <p>
+            Le jeton créé ne permet que de lire et valider ce planning. La création d’un nouveau jeton désactive l’ancien.
+          </p><button id="createToken">Créer le jeton de cette tablette</button>
+          <div id="tokenResult"></div><a href="https://app.damiensiri.com/ecran.html" target="_blank" rel="noopener">Ouvrir l’écran tablette</a>
+        </div>
+      </details>
     </main>
     <dialog id="taskDialog">
       <form id="taskForm" class="task-form">

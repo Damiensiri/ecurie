@@ -723,6 +723,134 @@
       }
       .side-stack .panel + .panel { margin-top: 0; }
     }
+
+    /* Interface compacte validée le 2026-07-28. */
+    .app-shell { padding-bottom: 76px; }
+    .topbar {
+      min-height: 58px;
+      padding-block: 9px;
+    }
+    .brand-title { font-size: clamp(18px, 2vw, 23px); }
+    .brand-subtitle {
+      margin-top: 2px;
+      font-size: 11px;
+    }
+    .layout { padding-top: 11px; }
+    .prototype-warning {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      margin-bottom: 10px;
+      padding: 5px 9px;
+      border-radius: 9px;
+      font-size: 11px;
+      line-height: 1.25;
+    }
+    .desktop-nav {
+      gap: 5px;
+      margin-bottom: 12px;
+      padding: 4px;
+      border-radius: 11px;
+    }
+    .desktop-nav .nav-btn {
+      min-height: 40px;
+      font-size: 13px;
+    }
+    .section-head {
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .section-title { font-size: clamp(20px, 2.4vw, 27px); }
+    .section-note {
+      margin-top: 3px;
+      font-size: 12px;
+    }
+    .date-controls {
+      gap: 5px;
+      margin-bottom: 7px;
+    }
+    .date-controls button { min-height: 42px; }
+    .date-picker {
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .summary-grid {
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .metric {
+      min-height: 64px;
+      padding: 9px 11px;
+    }
+    .metric-value { font-size: 20px; }
+    .metric-label {
+      margin-top: 4px;
+      font-size: 11px;
+    }
+    .metric-detail {
+      margin-top: 3px;
+      font-size: 10px;
+    }
+    .panel { box-shadow: 0 10px 28px rgba(0, 0, 0, .22); }
+    .panel + .panel { margin-top: 9px; }
+    .panel-header { padding: 10px 11px; }
+    .panel-title { font-size: 15px; }
+    .panel-body { padding: 11px; }
+    .quick-actions {
+      gap: 6px;
+      margin-bottom: 0;
+    }
+    .item-card { padding: 11px; }
+    .item-title { font-size: 15px; }
+    .item-meta {
+      gap: 6px;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+    .item-actions {
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .paddock-head { padding: 10px 11px; }
+    .paddock-name { font-size: 16px; }
+    .slot-list {
+      gap: 5px;
+      padding: 7px;
+    }
+    .slot-card {
+      min-height: 50px;
+      padding: 8px;
+    }
+    th, td { padding: 9px; }
+    .form-grid { gap: 8px; }
+    .field-label {
+      gap: 4px;
+      font-size: 11px;
+    }
+    .choice-grid { gap: 6px; }
+    .bottom-nav {
+      gap: 4px;
+      padding-top: 5px;
+    }
+    .bottom-nav .nav-btn { min-height: 52px; }
+
+    @media (min-width: 720px) {
+      .app-shell { padding-bottom: 0; }
+      .layout { padding: 14px 18px 24px; }
+    }
+
+    @media (max-width: 519px) {
+      .topbar { min-height: 54px; }
+      .layout { padding-inline: 11px; }
+      .section-head { gap: 7px; }
+      .section-head > .select { min-height: 42px; }
+      .mobile-paddocks {
+        gap: 8px;
+        margin-inline: -11px;
+        padding-inline: 11px;
+      }
+      .paddock-card { flex-basis: 91vw; }
+    }
   </style>
 </head>
 <body>
@@ -735,7 +863,6 @@
     </header>
 
     <main class="layout">
-      <div class="prototype-warning" role="status">Production Cloudflare/D1 : toutes les actions de cette page restent isolées de la production.</div>
       <nav class="desktop-nav" aria-label="Navigation principale">
         <button class="nav-btn is-active" data-view-target="planning"><span class="nav-icon">🗓️</span>Planning</button>
         <button class="nav-btn" data-view-target="reservations"><span class="nav-icon">📒</span>Reservations</button>
