@@ -417,13 +417,114 @@ function selectView(view){
   localStorage.setItem("staff_prod_view",view);
 }
 
+function plainWorkText(shift){
+  if(!shift||shift.status==="rest")return"Repos";
+  if(shift.status!=="work")return TYPES[shift.status]||shift.status;
+  const lines=[];
+  if(shift.morningStart&&shift.morningEnd)lines.push(`${displayHour(shift.morningStart)}-${displayHour(shift.morningEnd)}`);
+  if(shift.afternoonStart&&shift.afternoonEnd)lines.push(`${displayHour(shift.afternoonStart)}-${displayHour(shift.afternoonEnd)}`);
+  if(shift.note)lines.push(shift.note);
+  return lines.join("\n")||"Repos";
+}
+
+async function shareStaffPdf(employeeId){
+  const JsPdf=window.jspdf?.jsPDF;
+  if(!JsPdf)throw Error("Le générateur PDF n’a pas pu être chargé. Vérifiez la connexion puis réessayez.");
+
+  const employee=state.employees.find(item=>String(item.id)===employeeId);
+  const selected=employee?[employee]:state.employees;
+  const shifts=shiftMap();
+  const documentPdf=new JsPdf({orientation:"portrait",unit:"mm",format:"a4"});
+  const pageWidth=documentPdf.internal.pageSize.getWidth();
+  let cursorY=12;
+
+  documentPdf.setFont("helvetica","bold");
+  documentPdf.setFontSize(14);
+  documentPdf.text("Planning salariés",10,cursorY);
+  documentPdf.setFont("helvetica","normal");
+  documentPdf.setFontSize(8);
+  documentPdf.text(`${monthLabel(state.month)} · ${employee?.name||"Toute l’équipe"}`,10,cursorY+5);
+  cursorY+=10;
+
+  weeks().forEach((dates,weekIndex)=>{
+    if(cursorY>254){documentPdf.addPage();cursorY=12}
+    documentPdf.setFont("helvetica","bold");
+    documentPdf.setFontSize(8);
+    documentPdf.text(`Semaine ${isoWeek(dates[0])}`,10,cursorY);
+    cursorY+=2;
+
+    const rowStatuses=[];
+    const body=selected.map(item=>{
+      rowStatuses.push(dates.map(date=>shifts.get(shiftKey(item.id,date))?.status||"rest"));
+      const cells=dates.map(date=>plainWorkText(shifts.get(shiftKey(item.id,date))));
+      const total=dates.reduce((sum,date)=>sum+shiftMinutes(shifts.get(shiftKey(item.id,date))),0);
+      return[item.name,...cells,duration(total)];
+    });
+
+    documentPdf.autoTable({
+      startY:cursorY,
+      margin:{left:10,right:10},
+      tableWidth:pageWidth-20,
+      head:[["Salarié",...dates.map(rowDate),"Total"]],
+      body,
+      theme:"grid",
+      styles:{font:"helvetica",fontSize:5.2,cellPadding:.8,valign:"middle",lineColor:[130,140,150],lineWidth:.15,textColor:[20,25,30]},
+      headStyles:{fillColor:[220,231,241],textColor:[0,0,0],fontStyle:"bold"},
+      columnStyles:{0:{cellWidth:23,fontStyle:"bold"},8:{cellWidth:14,fontStyle:"bold",halign:"center"}},
+      didParseCell(data){
+        if(data.section!=="body"||data.column.index<1||data.column.index>7)return;
+        const status=rowStatuses[data.row.index]?.[data.column.index-1]||"rest";
+        const colors={
+          rest:[232,234,237],
+          leave:[220,234,255],
+          sick:[255,223,226],
+          absence:[247,231,207],
+          cfa:[217,243,245]
+        };
+        if(colors[status])data.cell.styles.fillColor=colors[status];
+      }
+    });
+    cursorY=documentPdf.lastAutoTable.finalY+6;
+    if(weekIndex<weeks().length-1&&cursorY>265){documentPdf.addPage();cursorY=12}
+  });
+
+  const safeName=(employee?.name||"equipe").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/gi,"-").replace(/^-|-$/g,"").toLowerCase();
+  const filename=`planning-${state.month}-${safeName||"equipe"}.pdf`;
+  const blob=documentPdf.output("blob");
+  const file=new File([blob],filename,{type:"application/pdf"});
+
+  if(navigator.share&&navigator.canShare?.({files:[file]})){
+    await navigator.share({files:[file],title:`Planning ${monthLabel(state.month)}`});
+    return;
+  }
+  documentPdf.save(filename);
+}
+
+function isAppleMobile(){
+  return/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+}
+
 $("staffMonth").value=currentMonth();
 $("previousMonth").onclick=()=>{const date=parseDate($("staffMonth").value+"-01");date.setUTCMonth(date.getUTCMonth()-1);$("staffMonth").value=iso(date).slice(0,7);load()};
 $("nextMonth").onclick=()=>{const date=parseDate($("staffMonth").value+"-01");date.setUTCMonth(date.getUTCMonth()+1);$("staffMonth").value=iso(date).slice(0,7);load()};
 $("staffMonth").onchange=()=>load();$("refreshStaff").onclick=()=>load();
-$("exportStaffPdf").onclick=()=>{
+$("exportStaffPdf").onclick=async()=>{
   const employeeId=$("printEmployee").value;
   const employee=state.employees.find(item=>String(item.id)===employeeId);
+  if(isAppleMobile()){
+    const button=$("exportStaffPdf");
+    button.disabled=true;
+    setStatus("Création du PDF…");
+    try{
+      await shareStaffPdf(employeeId);
+      setStatus("PDF prêt à être partagé ou enregistré.","success");
+    }catch(error){
+      if(error?.name!=="AbortError")setStatus(error.message||"Création du PDF impossible.","error");
+    }finally{
+      button.disabled=false;
+    }
+    return;
+  }
   $("printTitle").textContent=`${monthLabel(state.month)} · ${employee?.name||"Toute l’équipe"}`;
   document.querySelectorAll("[data-overview-employee]").forEach(row=>
     row.classList.toggle("print-excluded",Boolean(employeeId)&&row.dataset.overviewEmployee!==employeeId));
