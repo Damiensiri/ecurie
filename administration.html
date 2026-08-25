@@ -6,7 +6,7 @@
 <title>Espaces — Backstage production</title>
 <meta name="theme-color" content="#102b45">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="assets/css/administration.css?v=20260728-2">
+<link rel="stylesheet" href="assets/css/administration.css?v=20260825-1">
 <link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260716-1">
 </head>
 <body>
@@ -51,12 +51,21 @@
       <div class="switches single-option">
         <label class="check"><input id="epingle" type="checkbox"> Épingler l’alerte</label>
       </div>
+      <div class="schedule-fields" aria-label="Programmation de l’envoi">
+        <label>Date de programmation
+          <input id="scheduledDate" type="date">
+        </label>
+        <label>Heure
+          <input id="scheduledTime" type="time">
+        </label>
+      </div>
       <p class="safety-note">Les données et les push de cette page restent isolés dans l’environnement production.</p>
       <div class="form-actions">
         <button id="publishBtn" type="submit" name="delivery" value="publish">Publier</button>
         <button id="sendBtn" class="send" type="submit" name="delivery" value="send">Envoyer</button>
+        <button id="scheduleBtn" class="schedule" type="submit" name="delivery" value="schedule">Programmer</button>
       </div>
-      <p class="action-help"><strong>Publier</strong> : visible dans la PWA sans push. <strong>Envoyer</strong> : visible dans la PWA avec push.</p>
+      <p class="action-help"><strong>Publier</strong> : visible dans la PWA sans push. <strong>Envoyer</strong> : visible dans la PWA avec push. <strong>Programmer</strong> : invisible jusqu’à l’heure choisie, puis publié et poussé automatiquement.</p>
       <p id="formStatus" class="status" role="status"></p>
     </form>
   </section>

@@ -13,9 +13,12 @@
     titre:document.getElementById("titre"),
     message:document.getElementById("message"),
     epingle:document.getElementById("epingle"),
+    scheduledDate:document.getElementById("scheduledDate"),
+    scheduledTime:document.getElementById("scheduledTime"),
     formTitle:document.getElementById("formTitle"),
     publish:document.getElementById("publishBtn"),
     send:document.getElementById("sendBtn"),
+    schedule:document.getElementById("scheduleBtn"),
     cancel:document.getElementById("cancelEditBtn"),
     formStatus:document.getElementById("formStatus"),
     refresh:document.getElementById("refreshBtn"),
@@ -64,6 +67,36 @@
       base:elements.apiUrl.value.trim().replace(/\/$/,""),
       token:elements.token.value
     };
+  }
+
+  function readScheduledAt(){
+    const date=elements.scheduledDate.value;
+    const time=elements.scheduledTime.value;
+    if(!date&&!time)return null;
+    if(!date||!time)return "";
+    const value=new Date(`${date}T${time}:00`);
+    return Number.isNaN(value.getTime())?"":value.toISOString();
+  }
+
+  function scheduleToLocalFields(value){
+    if(!value)return{date:"",time:""};
+    const date=new Date(value);
+    if(Number.isNaN(date.getTime()))return{date:"",time:""};
+    const year=date.getFullYear();
+    const month=String(date.getMonth()+1).padStart(2,"0");
+    const day=String(date.getDate()).padStart(2,"0");
+    const hour=String(date.getHours()).padStart(2,"0");
+    const minute=String(date.getMinutes()).padStart(2,"0");
+    return{date:`${year}-${month}-${day}`,time:`${hour}:${minute}`};
+  }
+
+  function formatScheduledAt(value){
+    if(!value)return"";
+    const date=new Date(value);
+    if(Number.isNaN(date.getTime()))return"";
+    return new Intl.DateTimeFormat("fr-FR",{
+      day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"
+    }).format(date).replace(":","h");
   }
 
   async function api(path,options={}){
@@ -378,11 +411,19 @@
 
       const badges=document.createElement("div");
       badges.className="badges";
+      const schedule=alert.schedule;
       badges.append(
         badge(alert.active==="oui"?"Publiée":"Inactive",alert.active==="oui"?"active":"inactive"),
         badge(alert.epingle==="oui"?"Épinglée":"Non épinglée"),
         badge(alert.push_sent_at?"Push envoyé":alert.push_requested?"Push en attente (production)":"Sans push")
       );
+      if(schedule){
+        const label=schedule.status==="sent"?"Programmation envoyée":
+          schedule.status==="failed"?"Programmation en échec":
+          schedule.status==="cancelled"?"Programmation annulée":
+          `Programmée ${formatScheduledAt(schedule.scheduledAt)}`;
+        badges.append(badge(label,schedule.status==="failed"?"inactive":schedule.status==="sent"?"active":""));
+      }
 
       const edit=document.createElement("button");
       edit.type="button";
@@ -427,6 +468,10 @@
     elements.titre.value=alert.titre;
     elements.message.value=alert.message;
     elements.epingle.checked=alert.epingle==="oui";
+    const scheduledAt=alert.schedule?.status!=="sent"&&alert.schedule?.status!=="cancelled"?alert.schedule?.scheduledAt:"";
+    const local=scheduleToLocalFields(scheduledAt);
+    elements.scheduledDate.value=local.date;
+    elements.scheduledTime.value=local.time;
     elements.formTitle.textContent=`Modifier l’alerte #${alert.id}`;
     elements.cancel.hidden=false;
     elements.form.scrollIntoView({behavior:"smooth",block:"start"});
@@ -436,6 +481,8 @@
     elements.form.reset();
     elements.editingId.value="";
     elements.formTitle.textContent="Nouvelle alerte";
+    elements.scheduledDate.value="";
+    elements.scheduledTime.value="";
     elements.cancel.hidden=true;
     setStatus(elements.formStatus,"");
   }
@@ -443,18 +490,26 @@
   elements.form.addEventListener("submit",async event=>{
     event.preventDefault();
     const id=elements.editingId.value;
-    const sendPush=event.submitter?.value==="send";
+    const delivery=event.submitter?.value||"publish";
+    const sendPush=delivery==="send";
+    const scheduledAt=delivery==="schedule"?readScheduledAt():null;
+    if(delivery==="schedule"&&!scheduledAt){
+      setStatus(elements.formStatus,"Choisissez une date et une heure de programmation.","error");
+      return;
+    }
     const payload={
       categorie:elements.categorie.value,
       titre:elements.titre.value,
       message:elements.message.value,
       epingle:elements.epingle.checked,
       active:true,
-      pushRequested:sendPush
+      pushRequested:sendPush,
+      scheduledAt
     };
     setStatus(elements.formStatus,"Enregistrement…");
     elements.publish.disabled=true;
     elements.send.disabled=true;
+    elements.schedule.disabled=true;
     try{
       const result=await api(id?`/api/admin/notifications/${id}`:"/api/admin/notifications",{
         method:id?"PATCH":"POST",
@@ -465,7 +520,8 @@
         sent:"Alerte enregistrée et push envoyé.",
         "already-sent":"Alerte enregistrée. Le push avait déjà été envoyé.",
         "not-requested":"Alerte enregistrée sans push.",
-        "disabled-in-beta":"Alerte enregistrée. L’envoi push est momentanément indisponible.",
+        disabled:"Alerte enregistrée. L’envoi push est momentanément indisponible.",
+        scheduled:"Alerte programmée. Elle restera invisible jusqu’à l’heure prévue.",
         failed:`Alerte enregistrée, mais le push a échoué${result.push?.error?" : "+result.push.error:"."}`
       };
       const pushFailed=result.push?.status==="failed";
@@ -476,6 +532,7 @@
     }finally{
       elements.publish.disabled=false;
       elements.send.disabled=false;
+      elements.schedule.disabled=false;
     }
   });
 
