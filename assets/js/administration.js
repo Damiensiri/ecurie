@@ -1004,7 +1004,7 @@
         sent:"Alerte enregistrée et push envoyé.",
         "already-sent":"Alerte enregistrée. Le push avait déjà été envoyé.",
         "not-requested":"Alerte enregistrée sans push.",
-        "disabled-in-beta":"Alerte enregistrée. Le push bêta n’est pas encore activé.",
+        "disabled-in-production":"Alerte enregistrée. Le push bêta n’est pas encore activé.",
         scheduled:"Alerte programmée. Elle restera invisible jusqu’à l’heure prévue.",
         failed:`Alerte enregistrée, mais le push a échoué${result.push?.error?" : "+result.push.error:"."}`
       };
