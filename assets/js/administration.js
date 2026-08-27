@@ -45,13 +45,52 @@
     saveException:document.getElementById("saveExceptionBtn"),
     exceptionStatus:document.getElementById("exceptionStatus"),
     exceptionsList:document.getElementById("exceptionsList"),
+    hourProgramId:document.getElementById("hourProgramId"),
+    hourProgramName:document.getElementById("hourProgramName"),
+    hourProgramStart:document.getElementById("hourProgramStart"),
+    hourProgramEnd:document.getElementById("hourProgramEnd"),
+    hourProgramBulkOpen:document.getElementById("hourProgramBulkOpen"),
+    hourProgramBulkClose:document.getElementById("hourProgramBulkClose"),
+    hourProgramBulkStatusWrap:document.getElementById("hourProgramBulkStatusWrap"),
+    hourProgramBulkStatus:document.getElementById("hourProgramBulkStatus"),
+    applyHourProgramBulk:document.getElementById("applyHourProgramBulkBtn"),
+    hourProgramGrid:document.getElementById("hourProgramGrid"),
+    applyAllPaddockHours:document.getElementById("applyAllPaddockHoursBtn"),
+    saveHourProgram:document.getElementById("saveHourProgramBtn"),
+    deleteHourProgram:document.getElementById("deleteHourProgramBtn"),
+    resetHourProgram:document.getElementById("resetHourProgramBtn"),
+    refreshHourPrograms:document.getElementById("refreshHourProgramsBtn"),
+    hourProgramStatus:document.getElementById("hourProgramStatus"),
+    hourProgramsList:document.getElementById("hourProgramsList"),
+    activityProgramId:document.getElementById("activityProgramId"),
+    activityProgramName:document.getElementById("activityProgramName"),
+    activityProgramStart:document.getElementById("activityProgramStart"),
+    activityProgramEnd:document.getElementById("activityProgramEnd"),
+    activityProgramEnabled:document.getElementById("activityProgramEnabled"),
+    activityProgramGrid:document.getElementById("activityProgramGrid"),
+    saveActivityProgram:document.getElementById("saveActivityProgramBtn"),
+    deleteActivityProgram:document.getElementById("deleteActivityProgramBtn"),
+    resetActivityProgram:document.getElementById("resetActivityProgramBtn"),
+    activityProgramStatus:document.getElementById("activityProgramStatus"),
+    activityProgramsList:document.getElementById("activityProgramsList"),
+    hourExceptionDate:document.getElementById("hourExceptionDate"),
+    hourExceptionScope:document.getElementById("hourExceptionScope"),
+    hourExceptionTarget:document.getElementById("hourExceptionTarget"),
+    hourExceptionStatusSelect:document.getElementById("hourExceptionStatus"),
+    hourExceptionOpen:document.getElementById("hourExceptionOpen"),
+    hourExceptionClose:document.getElementById("hourExceptionClose"),
+    saveHourException:document.getElementById("saveHourExceptionBtn"),
+    hourExceptionStatusMessage:document.getElementById("hourExceptionStatusMessage"),
+    hourExceptionsList:document.getElementById("hourExceptionsList"),
     homeAlertMessage:document.getElementById("homeAlertMessage"),
     homeAlertUrgent:document.getElementById("homeAlertUrgent"),
     saveHomeAlert:document.getElementById("saveHomeAlertBtn"),
     homeAlertStatus:document.getElementById("homeAlertStatus")
   };
   let alerts=[];
-  let operations={spaces:[],spaceSchedules:[],generalSchedules:[],exceptions:[],homeAlert:{}};
+  let operations={spaces:[],spaceSchedules:[],generalSchedules:[],exceptions:[],hourExceptions:[],homeAlert:{},activityPrograms:[]};
+  let hourProgramScope="general";
+  let hourProgramDrafts=new Map();
   let publicStatuses=[];
   let liveRefreshTimer=null;
   const days=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
@@ -121,6 +160,10 @@
     element.className="status"+(type?" "+type:"");
   }
 
+  function esc(value){
+    return String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[char]));
+  }
+
   async function loadAlerts(){
     setStatus(elements.connectionStatus,"Chargement…");
     try{
@@ -167,7 +210,13 @@
     renderSpacePills();
     renderSelectedSpace();
     renderScheduleInputs(elements.generalSchedules,operations.generalSchedules);
+    renderHourExceptionTargets();
+    renderHourExceptions();
     renderExceptions();
+    renderHourProgramGrid();
+    renderHourProgramsList();
+    renderActivityProgramGrid();
+    renderActivityProgramsList();
     elements.homeAlertMessage.value=operations.homeAlert?.message||"";
     elements.homeAlertUrgent.checked=operations.homeAlert?.urgent==="oui";
   }
@@ -188,8 +237,10 @@
       name.textContent=space.label;
       const detail=document.createElement("span");
       const statusLabel={ouvert:"Ouvert",prevision:"Prévision",ferme:"Fermé","hors-service":"Hors service"}[current.statut_auto||space.manual_status]||"—";
-      const hours=schedule?`${schedule.opens_at}–${schedule.closes_at}`:"—";
-      detail.textContent=`${statusLabel} / ${hours}${space.info?"  💬":""}`;
+      const baseHours=schedule?`${schedule.opens_at}–${schedule.closes_at}`:"—";
+      const effectiveHours=current.horaire_affiche?current.horaire_affiche.replace(/\s-\s/g,"–"):baseHours;
+      const effectiveNote=effectiveHours!==baseHours?` · aujourd’hui ${effectiveHours}`:"";
+      detail.textContent=`${statusLabel} / actuel ${baseHours}${effectiveNote}${space.info?"  💬":""}`;
       summary.append(name,detail);
 
       const open=document.createElement("button");
@@ -237,15 +288,28 @@
     const name=document.createElement("span");
     name.textContent=label;
     wrapper.appendChild(name);
-    ["oui","non"].forEach(value=>{
+    const hasAuto=hasActivityProgramFor(space.slug,field);
+    ["auto","oui","non"].forEach(value=>{
       const button=document.createElement("button");
       button.type="button";
-      button.textContent=value.toUpperCase();
+      button.textContent=value==="auto"?"Auto":value.toUpperCase();
       button.classList.toggle("selected",space[field]===value);
+      if(value==="auto"&&!hasAuto){
+        button.disabled=true;
+        button.title="Aucune programmation d’activité active";
+      }
       button.addEventListener("click",()=>quickSaveSpace(space,{[field]:value}));
       wrapper.appendChild(button);
     });
     return wrapper;
+  }
+
+  function hasActivityProgramFor(spaceSlug,activity){
+    return (operations.activityPrograms||[]).some(program=>
+      program.enabled==="oui"&&(program.entries||[]).some(entry=>
+        entry.spaceSlug===spaceSlug&&entry.activity===activity
+      )
+    );
   }
 
   async function quickSaveSpace(space,changes){
@@ -325,6 +389,384 @@
     });
   }
 
+  function hourProgramTargets(scope=hourProgramScope){
+    if(scope==="general")return[{slug:"general",label:"Écuries"}];
+    if(scope==="paddocks")return[
+      {slug:"maison",label:"Maison"},
+      {slug:"grande",label:"Grande voie"},
+      {slug:"beudot",label:"Beudot"}
+    ];
+    const wanted=["carriere","manege"];
+    return operations.spaces.filter(space=>wanted.includes(space.slug))
+      .map(space=>({slug:space.slug,label:space.label}));
+  }
+
+  function hourExceptionTargets(scope=elements.hourExceptionScope?.value||"general"){
+    if(scope==="general")return[{slug:"general",label:"Écuries"}];
+    if(scope==="paddocks")return[
+      {slug:"maison",label:"Maison"},
+      {slug:"grande",label:"Grande voie"},
+      {slug:"beudot",label:"Beudot"}
+    ];
+    return operations.spaces
+      .filter(space=>["carriere","manege"].includes(space.slug))
+      .map(space=>({slug:space.slug,label:space.label}));
+  }
+
+  function renderHourExceptionTargets(){
+    if(!elements.hourExceptionTarget)return;
+    const current=elements.hourExceptionTarget.value;
+    const targets=hourExceptionTargets();
+    elements.hourExceptionTarget.replaceChildren(...targets.map(target=>{
+      const option=document.createElement("option");
+      option.value=target.slug;
+      option.textContent=target.label;
+      return option;
+    }));
+    if(targets.some(target=>target.slug===current))elements.hourExceptionTarget.value=current;
+  }
+
+  function baseHourProgramEntry(target,day){
+    const source=hourProgramScope==="general"
+      ?operations.generalSchedules.find(item=>Number(item.day)===day)
+      :operations.spaceSchedules.find(item=>item.space_slug===target.slug&&Number(item.day)===day);
+    const space=operations.spaces.find(item=>item.slug===target.slug)||{};
+    return{
+      targetSlug:target.slug,
+      day,
+      manualStatus:space.manual_status||"ouvert",
+      opensAt:source?.opens_at||"08:00",
+      closesAt:source?.closes_at||"21:00",
+      specialHours:space.special_hours||"",
+      info:space.info||"",
+      liberte:space.liberte||"non",
+      longe:space.longe||"non"
+    };
+  }
+
+  function renderHourProgramGrid(entries=[]){
+    if(!elements.hourProgramGrid)return;
+    if(elements.applyAllPaddockHours)elements.applyAllPaddockHours.hidden=hourProgramScope!=="paddocks";
+    if(elements.hourProgramBulkStatusWrap)elements.hourProgramBulkStatusWrap.hidden=hourProgramScope!=="paddocks";
+    const currentEntries=entries.length?entries:(hourProgramDrafts.get(hourProgramScope)||[]);
+    elements.hourProgramGrid.replaceChildren();
+    hourProgramTargets().forEach(target=>{
+      const card=document.createElement("article");
+      card.className="hour-program-target";
+      const title=document.createElement("h3");
+      title.textContent=target.label;
+      card.appendChild(title);
+      days.forEach((label,index)=>{
+        const day=index+1;
+        const row=currentEntries.find(item=>item.targetSlug===target.slug&&Number(item.day)===day)||baseHourProgramEntry(target,day);
+        const line=document.createElement("div");
+        line.className=`hour-program-row is-${hourProgramScope}`;
+        line.dataset.target=target.slug;
+        line.dataset.day=String(day);
+        const commonHours=`
+          <label class="program-day-check" aria-label="Sélectionner ${target.label} ${label}">
+            <input data-field="selected" type="checkbox">
+          </label>
+          <strong>${label}</strong>
+          <input data-field="opensAt" type="time" value="${esc(row.opensAt)}" aria-label="Ouverture ${target.label} ${label}">
+          <input data-field="closesAt" type="time" value="${esc(row.closesAt)}" aria-label="Fermeture ${target.label} ${label}">
+        `;
+        if(hourProgramScope==="general"){
+          line.innerHTML=commonHours;
+        }else if(hourProgramScope==="work"){
+          line.innerHTML=`
+            <label class="program-day-check" aria-label="Sélectionner ${target.label} ${label}">
+              <input data-field="selected" type="checkbox">
+            </label>
+            <strong>${label}</strong>
+            <input data-field="opensAt" type="time" value="${esc(row.opensAt)}" aria-label="Ouverture ${target.label} ${label}">
+            <input data-field="closesAt" type="time" value="${esc(row.closesAt)}" aria-label="Fermeture ${target.label} ${label}">
+          `;
+        }else{
+          line.innerHTML=`
+            <label class="program-day-check" aria-label="Sélectionner ${target.label} ${label}">
+              <input data-field="selected" type="checkbox">
+            </label>
+            <strong>${label}</strong>
+            <select data-field="manualStatus" aria-label="Statut ${target.label} ${label}">
+              <option value="ouvert">Ouvert</option>
+              <option value="ferme">Fermé</option>
+              <option value="hors-service">Hors service</option>
+            </select>
+            <input data-field="opensAt" type="time" value="${esc(row.opensAt)}" aria-label="Ouverture ${target.label} ${label}">
+            <input data-field="closesAt" type="time" value="${esc(row.closesAt)}" aria-label="Fermeture ${target.label} ${label}">
+          `;
+          line.querySelector('[data-field="manualStatus"]').value=row.manualStatus||"ouvert";
+        }
+        card.appendChild(line);
+      });
+      elements.hourProgramGrid.appendChild(card);
+    });
+  }
+
+  function readHourProgramEntriesFromDom(){
+    if(!elements.hourProgramGrid?.children.length)return[];
+    return[...elements.hourProgramGrid.querySelectorAll(".hour-program-row")].map(row=>{
+      const value=field=>row.querySelector(`[data-field="${field}"]`)?.value||"";
+      return{
+        targetSlug:row.dataset.target,
+        day:Number(row.dataset.day),
+        manualStatus:value("manualStatus")||"ouvert",
+        opensAt:value("opensAt"),
+        closesAt:value("closesAt"),
+        specialHours:value("specialHours"),
+        info:value("info"),
+        liberte:value("liberte"),
+        longe:value("longe")
+      };
+    });
+  }
+
+  function rememberHourProgramDraft(){
+    if(!elements.hourProgramGrid?.children.length)return;
+    hourProgramDrafts.set(hourProgramScope,readHourProgramEntriesFromDom());
+  }
+
+  function filledHourProgramDrafts(){
+    rememberHourProgramDraft();
+    return["general","work","paddocks"]
+      .map(scope=>({scope,entries:hourProgramDrafts.get(scope)||[]}))
+      .filter(item=>item.entries.length);
+  }
+
+  function applyFirstPaddockProgramToAll(){
+    if(hourProgramScope!=="paddocks"||!elements.hourProgramGrid)return;
+    const targets=hourProgramTargets();
+    const source=targets[0]?.slug;
+    if(!source)return;
+    const sourceRows=[...elements.hourProgramGrid.querySelectorAll(`.hour-program-row[data-target="${source}"]`)];
+    const values=new Map(sourceRows.map(row=>[
+      Number(row.dataset.day),
+      {
+        manualStatus:row.querySelector('[data-field="manualStatus"]')?.value||"ouvert",
+        opensAt:row.querySelector('[data-field="opensAt"]')?.value||"",
+        closesAt:row.querySelector('[data-field="closesAt"]')?.value||""
+      }
+    ]));
+    targets.slice(1).forEach(target=>{
+      [...elements.hourProgramGrid.querySelectorAll(`.hour-program-row[data-target="${target.slug}"]`)].forEach(row=>{
+        const value=values.get(Number(row.dataset.day));
+        if(!value)return;
+        const status=row.querySelector('[data-field="manualStatus"]');
+        const open=row.querySelector('[data-field="opensAt"]');
+        const close=row.querySelector('[data-field="closesAt"]');
+        if(status)status.value=value.manualStatus;
+        if(open)open.value=value.opensAt;
+        if(close)close.value=value.closesAt;
+      });
+    });
+    setStatus(elements.hourProgramStatus,"Grille du premier paddock appliquée aux 3 paddocks.","success");
+  }
+
+  function applyBulkHourProgram(){
+    if(!elements.hourProgramGrid)return;
+    const selectedRows=[...elements.hourProgramGrid.querySelectorAll('.hour-program-row input[data-field="selected"]:checked')]
+      .map(input=>input.closest(".hour-program-row"))
+      .filter(Boolean);
+    if(!selectedRows.length){
+      setStatus(elements.hourProgramStatus,"Sélectionnez au moins un jour dans la grille.","error");
+      return;
+    }
+    const opensAt=elements.hourProgramBulkOpen?.value||"";
+    const closesAt=elements.hourProgramBulkClose?.value||"";
+    const manualStatus=elements.hourProgramBulkStatus?.value||"";
+    if(!opensAt&&!closesAt&&!manualStatus){
+      setStatus(elements.hourProgramStatus,"Indiquez au moins une valeur à appliquer.","error");
+      return;
+    }
+    selectedRows.forEach(row=>{
+      const open=row.querySelector('[data-field="opensAt"]');
+      const close=row.querySelector('[data-field="closesAt"]');
+      const status=row.querySelector('[data-field="manualStatus"]');
+      if(opensAt&&open)open.value=opensAt;
+      if(closesAt&&close)close.value=closesAt;
+      if(manualStatus&&status)status.value=manualStatus;
+      const selected=row.querySelector('[data-field="selected"]');
+      if(selected)selected.checked=false;
+    });
+    rememberHourProgramDraft();
+    setStatus(elements.hourProgramStatus,`${selectedRows.length} jour(s) mis à jour dans l’onglet affiché.`,"success");
+  }
+
+  function resetHourProgram(){
+    hourProgramDrafts=new Map();
+    elements.hourProgramId.value="";
+    elements.hourProgramName.value="";
+    elements.hourProgramStart.value="";
+    elements.hourProgramEnd.value="";
+    elements.deleteHourProgram.hidden=true;
+    renderHourProgramGrid([]);
+    setStatus(elements.hourProgramStatus,"");
+  }
+
+  function editHourProgram(program){
+    hourProgramDrafts=new Map([[program.scope,program.entries||[]]]);
+    hourProgramScope=program.scope;
+    document.querySelectorAll("[data-hour-program-scope]").forEach(button=>{
+      button.classList.toggle("selected",button.dataset.hourProgramScope===hourProgramScope);
+    });
+    elements.hourProgramId.value=program.id;
+    elements.hourProgramName.value=program.name;
+    elements.hourProgramStart.value=program.startsOn;
+    elements.hourProgramEnd.value=program.endsOn||"";
+    elements.deleteHourProgram.hidden=false;
+    renderHourProgramGrid(program.entries||[]);
+    setStatus(elements.hourProgramStatus,`Programmation #${program.id} chargée.`);
+  }
+
+  function renderHourProgramsList(){
+    if(!elements.hourProgramsList)return;
+    elements.hourProgramsList.replaceChildren();
+    const programs=operations.hourPrograms||[];
+    if(!programs.length){
+      const empty=document.createElement("p");
+      empty.className="empty";
+      empty.textContent="Aucune programmation enregistrée.";
+      elements.hourProgramsList.appendChild(empty);
+      return;
+    }
+    programs.forEach(program=>{
+      const row=document.createElement("article");
+      row.className="hour-program-item";
+      const scopeLabel={general:"Écuries",work:"Travail",paddocks:"Paddocks"}[program.scope]||program.scope;
+      row.innerHTML=`
+        <div>
+          <strong>${esc(program.name)}</strong>
+          <p>${scopeLabel} · à partir du ${esc(program.startsOn)}${program.endsOn?` · jusqu’au ${esc(program.endsOn)}`:""} · ${program.entries.length} ligne(s)</p>
+        </div>
+      `;
+      const edit=document.createElement("button");
+      edit.type="button";
+      edit.className="secondary compact";
+      edit.textContent="Modifier";
+      edit.addEventListener("click",()=>editHourProgram(program));
+      row.appendChild(edit);
+      elements.hourProgramsList.appendChild(row);
+    });
+  }
+
+  function baseActivityEntry(spaceSlug,day,activity){
+    return{spaceSlug,day,activity,enabled:"non",startsAt:"",endsAt:""};
+  }
+
+  function renderActivityProgramGrid(entries=[]){
+    if(!elements.activityProgramGrid)return;
+    const current=entries.length?entries:[];
+    elements.activityProgramGrid.replaceChildren();
+    ["carriere","manege"].forEach(spaceSlug=>{
+      const space=operations.spaces.find(item=>item.slug===spaceSlug);
+      const card=document.createElement("article");
+      card.className="hour-program-target activity-program-target";
+      const title=document.createElement("h3");
+      title.textContent=space?.label||spaceSlug;
+      card.appendChild(title);
+      ["liberte","longe"].forEach(activity=>{
+        const group=document.createElement("section");
+        group.className="activity-program-group";
+        const heading=document.createElement("h4");
+        heading.textContent=activity==="liberte"?"Liberté":"Longe";
+        group.appendChild(heading);
+        days.forEach((label,index)=>{
+          const day=index+1;
+          const row=current.find(item=>item.spaceSlug===spaceSlug&&Number(item.day)===day&&item.activity===activity)||baseActivityEntry(spaceSlug,day,activity);
+          const line=document.createElement("div");
+          line.className="activity-program-row";
+          line.dataset.space=spaceSlug;
+          line.dataset.day=String(day);
+          line.dataset.activity=activity;
+          line.innerHTML=`
+            <strong>${label}</strong>
+            <span>${activity==="liberte"?"Liberté":"Longe"}</span>
+            <select data-field="enabled" aria-label="${activity} ${label}">
+              <option value="non">NON</option>
+              <option value="oui">OUI</option>
+            </select>
+            <input data-field="startsAt" type="time" value="${esc(row.startsAt)}" aria-label="Début ${activity} ${label}">
+            <input data-field="endsAt" type="time" value="${esc(row.endsAt)}" aria-label="Fin ${activity} ${label}">
+          `;
+          line.querySelector('[data-field="enabled"]').value=row.enabled||"non";
+          group.appendChild(line);
+        });
+        card.appendChild(group);
+      });
+      elements.activityProgramGrid.appendChild(card);
+    });
+  }
+
+  function readActivityProgramEntries(){
+    if(!elements.activityProgramGrid)return[];
+    return[...elements.activityProgramGrid.querySelectorAll(".activity-program-row")].map(row=>{
+      const value=field=>row.querySelector(`[data-field="${field}"]`)?.value||"";
+      return{
+        spaceSlug:row.dataset.space,
+        day:Number(row.dataset.day),
+        activity:row.dataset.activity,
+        enabled:value("enabled")||"non",
+        startsAt:value("startsAt"),
+        endsAt:value("endsAt")
+      };
+    });
+  }
+
+  function resetActivityProgram(){
+    if(!elements.activityProgramId)return;
+    elements.activityProgramId.value="";
+    elements.activityProgramName.value="";
+    elements.activityProgramStart.value="";
+    elements.activityProgramEnd.value="";
+    elements.activityProgramEnabled.checked=false;
+    elements.deleteActivityProgram.hidden=true;
+    renderActivityProgramGrid();
+    setStatus(elements.activityProgramStatus,"");
+  }
+
+  function editActivityProgram(program){
+    elements.activityProgramId.value=program.id;
+    elements.activityProgramName.value=program.name;
+    elements.activityProgramStart.value=program.startsOn;
+    elements.activityProgramEnd.value=program.endsOn||"";
+    elements.activityProgramEnabled.checked=program.enabled==="oui";
+    elements.deleteActivityProgram.hidden=false;
+    renderActivityProgramGrid(program.entries||[]);
+    setStatus(elements.activityProgramStatus,`Options #${program.id} chargées.`);
+  }
+
+  function renderActivityProgramsList(){
+    if(!elements.activityProgramsList)return;
+    elements.activityProgramsList.replaceChildren();
+    const programs=operations.activityPrograms||[];
+    if(!programs.length){
+      const empty=document.createElement("p");
+      empty.className="empty";
+      empty.textContent="Aucune option programmée.";
+      elements.activityProgramsList.appendChild(empty);
+      return;
+    }
+    programs.forEach(program=>{
+      const row=document.createElement("article");
+      row.className="hour-program-item";
+      const active=program.enabled==="oui"?"active":"inactive";
+      row.innerHTML=`
+        <div>
+          <strong>${esc(program.name)}</strong>
+          <p>Options · ${active} · à partir du ${esc(program.startsOn)}${program.endsOn?` · jusqu’au ${esc(program.endsOn)}`:""} · ${program.entries.length} ligne(s)</p>
+        </div>
+      `;
+      const edit=document.createElement("button");
+      edit.type="button";
+      edit.className="secondary compact";
+      edit.textContent="Modifier";
+      edit.addEventListener("click",()=>editActivityProgram(program));
+      row.appendChild(edit);
+      elements.activityProgramsList.appendChild(row);
+    });
+  }
+
   function renderExceptions(){
     elements.exceptionsList.replaceChildren();
     if(!operations.exceptions.length){
@@ -350,6 +792,39 @@
       remove.addEventListener("click",()=>deleteException(item));
       row.append(text,remove);
       elements.exceptionsList.appendChild(row);
+    });
+  }
+
+  function renderHourExceptions(){
+    if(!elements.hourExceptionsList)return;
+    elements.hourExceptionsList.replaceChildren();
+    const list=operations.hourExceptions||[];
+    if(!list.length){
+      const empty=document.createElement("p");
+      empty.className="empty";
+      empty.textContent="Aucune exception horaire enregistrée.";
+      elements.hourExceptionsList.appendChild(empty);
+      return;
+    }
+    list.forEach(item=>{
+      const row=document.createElement("article");
+      row.className="exception-item";
+      const scopeLabel={general:"Écuries",work:"Travail",paddocks:"Paddock"}[item.scope]||item.scope;
+      const targetLabel=hourExceptionTargets(item.scope).find(target=>target.slug===item.targetSlug)?.label||item.targetSlug;
+      const statusLabel={ouvert:"Ouvert",ferme:"Fermé","hors-service":"Hors service"}[item.manualStatus]||item.manualStatus;
+      const text=document.createElement("div");
+      const title=document.createElement("strong");
+      title.textContent=`${item.date} · ${scopeLabel} · ${targetLabel}`;
+      const message=document.createElement("p");
+      message.textContent=`${statusLabel} · ${item.opensAt}–${item.closesAt}`;
+      text.append(title,message);
+      const remove=document.createElement("button");
+      remove.type="button";
+      remove.className="danger compact";
+      remove.textContent="Supprimer";
+      remove.addEventListener("click",()=>deleteHourException(item));
+      row.append(text,remove);
+      elements.hourExceptionsList.appendChild(row);
     });
   }
 
@@ -379,6 +854,15 @@
       await refreshOperations();
       setStatus(elements.exceptionStatus,"Exception supprimée.","success");
     }catch(error){setStatus(elements.exceptionStatus,error.message,"error");}
+  }
+
+  async function deleteHourException(item){
+    if(!window.confirm(`Supprimer l’exception horaire du ${item.date} ?`))return;
+    try{
+      await api(`/api/admin/hour-exceptions/${item.id}`,{method:"DELETE"});
+      await refreshOperations();
+      setStatus(elements.hourExceptionStatusMessage,"Exception horaire supprimée.","success");
+    }catch(error){setStatus(elements.hourExceptionStatusMessage,error.message,"error");}
   }
 
   function render(){
@@ -415,7 +899,7 @@
       badges.append(
         badge(alert.active==="oui"?"Publiée":"Inactive",alert.active==="oui"?"active":"inactive"),
         badge(alert.epingle==="oui"?"Épinglée":"Non épinglée"),
-        badge(alert.push_sent_at?"Push envoyé":alert.push_requested?"Push en attente (production)":"Sans push")
+        badge(alert.push_sent_at?"Push envoyé":alert.push_requested?"Push en attente (bêta)":"Sans push")
       );
       if(schedule){
         const label=schedule.status==="sent"?"Programmation envoyée":
@@ -520,7 +1004,7 @@
         sent:"Alerte enregistrée et push envoyé.",
         "already-sent":"Alerte enregistrée. Le push avait déjà été envoyé.",
         "not-requested":"Alerte enregistrée sans push.",
-        disabled:"Alerte enregistrée. L’envoi push est momentanément indisponible.",
+        "disabled-in-beta":"Alerte enregistrée. Le push bêta n’est pas encore activé.",
         scheduled:"Alerte programmée. Elle restera invisible jusqu’à l’heure prévue.",
         failed:`Alerte enregistrée, mais le push a échoué${result.push?.error?" : "+result.push.error:"."}`
       };
@@ -552,7 +1036,7 @@
       notifications:{title:"Notifications",subtitle:"Publication des informations et envoi des notifications push."},
       general:{title:"Horaires",subtitle:"Horaires des écuries et exceptions de date."},
       "home-alert":{title:"Alertes",subtitle:"Bandeau d’information affiché sur l’accueil de la PWA."},
-      settings:{title:"Paramètres",subtitle:"Connexion sécurisée au backend de la production."}
+      settings:{title:"Paramètres",subtitle:"Connexion sécurisée au backend de la bêta."}
     };
     const selectedName=sections[name]?name:"spaces";
     document.body.classList.toggle("admin-section-spaces",selectedName==="spaces");
@@ -562,7 +1046,7 @@
     if(selectedName!=="spaces")closeSpaceEditor();
     elements.pageTitle.textContent=sections[selectedName].title;
     elements.pageSubtitle.textContent=sections[selectedName].subtitle;
-    document.title=`${sections[selectedName].title} — Backstage production`;
+    document.title=`${sections[selectedName].title} — Backstage bêta`;
     const url=new URL(window.location.href);
     url.searchParams.set("section",selectedName);
     history.replaceState(null,"",url);
@@ -640,6 +1124,133 @@
       await refreshOperations();
       setStatus(elements.exceptionStatus,"Exception enregistrée.","success");
     }catch(error){setStatus(elements.exceptionStatus,error.message,"error");}
+  });
+
+  elements.hourExceptionScope?.addEventListener("change",renderHourExceptionTargets);
+  elements.saveHourException?.addEventListener("click",async()=>{
+    setStatus(elements.hourExceptionStatusMessage,"Enregistrement…");
+    try{
+      await api("/api/admin/hour-exceptions",{
+        method:"POST",
+        body:JSON.stringify({
+          date:elements.hourExceptionDate.value,
+          scope:elements.hourExceptionScope.value,
+          targetSlug:elements.hourExceptionTarget.value,
+          manualStatus:elements.hourExceptionStatusSelect.value,
+          opensAt:elements.hourExceptionOpen.value,
+          closesAt:elements.hourExceptionClose.value
+        })
+      });
+      await refreshOperations();
+      setStatus(elements.hourExceptionStatusMessage,"Exception horaire enregistrée.","success");
+    }catch(error){setStatus(elements.hourExceptionStatusMessage,error.message,"error");}
+  });
+
+  document.querySelectorAll("[data-hour-program-scope]").forEach(button=>{
+    button.addEventListener("click",()=>{
+      if(elements.hourProgramId.value&&button.dataset.hourProgramScope!==hourProgramScope){
+        setStatus(elements.hourProgramStatus,"Terminez ou annulez la modification en cours avant de changer d’onglet.","error");
+        return;
+      }
+      rememberHourProgramDraft();
+      hourProgramScope=button.dataset.hourProgramScope;
+      document.querySelectorAll("[data-hour-program-scope]").forEach(item=>item.classList.toggle("selected",item===button));
+      if(!elements.hourProgramId.value)elements.deleteHourProgram.hidden=true;
+      renderHourProgramGrid(hourProgramDrafts.get(hourProgramScope)||[]);
+    });
+  });
+
+  elements.resetHourProgram.addEventListener("click",resetHourProgram);
+  elements.applyAllPaddockHours?.addEventListener("click",applyFirstPaddockProgramToAll);
+  elements.applyHourProgramBulk?.addEventListener("click",applyBulkHourProgram);
+  elements.refreshHourPrograms.addEventListener("click",async()=>{
+    setStatus(elements.hourProgramStatus,"Actualisation…");
+    try{
+      await refreshOperations();
+      setStatus(elements.hourProgramStatus,"Programmations actualisées.","success");
+    }catch(error){setStatus(elements.hourProgramStatus,error.message,"error");}
+  });
+  elements.saveHourProgram.addEventListener("click",async()=>{
+    const id=elements.hourProgramId.value;
+    rememberHourProgramDraft();
+    setStatus(elements.hourProgramStatus,"Enregistrement…");
+    try{
+      if(id){
+        await api(`/api/admin/hour-programs/${id}`,{
+          method:"PATCH",
+          body:JSON.stringify({
+            name:elements.hourProgramName.value,
+            scope:hourProgramScope,
+            startsOn:elements.hourProgramStart.value,
+            endsOn:elements.hourProgramEnd.value,
+            entries:hourProgramDrafts.get(hourProgramScope)||[]
+          })
+        });
+      }else{
+        const drafts=filledHourProgramDrafts();
+        if(!drafts.length)throw new Error("Préparez au moins un onglet d’horaires.");
+        for(const draft of drafts){
+          await api("/api/admin/hour-programs",{
+            method:"POST",
+            body:JSON.stringify({
+              name:elements.hourProgramName.value,
+              scope:draft.scope,
+              startsOn:elements.hourProgramStart.value,
+              endsOn:elements.hourProgramEnd.value,
+              entries:draft.entries
+            })
+          });
+        }
+      }
+      await refreshOperations();
+      resetHourProgram();
+      setStatus(elements.hourProgramStatus,id?"Programmation enregistrée.":"Programmations enregistrées.","success");
+    }catch(error){setStatus(elements.hourProgramStatus,error.message,"error");}
+  });
+  elements.deleteHourProgram.addEventListener("click",async()=>{
+    const id=elements.hourProgramId.value;
+    if(!id||!window.confirm("Supprimer cette programmation ?"))return;
+    setStatus(elements.hourProgramStatus,"Suppression…");
+    try{
+      await api(`/api/admin/hour-programs/${id}`,{method:"DELETE"});
+      await refreshOperations();
+      resetHourProgram();
+      setStatus(elements.hourProgramStatus,"Programmation supprimée.","success");
+    }catch(error){setStatus(elements.hourProgramStatus,error.message,"error");}
+  });
+
+  elements.resetActivityProgram?.addEventListener("click",resetActivityProgram);
+  elements.saveActivityProgram?.addEventListener("click",async()=>{
+    const id=elements.activityProgramId.value;
+    setStatus(elements.activityProgramStatus,"Enregistrement…");
+    try{
+      const payload={
+        name:elements.activityProgramName.value,
+        startsOn:elements.activityProgramStart.value,
+        endsOn:elements.activityProgramEnd.value,
+        enabled:elements.activityProgramEnabled.checked?"oui":"non",
+        entries:readActivityProgramEntries()
+      };
+      if(id){
+        await api(`/api/admin/activity-programs/${id}`,{method:"PATCH",body:JSON.stringify(payload)});
+      }else{
+        await api("/api/admin/activity-programs",{method:"POST",body:JSON.stringify(payload)});
+      }
+      await refreshOperations();
+      resetActivityProgram();
+      setStatus(elements.activityProgramStatus,id?"Options enregistrées.":"Options programmées.","success");
+    }catch(error){setStatus(elements.activityProgramStatus,error.message,"error");}
+  });
+  elements.deleteActivityProgram?.addEventListener("click",async()=>{
+    const id=elements.activityProgramId.value;
+    if(!id||!window.confirm("Supprimer cette programmation d’activités ?"))return;
+    setStatus(elements.activityProgramStatus,"Suppression…");
+    try{
+      await api(`/api/admin/activity-programs/${id}`,{method:"DELETE"});
+      await refreshOperations();
+      resetActivityProgram();
+      setStatus(elements.activityProgramStatus,"Options supprimées.","success");
+    }catch(error){setStatus(elements.activityProgramStatus,error.message,"error");}
   });
 
   elements.saveHomeAlert.addEventListener("click",async()=>{
