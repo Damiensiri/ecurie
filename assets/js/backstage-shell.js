@@ -12,7 +12,7 @@
     ["Horaires","administration.html?section=general","🕘"],
     ["Planning salariés","staff.html","👥"],
     ["Utilisateurs","users.html","👤"],
-    ["Thèmes","https://app.damiensiri.com/admin.html","🎨"],
+    ["Thèmes","themes.html","🎨"],
     ["Paramètres","administration.html?section=settings","⚙️"]
   ];
   const button=document.createElement("button");

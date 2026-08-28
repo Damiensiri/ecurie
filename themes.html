@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#090b0f">
+  <title>Thèmes — Backstage production</title>
+  <link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260828-1">
+  <link rel="stylesheet" href="assets/css/themes-admin.css?v=20260828-1">
+</head>
+<body class="theme-admin-page">
+  <main class="theme-shell">
+    <header class="theme-header">
+      <div>
+        <p class="eyebrow">Ambiance PWA</p>
+        <h1>Thèmes</h1>
+      </div>
+      <span class="beta-pill">PRODUCTION · Apps Script relayé</span>
+    </header>
+
+    <section class="theme-card theme-current-card">
+      <div>
+        <p class="eyebrow">Actuellement publié</p>
+        <strong id="currentTheme">—</strong>
+        <small id="themeUpdatedAt"></small>
+      </div>
+      <button id="refreshTheme" type="button">Actualiser</button>
+    </section>
+
+    <section class="theme-card">
+      <p class="eyebrow">Changer l’ambiance</p>
+      <div id="themeChoices" class="theme-choice-grid" aria-label="Choix du thème"></div>
+      <button id="publishTheme" class="theme-primary" type="button">Publier le thème sélectionné</button>
+      <p id="themeStatus" class="theme-status" role="status">Chargement…</p>
+    </section>
+
+    <section class="theme-card theme-note">
+      <p>Cette page utilise le jeton Backstage mémorisé dans Paramètres. Le vieux code thème n’est plus demandé ici.</p>
+      <p><a href="https://app.damiensiri.com/admin.html" target="_blank" rel="noopener">Ouvrir l’ancienne page de secours</a></p>
+    </section>
+  </main>
+  <script src="assets/js/themes-admin.js?v=20260828-1"></script>
+  <script src="assets/js/backstage-shell.js?v=20260828-1"></script>
+</body>
+</html>
