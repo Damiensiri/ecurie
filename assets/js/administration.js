@@ -816,7 +816,9 @@
       const title=document.createElement("strong");
       title.textContent=`${item.date} · ${scopeLabel} · ${targetLabel}`;
       const message=document.createElement("p");
-      message.textContent=`${statusLabel} · ${item.opensAt}–${item.closesAt}`;
+      message.textContent=item.opensAt&&item.closesAt
+        ? `${statusLabel} · ${item.opensAt}–${item.closesAt}`
+        : `${statusLabel} · journée complète`;
       text.append(title,message);
       const remove=document.createElement("button");
       remove.type="button";
@@ -1127,6 +1129,11 @@
   });
 
   elements.hourExceptionScope?.addEventListener("change",renderHourExceptionTargets);
+  elements.hourExceptionScope?.addEventListener("change",()=>{
+    if(elements.hourExceptionScope.value==="general"&&elements.hourExceptionStatusSelect?.value==="hors-service"){
+      elements.hourExceptionStatusSelect.value="ferme";
+    }
+  });
   elements.saveHourException?.addEventListener("click",async()=>{
     setStatus(elements.hourExceptionStatusMessage,"Enregistrement…");
     try{
