@@ -901,7 +901,7 @@
       badges.append(
         badge(alert.active==="oui"?"Publiée":"Inactive",alert.active==="oui"?"active":"inactive"),
         badge(alert.epingle==="oui"?"Épinglée":"Non épinglée"),
-        badge(alert.push_sent_at?"Push envoyé":alert.push_requested?"Push en attente (bêta)":"Sans push")
+        badge(alert.push_sent_at?"Push envoyé":alert.push_requested?"Push en attente":"Sans push")
       );
       if(schedule){
         const label=schedule.status==="sent"?"Programmation envoyée":
@@ -1006,7 +1006,7 @@
         sent:"Alerte enregistrée et push envoyé.",
         "already-sent":"Alerte enregistrée. Le push avait déjà été envoyé.",
         "not-requested":"Alerte enregistrée sans push.",
-        "disabled-in-production":"Alerte enregistrée. Le push bêta n’est pas encore activé.",
+        "disabled-in-production":"Alerte enregistrée. Le push production n’est pas activé.",
         scheduled:"Alerte programmée. Elle restera invisible jusqu’à l’heure prévue.",
         failed:`Alerte enregistrée, mais le push a échoué${result.push?.error?" : "+result.push.error:"."}`
       };
@@ -1038,7 +1038,7 @@
       notifications:{title:"Notifications",subtitle:"Publication des informations et envoi des notifications push."},
       general:{title:"Horaires",subtitle:"Horaires des écuries et exceptions de date."},
       "home-alert":{title:"Alertes",subtitle:"Bandeau d’information affiché sur l’accueil de la PWA."},
-      settings:{title:"Paramètres",subtitle:"Connexion sécurisée au backend de la bêta."}
+      settings:{title:"Paramètres",subtitle:"Connexion sécurisée au backend de production."}
     };
     const selectedName=sections[name]?name:"spaces";
     document.body.classList.toggle("admin-section-spaces",selectedName==="spaces");
@@ -1048,7 +1048,7 @@
     if(selectedName!=="spaces")closeSpaceEditor();
     elements.pageTitle.textContent=sections[selectedName].title;
     elements.pageSubtitle.textContent=sections[selectedName].subtitle;
-    document.title=`${sections[selectedName].title} — Backstage bêta`;
+    document.title=`${sections[selectedName].title} — Backstage production`;
     const url=new URL(window.location.href);
     url.searchParams.set("section",selectedName);
     history.replaceState(null,"",url);
