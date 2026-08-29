@@ -1,5 +1,7 @@
 (function(){
   const APP_ID="104b740c-3a7b-4e39-87b2-847d00f300fb";
+  const promptMemoryKey="backstage_prod_push_prompt_last_seen";
+  const promptDelayMs=14*24*60*60*1000;
   const button=document.getElementById("enablePushBtn");
   const status=document.getElementById("pushSettingsStatus");
   if(!button||!status)return;
@@ -15,10 +17,16 @@
   window.OneSignalDeferred=window.OneSignalDeferred||[];
   window.OneSignalDeferred.push(async OneSignal=>{
     try{
-      await OneSignal.init({appId:APP_ID,notifyButton:{enable:false},welcomeNotification:{disable:true},serviceWorkerPath:"OneSignalSDKWorker.js",serviceWorkerParam:{scope:"/"}});
+      await OneSignal.init({appId:APP_ID,notifyButton:{enable:false},welcomeNotification:{disable:true},serviceWorkerPath:"OneSignalSDKWorker.js",serviceWorkerParam:{scope:"/"},promptOptions:{slidedown:{prompts:[{type:"push",autoPrompt:false,text:{actionMessage:"Souhaitez-vous recevoir les notifications Backstage ?",acceptButton:"Autoriser",cancelButton:"Plus tard"}}]}}});
       OneSignal.User.PushSubscription.addEventListener("change",()=>{if(OneSignal.User.PushSubscription.id)registerSubscription(OneSignal).catch(()=>{});});
       if(Notification.permission==="granted"&&OneSignal.User.PushSubscription.id)await registerSubscription(OneSignal);
-      button.addEventListener("click",async()=>{try{await OneSignal.Notifications.requestPermission();if(!OneSignal.Notifications.permission)throw new Error("Notifications refusées ou bloquées");await registerSubscription(OneSignal);}catch(error){setState(error?.message||"Activation impossible.","error");}});
+      const nativePermission=OneSignal.Notifications?.permissionNative||Notification?.permission||"default";
+      const pushOptedIn=Boolean(OneSignal.User.PushSubscription.optedIn||OneSignal.User.PushSubscription.id);
+      const lastPrompt=Number(localStorage.getItem(promptMemoryKey)||0);
+      if(nativePermission==="default"&&!pushOptedIn&&Date.now()-lastPrompt>promptDelayMs){
+        localStorage.setItem(promptMemoryKey,String(Date.now()));
+      }
+      button.addEventListener("click",async()=>{try{localStorage.setItem(promptMemoryKey,String(Date.now()));await OneSignal.Notifications.requestPermission();if(!OneSignal.Notifications.permission)throw new Error("Notifications refusées ou bloquées");await registerSubscription(OneSignal);}catch(error){setState(error?.message||"Activation impossible.","error");}});
     }catch(error){setState(error?.message||"OneSignal est indisponible.","error");}
   });
 })();
