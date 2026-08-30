@@ -1,7 +1,139 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#090b0f"><title>Commandes — Backstage production</title><link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260716-3"><link rel="stylesheet" href="assets/css/users.css?v=20260716-2"><link rel="stylesheet" href="assets/css/orders.css?v=20260728-1"></head><body class="users-page orders-page"><main class="users-shell orders-shell"><header class="users-header orders-header"><div><p class="orders-eyebrow">Ventes et facturation</p><h1>Commandes</h1></div><span class="beta-pill">PRODUCTION · D1</span></header>
-<p id="connectionStatus" class="status"></p>
-<section class="users-panel orders-priority-panel"><div class="panel-heading"><div><p class="panel-kicker">À traiter</p><h2>Commandes</h2></div><button id="refreshBtn" class="secondary">Actualiser</button></div><div id="ordersList" class="orders-list"><p class="empty">Chargement…</p></div></section>
-<section class="users-panel catalog-panel"><div class="panel-heading"><div><p class="panel-kicker">Catalogue</p><h2>Articles</h2></div><button id="newProductBtn" class="secondary" type="button">Nouvel article</button></div><div class="catalog-tabs" role="tablist"><button type="button" data-category-tab="services" class="is-active">Services</button><button type="button" data-category-tab="soins">Soins</button><button type="button" data-category-tab="laverie">Laverie</button><button type="button" data-category-tab="cards">Cartes</button></div><p id="dragHelp" class="drag-help">Sur ordinateur, fais glisser les articles pour modifier leur ordre d’affichage.</p>
-<form id="productForm" class="product-form" hidden><input id="productId" type="hidden"><input id="productPosition" type="hidden"><input id="productImage" type="hidden"><div class="field-grid"><label>Page<select id="productCategory"><option value="services">Services</option><option value="soins">Soins</option><option value="laverie">Laverie</option></select></label><label>Nom<input id="productName" maxlength="120" required></label><label>Prix (€)<input id="productPrice" type="number" min="0" max="100000" step="0.01" required></label><label>Badge<input id="productBadge" maxlength="80"></label><label class="wide">Description<textarea id="productDescription" maxlength="1000"></textarea></label><label class="wide image-picker">Image de l’article<input id="productImageFile" type="file" accept="image/*"><span>Galerie ou fichier · compression automatique</span><img id="productImagePreview" alt="Aperçu de l’image" hidden></label><label class="check-row"><input id="productFeatured" type="checkbox"> Mettre en avant 📌</label><label class="check-row"><input id="productActive" type="checkbox" checked> Article actif</label></div><div class="form-actions"><button type="submit">Enregistrer l’article</button><button id="cancelProductBtn" class="secondary" type="button">Annuler</button></div></form><div id="productsList" class="products-admin"><p class="empty">Chargement…</p></div></section>
-<form id="cardProductForm" class="product-form" hidden><div class="field-grid"><label>Nom<input id="cardProductName" maxlength="120" required></label><label>Nombre de mises<input id="cardProductUnits" type="number" min="1" max="999" step="1" required></label><label>Prix (€)<input id="cardProductPrice" type="number" min="0" max="100000" step="0.01" required></label><label class="wide">Description ajoutée à l’e-mail<textarea id="cardProductDescription" maxlength="1000"></textarea></label><label class="check-row"><input id="cardProductActive" type="checkbox" checked> Carte disponible</label></div><div class="form-actions"><button type="submit">Enregistrer la carte</button></div></form>
-</main><script src="assets/js/orders.js?v=20260719-1"></script><script src="assets/js/backstage-shell.js?v=20260726-4"></script></body></html>
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#090b0f">
+  <title>Commandes — Backstage production</title>
+  <link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260716-3">
+  <link rel="stylesheet" href="assets/css/users.css?v=20260716-2">
+  <link rel="stylesheet" href="assets/css/orders.css?v=20260830-1">
+</head>
+<body class="users-page orders-page">
+<main class="users-shell orders-shell">
+  <header class="users-header orders-header">
+    <div>
+      <p class="orders-eyebrow">Ventes et facturation</p>
+      <h1>Commandes</h1>
+    </div>
+    <span class="beta-pill">PRODUCTION · D1</span>
+  </header>
+  <p id="connectionStatus" class="status"></p>
+
+  <section class="users-panel manual-order-panel">
+    <div class="panel-heading">
+      <div>
+        <p class="panel-kicker">Vive voix</p>
+        <h2>Commande manuelle</h2>
+      </div>
+      <button id="toggleManualOrderBtn" class="secondary" type="button">Créer une commande</button>
+    </div>
+    <form id="manualOrderForm" class="product-form manual-order-form" hidden>
+      <div class="field-grid">
+        <label class="wide">Client
+          <select id="manualCustomer" required></select>
+        </label>
+        <label>Page
+          <select id="manualSource">
+            <option value="services">Services</option>
+            <option value="soins">Soins</option>
+            <option value="laverie">Laverie</option>
+            <option value="panier">Panier</option>
+          </select>
+        </label>
+        <label>Article
+          <select id="manualProduct"></select>
+        </label>
+        <label>Quantité
+          <input id="manualQuantity" type="number" min="1" max="99" step="1" value="1">
+        </label>
+      </div>
+      <div class="form-actions">
+        <button id="addManualItemBtn" class="secondary" type="button">Ajouter l’article</button>
+      </div>
+      <div id="manualItems" class="manual-items"><p class="empty">Aucun article ajouté.</p></div>
+      <div class="field-grid">
+        <label>Statut
+          <select id="manualStatus"></select>
+        </label>
+        <label class="check-row"><input id="manualBilled" type="checkbox"> Déjà facturée</label>
+        <label class="check-row"><input id="manualEmail" type="checkbox"> Envoyer un mail au client</label>
+        <label class="wide">Commentaire
+          <input id="manualComment" maxlength="500" placeholder="Ex. Commande prise à l’écurie">
+        </label>
+      </div>
+      <div class="form-actions">
+        <button type="submit">Enregistrer la commande</button>
+        <button id="cancelManualOrderBtn" class="secondary" type="button">Annuler</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="users-panel orders-priority-panel">
+    <div class="panel-heading">
+      <div>
+        <p class="panel-kicker">Suivi</p>
+        <h2>Commandes</h2>
+      </div>
+      <button id="refreshBtn" class="secondary">Actualiser</button>
+    </div>
+    <div class="catalog-tabs order-tabs" role="tablist">
+      <button type="button" data-order-tab="active" class="is-active">À traiter</button>
+      <button type="button" data-order-tab="processed">Traitées</button>
+    </div>
+    <div id="ordersList" class="orders-list"><p class="empty">Chargement…</p></div>
+  </section>
+
+  <section class="users-panel catalog-panel">
+    <div class="panel-heading">
+      <div>
+        <p class="panel-kicker">Catalogue</p>
+        <h2>Articles</h2>
+      </div>
+      <button id="newProductBtn" class="secondary" type="button">Nouvel article</button>
+    </div>
+    <div class="catalog-tabs" role="tablist">
+      <button type="button" data-category-tab="services" class="is-active">Services</button>
+      <button type="button" data-category-tab="soins">Soins</button>
+      <button type="button" data-category-tab="laverie">Laverie</button>
+      <button type="button" data-category-tab="cards">Cartes</button>
+    </div>
+    <div class="catalog-tabs product-state-tabs" role="tablist">
+      <button type="button" data-product-state="active" class="is-active">Articles actifs</button>
+      <button type="button" data-product-state="inactive">Articles désactivés</button>
+    </div>
+    <p id="dragHelp" class="drag-help">Sur ordinateur, fais glisser les articles actifs pour modifier leur ordre d’affichage.</p>
+    <form id="productForm" class="product-form" hidden>
+      <input id="productId" type="hidden">
+      <input id="productPosition" type="hidden">
+      <input id="productImage" type="hidden">
+      <div class="field-grid">
+        <label>Page<select id="productCategory"><option value="services">Services</option><option value="soins">Soins</option><option value="laverie">Laverie</option></select></label>
+        <label>Nom<input id="productName" maxlength="120" required></label>
+        <label>Prix (€)<input id="productPrice" type="number" min="0" max="100000" step="0.01" required></label>
+        <label>Badge<input id="productBadge" maxlength="80"></label>
+        <label class="wide">Description<textarea id="productDescription" maxlength="1000"></textarea></label>
+        <label class="wide image-picker">Image de l’article<input id="productImageFile" type="file" accept="image/*"><span>Galerie ou fichier · compression automatique</span><img id="productImagePreview" alt="Aperçu de l’image" hidden></label>
+        <label class="check-row"><input id="productFeatured" type="checkbox"> Mettre en avant 📌</label>
+        <label class="check-row"><input id="productActive" type="checkbox" checked> Article actif</label>
+      </div>
+      <div class="form-actions"><button type="submit">Enregistrer l’article</button><button id="cancelProductBtn" class="secondary" type="button">Annuler</button></div>
+    </form>
+    <div id="productsList" class="products-admin"><p class="empty">Chargement…</p></div>
+  </section>
+
+  <form id="cardProductForm" class="product-form" hidden>
+    <div class="field-grid">
+      <label>Nom<input id="cardProductName" maxlength="120" required></label>
+      <label>Nombre de mises<input id="cardProductUnits" type="number" min="1" max="999" step="1" required></label>
+      <label>Prix (€)<input id="cardProductPrice" type="number" min="0" max="100000" step="0.01" required></label>
+      <label class="wide">Description ajoutée à l’e-mail<textarea id="cardProductDescription" maxlength="1000"></textarea></label>
+      <label class="check-row"><input id="cardProductActive" type="checkbox" checked> Carte disponible</label>
+    </div>
+    <div class="form-actions"><button type="submit">Enregistrer la carte</button></div>
+  </form>
+</main>
+<script src="assets/js/orders.js?v=20260830-1"></script>
+<script src="assets/js/backstage-shell.js?v=20260726-4"></script>
+</body>
+</html>

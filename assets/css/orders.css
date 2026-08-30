@@ -10,7 +10,7 @@
 .orders-list,.products-admin{display:grid;gap:7px}
 .orders-list{max-height:min(57dvh,620px);overflow-y:auto;padding-right:4px;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#52667c #0b121b}
 .order-admin{padding:11px;border:1px solid #2d3b4b;border-radius:12px;background:#0b121b}
-.order-admin.is-billed,.product-row.is-inactive{opacity:.58}
+.order-admin.is-billed,.order-admin.is-processed,.product-row.is-inactive{opacity:.58}
 .order-head{display:flex;justify-content:space-between;gap:12px}
 .order-head strong{font-size:14px}
 .order-head small,.product-row small{display:block;margin-top:3px;color:#9eacbd;font-size:11px}
@@ -33,10 +33,17 @@
 .catalog-tabs{display:flex;gap:5px;margin:8px 0 6px;padding:3px;border:1px solid #ffffff18;border-radius:11px;background:#0b121b;overflow:auto}
 .catalog-tabs button{min-height:38px;padding:7px 12px;border-radius:8px;background:transparent;color:#aebdcd;font-size:12px;white-space:nowrap}
 .catalog-tabs button.is-active{background:#263f35;color:#9af0b5;box-shadow:inset 0 0 0 1px #68e18f55}
+.order-tabs button.is-active{background:#243750;color:#b9d8ff;box-shadow:inset 0 0 0 1px #70b8ff55}
+.product-state-tabs{margin-top:0}
 .drag-help{margin:0 0 8px;color:#9eacbd;font-size:11px}
 .drag-handle{color:#8190a1;font-size:20px;cursor:grab;user-select:none}
 .product-row.is-dragging{opacity:.35}
 .product-row.drag-over{border-color:#68e18f;transform:translateY(3px)}
+.manual-order-panel .product-form{margin-bottom:0}
+.manual-items{display:grid;gap:6px;margin:8px 0 12px}
+.manual-item,.manual-total{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:8px 10px;border:1px solid #2d3b4b;border-radius:10px;background:#09111b;color:#dce6ef}
+.manual-item button{min-height:32px;padding:4px 10px;border-radius:9px;background:#582a31;color:#ffd7dc}
+.manual-total{grid-template-columns:minmax(0,1fr) auto;background:#122437;font-weight:850}
 @media(max-width:720px){
   .orders-header{padding-right:58px}
   .orders-header .beta-pill{position:absolute;top:calc(18px + env(safe-area-inset-top));right:72px}
@@ -49,4 +56,6 @@
   .product-row img{width:48px;height:48px}
   .product-actions{grid-column:1/-1}
   .drag-help{display:none}
+  .manual-item,.manual-total{grid-template-columns:1fr auto}
+  .manual-item button{grid-column:1/-1}
 }
