@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <link rel="manifest" href="manifest.webmanifest">
   <title>Backstage Écurie</title>
-  <link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260831-1">
+  <link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260906-prod-chevaux">
   <style>
     :root {
       color-scheme: dark;
@@ -852,6 +852,7 @@
       .paddock-card { flex-basis: 91vw; }
     }
   </style>
+<script src="assets/js/paddock-horses.js?v=20260906-prod-chevaux"></script>
 </head>
 <body>
   <div class="app-shell">
@@ -939,6 +940,7 @@
               <label class="field-label">Client
                 <select class="select" id="adminReservationUser" required><option value="">Chargement des clients…</option></select>
               </label>
+              <div id="adminBookingHorses" style="grid-column:1/-1"></div>
               <label class="field-label">Jour
                 <input class="field" id="adminReservationDate" type="date" required>
               </label>
@@ -1446,6 +1448,7 @@
             <span>${item.type || "Reservation"}</span>
           </div>
           <div class="item-actions">
+            <span>${(item.horses||[]).map(h=>escapeHTML(h.name)).join(" · ")}</span><button onclick="editHorseBooking('${item.id}')">Modifier</button>
             <button class="danger" data-cancel-reservation="${item.id}">Annuler</button>
           </div>
         </article>
@@ -1462,6 +1465,16 @@
       if (users.some((user) => String(user.id) === selected)) select.value = selected;
     }
 
+    document.getElementById('adminReservationUser').addEventListener('change',async()=>{
+      const userId=document.getElementById('adminReservationUser').value,box=document.getElementById('adminBookingHorses');
+      box.replaceChildren();if(!userId)return;
+      try{const result=await paddockAdminApi('/api/admin/paddocks/horse-options?userId='+userId);
+        if(document.getElementById('adminReservationUser').value===userId)PaddockHorses.render(box,result.horses||[]);
+      }catch(error){showToast(error.message);}
+    });
+    window.editHorseBooking=id=>{const reservation=reservations.find(r=>String(r.id)===String(id));if(!reservation)return;
+      PaddockHorses.edit({reservation,api:paddockAdminApi,optionsPath:'/api/admin/paddocks/horse-options?userId='+reservation.userId,path:'/api/admin/paddocks/reservations/'+id,onSaved:loadD1Paddocks});
+    };
     function updateAdminReservationDurations() {
       const paddock = document.getElementById("adminReservationPaddock").value;
       const duration = document.getElementById("adminReservationDuration");
@@ -1521,6 +1534,7 @@
       event.preventDefault();
       const button = document.getElementById("adminReservationSubmit");
       const payload = {
+        horseIds:PaddockHorses.selected(document.getElementById("adminBookingHorses")),
         userId: Number(document.getElementById("adminReservationUser").value),
         date: document.getElementById("adminReservationDate").value,
         paddock: document.getElementById("adminReservationPaddock").value,
@@ -1901,7 +1915,7 @@
       if (event.detail?.type === "paddocks" || event.detail?.type === "paddock-requests" || event.detail?.type === "all") loadD1Paddocks();
     });
   </script>
-  <script src="assets/js/status-realtime.js?v=20260831-1"></script>
-  <script src="assets/js/backstage-shell.js?v=20260831-1"></script>
+  <script src="assets/js/status-realtime.js?v=20260906-prod-chevaux"></script>
+  <script src="assets/js/backstage-shell.js?v=20260906-prod-chevaux"></script>
 </body>
 </html>

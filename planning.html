@@ -8,11 +8,11 @@
     <title>
       Planning — Backstage production
     </title>
-    <link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260831-1" type="text/css">
-    <link rel="stylesheet" href="assets/css/planning.css?v=20260831-1" type="text/css">
-    <link rel="stylesheet" href="assets/css/planning-enhancements.css?v=20260831-1" type="text/css">
-    <link rel="stylesheet" href="assets/css/planning-actions.css?v=20260831-1" type="text/css">
-    <link rel="stylesheet" href="assets/css/planning-responsive.css?v=20260831-1" type="text/css">
+    <link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260906-prod-chevaux" type="text/css">
+    <link rel="stylesheet" href="assets/css/planning.css?v=20260906-prod-chevaux" type="text/css">
+    <link rel="stylesheet" href="assets/css/planning-enhancements.css?v=20260906-prod-chevaux" type="text/css">
+    <link rel="stylesheet" href="assets/css/planning-actions.css?v=20260906-prod-chevaux" type="text/css">
+    <link rel="stylesheet" href="assets/css/planning-responsive.css?v=20260906-prod-chevaux" type="text/css">
   </head>
   <body>
     <main class="planning-shell">
@@ -34,7 +34,7 @@
           Chevaux de la semaine
         </h2>
         <form id="horseForm" class="inline-form">
-          <input id="horseName" maxlength="80" placeholder="Nom du cheval" required=""><button>Ajouter</button>
+          <select id="horseName" required aria-label="Cheval à afficher"><option value="">Choisir un cheval</option></select><a href="horses.html">Gérer les chevaux</a><button>Ajouter</button>
         </form>
         <div id="horseList" class="chips"></div>
       </section>
@@ -48,6 +48,7 @@
             <p class="muted">
               Utilisez le bouton + directement dans une case pour ajouter une ou plusieurs tâches.
             </p>
+            <div id="horseFilter" class="horse-filter" aria-label="Filtrer les chevaux affichés"></div>
           </div><label>Afficher <select id="taskFilter"><option value="all">Toutes</option><option value="todo">À faire</option><option value="completed">Réalisées</option><option value="overdue">En retard</option><option value="requests">Demandes paddock</option></select></label><button id="refresh" class="secondary">Actualiser</button>
         </div>
         <nav id="mobileDayNav" class="mobile-day-nav" aria-label="Jour affiché"></nav>
@@ -95,7 +96,7 @@
           <option value="autre">
             Autre
           </option>
-        </select></label><label id="paddockField">Paddock<select id="taskPaddock"><option value="Maison">Maison</option><option value="Grande Voie">Grande Voie</option><option value="Beudot">Beudot</option></select></label><label id="startField">Début<input id="taskStart" type="time"></label><label id="endField">Fin<input id="taskEnd" type="time"></label><label class="wide">Description<input id="taskDescription" maxlength="300" placeholder="Facultative"></label><label id="requestField" class="wide">Demande de mise au paddock liée (facultatif)<select id="taskRequest">
+        </select></label><label id="paddockField">Paddock<select id="taskPaddock"><option value="Maison">Maison</option><option value="Grande Voie">Grande Voie</option><option value="Beudot">Beudot</option></select></label><label id="startField">Début (facultatif hors paddock)<input id="taskStart" type="time"></label><label id="endField">Fin (facultative hors paddock)<input id="taskEnd" type="time"></label><label class="wide">Description<input id="taskDescription" maxlength="300" placeholder="Facultative"></label><label id="requestField" class="wide">Demande de mise au paddock liée (facultatif)<select id="taskRequest">
           <option value="">
             Aucune
           </option>
@@ -106,8 +107,8 @@
           <button type="submit" value="close">Ajouter et fermer</button><button type="submit" value="again" class="secondary">Ajouter une autre tâche</button>
         </div>
       </form>
-    </dialog><script src="assets/js/planning.js?v=20260831-1" type="text/javascript">
-</script><script src="assets/js/backstage-shell.js?v=20260831-1" type="text/javascript">
+    </dialog><script src="assets/js/planning.js?v=20260906-prod-chevaux" type="text/javascript">
+</script><script src="assets/js/backstage-shell.js?v=20260906-prod-chevaux" type="text/javascript">
 </script>
   </body>
 </html>

@@ -3,6 +3,7 @@
     ["Accueil","index.html","⌂"],
     ["Espaces","administration.html?section=spaces","🏇"],
     ["Planning","planning.html","🐴"],
+    ["Chevaux","horses.html","🐎"],
     ["Paddocks","paddocks.html","🗓️"],
     ["Liberté","liberte.html","🌿"],
     ["Notifications","administration.html?section=notifications","🔔"],

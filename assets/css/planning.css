@@ -42,3 +42,4 @@ dialog{border-radius:16px;padding:16px}
   .device{padding:0}
   .planning-shell h1{font-size:2rem}
 }
+.horse-filter{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.horse-filter button{min-height:34px;padding:0 11px;border:1px solid #40516a;background:#172435;color:#dce6f2;font-size:.76rem}.horse-filter button.is-active{border-color:#62df91;background:#315d4b;color:#eafff1}.task-source{margin-top:4px;color:#aebccc;font-size:.68rem;font-weight:750;text-transform:uppercase}
