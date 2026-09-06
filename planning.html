@@ -9,7 +9,7 @@
       Planning — Backstage production
     </title>
     <link rel="stylesheet" href="assets/css/backstage-shell.css?v=20260906-prod-chevaux" type="text/css">
-    <link rel="stylesheet" href="assets/css/planning.css?v=20260907-visibility" type="text/css">
+    <link rel="stylesheet" href="assets/css/planning.css?v=20260907-visibility-on" type="text/css">
     <link rel="stylesheet" href="assets/css/planning-enhancements.css?v=20260906-prod-chevaux" type="text/css">
     <link rel="stylesheet" href="assets/css/planning-actions.css?v=20260906-prod-chevaux" type="text/css">
     <link rel="stylesheet" href="assets/css/planning-responsive.css?v=20260906-prod-chevaux" type="text/css">
@@ -96,7 +96,7 @@
           <option value="autre">
             Autre
           </option>
-        </select></label><label id="paddockField">Paddock<select id="taskPaddock"><option value="Maison">Maison</option><option value="Grande Voie">Grande Voie</option><option value="Beudot">Beudot</option></select></label><label id="startField">Début (facultatif hors paddock)<input id="taskStart" type="time"></label><label id="endField">Fin (facultative hors paddock)<input id="taskEnd" type="time"></label><div class="wide"><div id="publicationSwitch"><label class="publication-control"><input id="taskPwaVisible" type="checkbox" role="switch">Afficher dans la PWA</label></div><p id="publicationAutomatic" hidden>Publié automatiquement dans le planning du cheval.</p></div><label class="wide">Description<input id="taskDescription" maxlength="300" placeholder="Facultative"></label><label id="requestField" class="wide">Demande de mise au paddock liée (facultatif)<select id="taskRequest">
+        </select></label><label id="paddockField">Paddock<select id="taskPaddock"><option value="Maison">Maison</option><option value="Grande Voie">Grande Voie</option><option value="Beudot">Beudot</option></select></label><label id="startField">Début (facultatif hors paddock)<input id="taskStart" type="time"></label><label id="endField">Fin (facultative hors paddock)<input id="taskEnd" type="time"></label><div class="wide"><div id="publicationSwitch"><label class="publication-control"><input id="taskPwaVisible" type="checkbox" checked role="switch">Afficher dans la PWA</label></div><p id="publicationAutomatic" hidden>Publié automatiquement dans le planning du cheval.</p></div><label class="wide">Description<input id="taskDescription" maxlength="300" placeholder="Facultative"></label><label id="requestField" class="wide">Demande de mise au paddock liée (facultatif)<select id="taskRequest">
           <option value="">
             Aucune
           </option>
@@ -107,7 +107,7 @@
           <button type="submit" value="close">Ajouter et fermer</button><button type="submit" value="again" class="secondary">Ajouter une autre tâche</button>
         </div>
       </form>
-    </dialog><script src="assets/js/planning.js?v=20260907-visibility" type="text/javascript">
+    </dialog><script src="assets/js/planning.js?v=20260907-visibility-on" type="text/javascript">
 </script><script src="assets/js/backstage-shell.js?v=20260906-prod-chevaux" type="text/javascript">
 </script>
   </body>
